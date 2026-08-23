@@ -106,6 +106,11 @@
   #clock.hidden{display:none}
   #fpsReadout{position:absolute;left:18px;top:37px;display:none;font:600 11px/1 ui-monospace,SFMono-Regular,Consolas,monospace;color:rgba(255,255,255,.62);letter-spacing:.03em;text-shadow:0 2px 10px rgba(0,0,0,.52)}
   #fpsReadout.show{display:block}
+  /* Clean-view mode deliberately hides only passive/desktop HUD while driving. The garage/pause
+     presentation remains intact, and coarse-pointer devices keep their essential touch controls.
+     Keyboard users can always press U to restore the HUD even when the top-right buttons are hidden. */
+  body.clean-ui:not(.garage) #stats,body.clean-ui:not(.garage) #topRight,body.clean-ui:not(.garage) #help,body.clean-ui:not(.garage) #clock,body.clean-ui:not(.garage) #fpsReadout,body.clean-ui:not(.garage) #regionToast,body.clean-ui:not(.garage) #hint{opacity:0!important;pointer-events:none!important}
+  @media (hover:none) and (pointer:coarse){body.clean-ui:not(.garage) #topRight{opacity:1!important;pointer-events:auto!important}}
   #regionToast{position:absolute;left:50%;top:12.5%;transform:translate(-50%,-5px);font-size:13px;font-weight:650;letter-spacing:.16em;color:rgba(250,253,255,.88);opacity:0;transition:opacity .65s ease,transform .65s ease;text-shadow:0 2px 16px rgba(0,0,0,.52);white-space:nowrap}
   #regionToast.show{opacity:.92;transform:translate(-50%,0)}
   #touchControls{display:none;position:absolute;inset:0;pointer-events:none}
@@ -221,6 +226,7 @@
       <div class="configRow"><span class="configLabel">加速力度</span><input class="configRange" type="range" min="50" max="160" step="1" data-setting="acceleration"><span class="configValue" data-value-for="acceleration"></span></div>
       <div class="configRow"><span class="configLabel">转向灵敏度</span><input class="configRange" type="range" min="50" max="160" step="1" data-setting="steering"><span class="configValue" data-value-for="steering"></span></div>
       <div class="configRow" title="降低后更容易产生侧滑；提高后车辆更快跟随车头方向"><span class="configLabel">抓地力</span><input class="configRange" type="range" min="50" max="150" step="1" data-setting="grip"><span class="configValue" data-value-for="grip"></span></div>
+      <div class="configRow" title="松开油门后由电机回生提供减速度；0% 为关闭"><span class="configLabel">单踏板减速</span><input class="configRange" type="range" min="0" max="100" step="1" data-setting="onePedal"><span class="configValue" data-value-for="onePedal"></span></div>
       <div class="configDivider"></div>
       <div class="configRow"><span class="configLabel">道路起伏</span><input class="configRange" type="range" min="0" max="500" step="1" data-setting="roadHills"><span class="configValue" data-value-for="roadHills"></span></div>
       <div class="configRow"><span class="configLabel">道路弯折</span><input class="configRange" type="range" min="0" max="500" step="1" data-setting="roadCurves"><span class="configValue" data-value-for="roadCurves"></span></div>
@@ -236,6 +242,9 @@
       <div class="configRow"><span class="configLabel">速度线强度</span><input class="configRange" type="range" min="0" max="200" step="1" data-setting="speedLines"><span class="configValue" data-value-for="speedLines"></span></div>
       <div class="configRow"><span class="configLabel">雾浓度</span><input class="configRange" type="range" min="0" max="200" step="1" data-setting="fogDensity"><span class="configValue" data-value-for="fogDensity"></span></div>
       <div class="configDivider"></div>
+      <div class="configRow" title="独立于自动画质的最终像素比例；降低可明显减轻 GPU 压力"><span class="configLabel">渲染比例</span><input class="configRange" type="range" min="50" max="150" step="5" data-setting="renderScale"><span class="configValue" data-value-for="renderScale"></span></div>
+      <div class="configRow" title="0 表示跟随浏览器 / 屏幕刷新率"><span class="configLabel">帧率上限</span><input class="configRange" type="range" min="0" max="120" step="30" data-setting="frameLimit"><span class="configValue" data-value-for="frameLimit"></span></div>
+      <div class="configDivider"></div>
       <div class="configToggleGrid">
         <label class="configToggleRow wide"><span>自动画质 <span id="qualityState" class="qualityState">Q0</span></span><input class="configCheck" type="checkbox" data-setting="autoQuality"></label>
       </div>
@@ -246,8 +255,10 @@
         <label class="configToggleRow wide"><span>显示 FPS</span><input class="configCheck" type="checkbox" data-setting="showFps"></label>
         <label class="configToggleRow wide"><span>显示时间</span><input class="configCheck" type="checkbox" data-setting="showClock"></label>
         <label class="configToggleRow wide"><span>显示里程</span><input class="configCheck" type="checkbox" data-setting="showDistance"></label>
+        <label class="configToggleRow wide" title="进入浏览器全屏；退出全屏后此项会自动同步"><span>全屏</span><input class="configCheck" type="checkbox" data-setting="fullscreen"></label>
+        <label class="configToggleRow wide" title="隐藏驾驶 HUD；桌面端按 U 可随时恢复"><span>纯净画面</span><input class="configCheck" type="checkbox" data-setting="cleanUi"></label>
       </div>
-      <div class="configNote">默认只显示速度与里程；时间、FPS 可按需开启。</div>
+      <div class="configNote">默认显示速度与里程；U 可随时切换纯净画面。</div>
     </div>
 
     <div class="configPage" data-config-page="audio">
@@ -320,6 +331,7 @@
       <div class="helpLine">G　自动驾驶</div>
       <div class="helpLine">P / Esc　暂停</div>
       <div class="helpLine">M　静音</div>
+      <div class="helpLine">U　纯净画面</div>
       <div class="helpLine">F2　性能信息</div>
     </div>
   </div>
@@ -430,11 +442,11 @@ const lerp = (a,b,t)=>a+(b-a)*t;
 const smoothstep = (a,b,x)=>{ x=clamp((x-a)/(b-a),0,1); return x*x*(3-2*x); };
 const expLerp = (a,b,rate,dt)=>lerp(a,b,1-Math.exp(-rate*dt));
 const SETTINGS_KEY='driftway-settings-v1';
-const SETTINGS_VERSION=7;
+const SETTINGS_VERSION=8;
 const BASE_SPEED_REF=300/3.6;
 const AUTOPILOT_SAFE_CAP_KMH=1000;
 const MAX_SPEED_INFINITY_SLIDER=1001;
-const DEFAULT_SETTINGS={volume:.68,motorVolume:1,windVolume:1,tireVolume:1,maxSpeedKmh:300,autopilotSpeedKmh:300,acceleration:1,steering:1,grip:1,roadHills:1,roadCurves:1,vegetation:1,baseFov:61,fovEffect:1,cameraSpeed:1,cameraShake:1,speedLines:1,fogDensity:1,speedAccelFade:true,highSpeedSteer:true,offroadDrag:true,paceBoost:true,autoQuality:true,showFps:false,showClock:false,showDistance:true,noCollision:false,autopilotUnlimited:false};
+const DEFAULT_SETTINGS={volume:.68,motorVolume:1,windVolume:1,tireVolume:1,maxSpeedKmh:300,autopilotSpeedKmh:300,acceleration:1,steering:1,grip:1,onePedal:0,roadHills:1,roadCurves:1,vegetation:1,baseFov:61,fovEffect:1,cameraSpeed:1,cameraShake:1,speedLines:1,fogDensity:1,renderScale:1,frameLimit:0,speedAccelFade:true,highSpeedSteer:true,offroadDrag:true,paceBoost:true,autoQuality:true,showFps:false,showClock:false,showDistance:true,fullscreen:false,cleanUi:false,noCollision:false,autopilotUnlimited:false};
 function loadSettings(){
   const out={...DEFAULT_SETTINGS};
   try{
@@ -444,6 +456,9 @@ function loadSettings(){
       // One-time migration: the previous default master volume was 50%. If the player never
       // moved it away from that exact default, adopt the new, fuller 68% mix automatically.
       const version=Number(raw._version)||1;if(version<2&&Math.abs(out.volume-.50)<.0001)out.volume=.68;if(version<3){if(Math.abs(out.maxSpeedKmh-240)<.0001)out.maxSpeedKmh=300;if(Math.abs(out.autopilotSpeedKmh-210)<.0001)out.autopilotSpeedKmh=300;}if(version<4&&out.autopilotSpeedKmh<0){out.autopilotUnlimited=true;out.autopilotSpeedKmh=AUTOPILOT_SAFE_CAP_KMH;}if(version<6){out.showClock=false;out.showDistance=true;}out.autopilotSpeedKmh=clamp(out.autopilotSpeedKmh,0,AUTOPILOT_SAFE_CAP_KMH);
+      // Fullscreen is intentionally not restored from localStorage: browsers only allow entry from
+      // a fresh user gesture. The checkbox mirrors the actual fullscreen state for this session.
+      out.fullscreen=false;
     }
   }catch(_){}
   return out;
@@ -710,13 +725,13 @@ void main(){
 class Renderer{
   constructor(gl){
     this.gl=gl;this.scene=new GLProgram(gl,VS_SCENE,FS_SCENE);this.sky=new GLProgram(gl,VS_SKY,FS_SKY);this.skyVao=gl.createVertexArray();
-    this.identity=M4.create();this.normalMat=new Float32Array(9);this.drawCalls=0;this.maxDpr=IS_COARSE_POINTER?1.25:1.5;
+    this.identity=M4.create();this.normalMat=new Float32Array(9);this.drawCalls=0;this.maxDpr=IS_COARSE_POINTER?1.25:1.5;this.renderScale=1;
     gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.cullFace(gl.BACK);gl.frontFace(gl.CCW);
   }
   resize(){
     const touchCoarse=matchMedia('(hover:none) and (pointer:coarse)').matches,forcedLandscape=touchCoarse&&innerHeight>innerWidth;
     const cssW=forcedLandscape?innerHeight:innerWidth,cssH=forcedLandscape?innerWidth:innerHeight;
-    const dpr=Math.min(window.devicePixelRatio||1,this.maxDpr), w=Math.max(2,Math.floor(cssW*dpr)), h=Math.max(2,Math.floor(cssH*dpr));
+    const dpr=Math.min(window.devicePixelRatio||1,this.maxDpr)*clamp(this.renderScale,.50,1.50), w=Math.max(2,Math.floor(cssW*dpr)), h=Math.max(2,Math.floor(cssH*dpr));
     if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;} this.gl.viewport(0,0,w,h);
   }
   begin(camera,env,vehicle=null){
@@ -1432,6 +1447,10 @@ class Vehicle{
     const onRoad=nearest.roadDist<5.25,off=nearest.roadDist;
     const manualThrottle=input.down('KeyW','ArrowUp')?1:0,manualBrake=input.down('KeyS','ArrowDown')?1:0,manualHand=input.down('Space');
     const throttle=autoControl?clamp(autoControl.throttle||0,0,1):(autoForward||manualThrottle?1:0),brake=autoControl?clamp(autoControl.brake||0,0,1):manualBrake,hand=autoControl?!!autoControl.handbrake:manualHand;
+    // One-pedal regeneration is a manual-driving aid only. Autopilot owns its own braking envelope,
+    // and Auto Forward should keep coasting/throttling exactly as before. Regen tapers out near zero
+    // speed so releasing W never snaps the car to a stop.
+    const onePedal=(!autoControl&&!autoForward&&!manualThrottle&&!manualBrake&&!manualHand&&this.speed>.35)?clamp(this.world.settings.onePedal,0,1)*smoothstep(.35,4.5,this.speed):0;
     let accel=0;
     const constantAccel=!this.world.settings.speedAccelFade;
     if(throttle>0){
@@ -1444,6 +1463,7 @@ class Vehicle{
       }else accel+=12.2*throttle;
     }
     if(brake>0){if(this.speed>1)accel-=16.5*brake;else accel-=6.4*brake;}
+    if(onePedal>0)accel-=3.6*onePedal;
     // Off-road should feel rougher, not like an invisible speed limiter. Keep only a modest
     // rolling-resistance increase so the player can still carry (and regain) high speed on grass.
     const offroadDrag=this.world.settings.offroadDrag,baseDrag=onRoad?.34:(offroadDrag?.58:.34),speedDrag=onRoad?.019:(offroadDrag?.023:.019),drag=baseDrag+Math.abs(this.speed)*speedDrag;
@@ -1485,8 +1505,8 @@ class Vehicle{
     if(!this.world.settings.noCollision){const hit=this.world.collideVehicle(this.x,this.z,1.05);if(hit){this.x+=hit.nx*hit.penetration;this.z+=hit.nz*hit.penetration;this.speed*=.32;this.heaveVel*=.55;}}
     nearest=this.world.nearestRoad(this.x,this.z);if(nearest.roadDist>168){this.reset();nearest=this.world.nearestRoad(this.x,this.z);}
     const finalOnRoad=nearest.roadDist<5.25;this.updateGroundEffects(dt,finalOnRoad,travelSpeed,brake,hand,yawRate);
-    this.wheelSpin=(this.wheelSpin+travelSpeed/this.wheelRadius*dt)%TAU;this.brakeLight=expLerp(this.brakeLight,(brake>.05||hand)?1:0,12,dt);
-    this.audioOnRoad=onRoad;this.audioThrottle=throttle;this.audioBrake=brake;this.audioHandbrake=hand;this.audioSteer=Math.abs(targetSteerInput);this.audioYawRate=Math.abs(yawRate);
+    this.wheelSpin=(this.wheelSpin+travelSpeed/this.wheelRadius*dt)%TAU;this.brakeLight=expLerp(this.brakeLight,(brake>.05||hand||onePedal>.34)?1:0,12,dt);
+    this.audioOnRoad=onRoad;this.audioThrottle=throttle;this.audioBrake=Math.max(brake,onePedal*.55);this.audioHandbrake=hand;this.audioSteer=Math.abs(targetSteerInput);this.audioYawRate=Math.abs(yawRate);
     if(input.take('KeyR'))this.reset();
   }
   renderDirectionalShadow(renderer,env){
@@ -1977,7 +1997,11 @@ class AdaptiveQuality{
     if(!this.game.settings.autoQuality)return;
     this.acc+=Math.min(rawDt,.1);this.frames++;this.cooldown=Math.max(0,this.cooldown-rawDt);if(this.acc<3)return;
     const avg=this.acc/Math.max(1,this.frames);this.acc=0;this.frames=0;
-    if(avg>.0195){this.badWindows++;this.goodSeconds=0;}else if(avg<.0169){this.badWindows=0;this.goodSeconds+=3;}else{this.badWindows=0;this.goodSeconds=Math.max(0,this.goodSeconds-1);}
+    // An explicit 30 FPS cap must not look like a permanently overloaded GPU. For caps below 60,
+    // judge quality relative to that requested cadence; 60/90/120 remain bounded by the display's
+    // own rAF rate, so they use the normal 60 Hz quality thresholds.
+    const cap=this.game.settings.frameLimit||0,targetDt=(cap>0&&cap<60)?1/cap:1/60,badDt=targetDt*1.17,goodDt=targetDt*1.014;
+    if(avg>badDt){this.badWindows++;this.goodSeconds=0;}else if(avg<goodDt){this.badWindows=0;this.goodSeconds+=3;}else{this.badWindows=0;this.goodSeconds=Math.max(0,this.goodSeconds-1);}
     if(this.badWindows>=2&&this.cooldown<=0&&this.level<6){this.level++;this.badWindows=0;this.cooldown=7;this.apply();}
     else if(this.goodSeconds>=15&&this.cooldown<=0&&this.level>0){this.level--;this.goodSeconds=0;this.cooldown=12;this.apply();}
   }
@@ -2027,7 +2051,7 @@ class UI{
 // ------------------------------------------------------------
 class Game{
   constructor(gl,seed){
-    this.gl=gl;this.seed=seed>>>0;this.settings=loadSettings();this.renderer=new Renderer(gl);this.input=new Input();this.world=new ChunkManager(gl,seed,this.settings);this.vehicle=new Vehicle(gl,this.world);this.loadVehiclePreferences();this.autopilot=new Autopilot(this.world,gl);this.camera=new Camera();this.audio=new AudioManager(this.settings);this.quality=new AdaptiveQuality(this);this.ui=new UI(this);this.initWindFx();this.envIndex=0;this.envFromIndex=0;this.envTransitionStart=-1;this.envTransitionDuration=1450;this.envScratch={name:'',skyTop:new Float32Array(3),skyBottom:new Float32Array(3),fogColor:new Float32Array(3),lightDir:new Float32Array(3),lightColor:new Float32Array(3),sunColor:new Float32Array(3),sunStrength:0,ambient:0,diffuse:0,fogNear:0,fogFar:0,nightFactor:0,duskFactor:0};this.autoForward=false;this.paused=false;this.pausePreview=false;this.started=false;document.body.classList.add('garage');this.last=performance.now();this.running=true;this.rafId=0;this.frameBound=t=>this.frame(t);
+    this.gl=gl;this.seed=seed>>>0;this.settings=loadSettings();this.renderer=new Renderer(gl);this.renderer.renderScale=clamp(this.settings.renderScale,.50,1.50);this.input=new Input();this.world=new ChunkManager(gl,seed,this.settings);this.vehicle=new Vehicle(gl,this.world);this.loadVehiclePreferences();this.autopilot=new Autopilot(this.world,gl);this.camera=new Camera();this.audio=new AudioManager(this.settings);this.quality=new AdaptiveQuality(this);this.ui=new UI(this);this.initWindFx();this.envIndex=0;this.envFromIndex=0;this.envTransitionStart=-1;this.envTransitionDuration=1450;this.envScratch={name:'',skyTop:new Float32Array(3),skyBottom:new Float32Array(3),fogColor:new Float32Array(3),lightDir:new Float32Array(3),lightColor:new Float32Array(3),sunColor:new Float32Array(3),sunStrength:0,ambient:0,diffuse:0,fogNear:0,fogFar:0,nightFactor:0,duskFactor:0};this.autoForward=false;this.paused=false;this.pausePreview=false;this.started=false;document.body.classList.add('garage');document.body.classList.toggle('clean-ui',!!this.settings.cleanUi);this.last=performance.now();this.lastPresented=0;this.running=true;this.rafId=0;this.frameBound=t=>this.frame(t);
     if($seedInput){$seedInput.value=String(this.seed);$seedInput.title=`当前世界种子 ${this.seed}`;}
     this.bindUI();this.initConfigPanel();this.camera.updateGarage(.016,this.vehicle);this.requestFrame();
   }
@@ -2063,6 +2087,10 @@ class Game{
       if(this.paused&&(e.code==='KeyP'||e.code==='Escape')){e.preventDefault();e.stopPropagation();this.input.clearCode(e.code);this.togglePause(false);}
     },{passive:false});
     document.addEventListener('visibilitychange',()=>{if(document.hidden&&!this.paused)this.togglePause(true);});
+    document.addEventListener('fullscreenchange',()=>{
+      const active=!!document.fullscreenElement;if(this.settings.fullscreen===active)return;
+      this.settings.fullscreen=active;this.syncSettingControl('fullscreen');saveSettings(this.settings);this.updateSettingReset('fullscreen');this.restoreCanvasFocus();
+    });
   }
   startDriving(){
     if(this.started)return;
@@ -2114,7 +2142,7 @@ class Game{
   }
   initConfigPanel(){
     if(!$configPanel)return;
-    const percentKeys=new Set(['acceleration','steering','grip','roadHills','roadCurves','vegetation','fovEffect','cameraSpeed','cameraShake','speedLines','fogDensity','motorVolume','windVolume','tireVolume']);
+    const percentKeys=new Set(['acceleration','steering','grip','onePedal','roadHills','roadCurves','vegetation','fovEffect','cameraSpeed','cameraShake','speedLines','fogDensity','renderScale','motorVolume','windVolume','tireVolume']);
     const restoreCanvasFocus=()=>this.restoreCanvasFocus();
     const tabs=[...$configPanel.querySelectorAll('.configTab')],pages=[...$configPanel.querySelectorAll('.configPage')];
     const selectTab=name=>{for(const tab of tabs){const active=tab.dataset.configTab===name;tab.classList.toggle('active',active);tab.setAttribute('aria-selected',String(active));}for(const page of pages)page.classList.toggle('active',page.dataset.configPage===name);};
@@ -2128,10 +2156,11 @@ class Game{
       const key=input.dataset.setting;
       if(key==='volume')input.value=String(Math.round(this.settings.volume*100));
       else if(key==='baseFov')input.value=String(Math.round(this.settings.baseFov));
+      else if(key==='frameLimit')input.value=String(Math.round(this.settings.frameLimit||0));
       else if(key==='maxSpeedKmh')input.value=String(this.settings.maxSpeedKmh<0?MAX_SPEED_INFINITY_SLIDER:Math.round(this.settings.maxSpeedKmh));
       else if(key==='autopilotSpeedKmh'){input.value=String(Math.round(clamp(this.settings.autopilotSpeedKmh,0,AUTOPILOT_SAFE_CAP_KMH)));input.disabled=!!this.settings.autopilotUnlimited;}
       else if(percentKeys.has(key))input.value=String(Math.round(this.settings[key]*100));
-      const refresh=()=>{const raw=Number(input.value);if(key==='volume')this.settings.volume=raw/100;else if(key==='baseFov')this.settings.baseFov=raw;else if(key==='maxSpeedKmh')this.settings.maxSpeedKmh=raw>=MAX_SPEED_INFINITY_SLIDER?-1:raw;else if(key==='autopilotSpeedKmh')this.settings.autopilotSpeedKmh=clamp(raw,0,AUTOPILOT_SAFE_CAP_KMH);else this.settings[key]=raw/100;this.applySetting(key);this.refreshConfigValue(key);saveSettings(this.settings);this.updateSettingReset(key);};
+      const refresh=()=>{const raw=Number(input.value);if(key==='volume')this.settings.volume=raw/100;else if(key==='baseFov')this.settings.baseFov=raw;else if(key==='frameLimit')this.settings.frameLimit=clamp(Math.round(raw/30)*30,0,120);else if(key==='maxSpeedKmh')this.settings.maxSpeedKmh=raw>=MAX_SPEED_INFINITY_SLIDER?-1:raw;else if(key==='autopilotSpeedKmh')this.settings.autopilotSpeedKmh=clamp(raw,0,AUTOPILOT_SAFE_CAP_KMH);else this.settings[key]=raw/100;this.applySetting(key);this.refreshConfigValue(key);saveSettings(this.settings);this.updateSettingReset(key);};
       input.addEventListener('input',refresh);
       // Let the browser keep its native range behavior. Refocus the game only after the gesture
       // finishes so sliders remain draggable while held driving keys stay in Input.keys.
@@ -2160,7 +2189,7 @@ class Game{
       // checked/change action on some browsers. Focus returns to the canvas after the change.
       input.addEventListener('change',()=>{this.settings[key]=invert?!input.checked:input.checked;this.applySetting(key);saveSettings(this.settings);this.updateSettingReset(key);restoreCanvasFocus();});
     }
-    this.installSettingResetButtons();this.applySetting('autopilotUnlimited');this.applySetting('showClock');this.applySetting('showDistance');this.updateAllSettingResets();this.updateQualityState();
+    this.installSettingResetButtons();this.applySetting('autopilotUnlimited');this.applySetting('showClock');this.applySetting('showDistance');this.applySetting('renderScale');this.applySetting('cleanUi');this.updateAllSettingResets();this.updateQualityState();
   }
   settingIsDefault(key){const a=this.settings[key],b=DEFAULT_SETTINGS[key];return typeof b==='number'?Math.abs(a-b)<1e-6:a===b;}
   installSettingResetButtons(){
@@ -2170,7 +2199,7 @@ class Game{
   }
   syncSettingControl(key){
     const range=$configPanel?.querySelector(`.configRange[data-setting="${key}"]`);
-    if(range){if(key==='volume')range.value=String(Math.round(this.settings.volume*100));else if(key==='baseFov')range.value=String(Math.round(this.settings.baseFov));else if(key==='maxSpeedKmh')range.value=String(this.settings.maxSpeedKmh<0?MAX_SPEED_INFINITY_SLIDER:Math.round(this.settings.maxSpeedKmh));else if(key==='autopilotSpeedKmh'){range.value=String(Math.round(clamp(this.settings.autopilotSpeedKmh,0,AUTOPILOT_SAFE_CAP_KMH)));range.disabled=!!this.settings.autopilotUnlimited;}else range.value=String(Math.round(this.settings[key]*100));this.refreshConfigValue(key);}
+    if(range){if(key==='volume')range.value=String(Math.round(this.settings.volume*100));else if(key==='baseFov')range.value=String(Math.round(this.settings.baseFov));else if(key==='frameLimit')range.value=String(Math.round(this.settings.frameLimit||0));else if(key==='maxSpeedKmh')range.value=String(this.settings.maxSpeedKmh<0?MAX_SPEED_INFINITY_SLIDER:Math.round(this.settings.maxSpeedKmh));else if(key==='autopilotSpeedKmh'){range.value=String(Math.round(clamp(this.settings.autopilotSpeedKmh,0,AUTOPILOT_SAFE_CAP_KMH)));range.disabled=!!this.settings.autopilotUnlimited;}else range.value=String(Math.round(this.settings[key]*100));this.refreshConfigValue(key);}
     const check=$configPanel?.querySelector(`.configCheck[data-setting="${key}"]`);if(check){const invert=check.dataset.invert==='true';check.checked=invert?!this.settings[key]:!!this.settings[key];}
   }
   resetOneSetting(key){if(!(key in DEFAULT_SETTINGS))return;this.settings[key]=DEFAULT_SETTINGS[key];this.syncSettingControl(key);this.applySetting(key);saveSettings(this.settings);this.updateSettingReset(key);}
@@ -2184,10 +2213,10 @@ class Game{
       const key=input.dataset.setting;if(key==='volume')input.value=String(Math.round(this.settings.volume*100));else if(key==='baseFov')input.value=String(Math.round(this.settings.baseFov));else if(key==='maxSpeedKmh')input.value=String(Math.round(this.settings.maxSpeedKmh));else if(key==='autopilotSpeedKmh'){input.value=String(Math.round(clamp(this.settings.autopilotSpeedKmh,0,AUTOPILOT_SAFE_CAP_KMH)));input.disabled=!!this.settings.autopilotUnlimited;}else if(percentKeys.has(key))input.value=String(Math.round(this.settings[key]*100));this.refreshConfigValue(key);
     }
     for(const input of $configPanel?.querySelectorAll('.configCheck')||[]){const key=input.dataset.setting,invert=input.dataset.invert==='true';input.checked=invert?!this.settings[key]:!!this.settings[key];}
-    this.audio.setVolume(this.settings.volume);if($fpsReadout)$fpsReadout.classList.toggle('show',!!this.settings.showFps);this.applySetting('showClock');this.applySetting('showDistance');this.applySetting('autopilotUnlimited');
+    this.audio.setVolume(this.settings.volume);if($fpsReadout)$fpsReadout.classList.toggle('show',!!this.settings.showFps);this.applySetting('showClock');this.applySetting('showDistance');this.applySetting('renderScale');this.applySetting('frameLimit');this.applySetting('cleanUi');this.applySetting('fullscreen');this.applySetting('autopilotUnlimited');
     clearTimeout(this.vegetationConfigTimer);this.world.refreshEnvironment();this.quality.badWindows=0;this.quality.goodSeconds=0;this.quality.cooldown=0;this.quality.level=0;this.renderer.maxDpr=this.quality.dpr[0];this.world.setQuality(0);this.updateAllSettingResets();this.updateQualityState();this.restoreCanvasFocus();
   }
-  refreshConfigValue(key){const el=$configPanel?.querySelector(`[data-value-for="${key}"]`);if(!el)return;if(key==='volume')el.textContent=`${Math.round(this.settings.volume*100)}%`;else if(key==='baseFov')el.textContent=`${Math.round(this.settings.baseFov)}°`;else if(key==='maxSpeedKmh')el.textContent=this.settings.maxSpeedKmh<0?'∞':`${Math.round(this.settings.maxSpeedKmh)}`;else if(key==='autopilotSpeedKmh')el.textContent=this.settings.autopilotUnlimited?'∞':`${Math.round(clamp(this.settings.autopilotSpeedKmh,0,AUTOPILOT_SAFE_CAP_KMH))}`;else el.textContent=`${Math.round(this.settings[key]*100)}%`;}
+  refreshConfigValue(key){const el=$configPanel?.querySelector(`[data-value-for="${key}"]`);if(!el)return;if(key==='volume')el.textContent=`${Math.round(this.settings.volume*100)}%`;else if(key==='baseFov')el.textContent=`${Math.round(this.settings.baseFov)}°`;else if(key==='frameLimit')el.textContent=this.settings.frameLimit>0?`${Math.round(this.settings.frameLimit)} FPS`:'跟随屏幕';else if(key==='maxSpeedKmh')el.textContent=this.settings.maxSpeedKmh<0?'∞':`${Math.round(this.settings.maxSpeedKmh)}`;else if(key==='autopilotSpeedKmh')el.textContent=this.settings.autopilotUnlimited?'∞':`${Math.round(clamp(this.settings.autopilotSpeedKmh,0,AUTOPILOT_SAFE_CAP_KMH))}`;else el.textContent=`${Math.round(this.settings[key]*100)}%`;}
   applySetting(key){
     if(key==='volume')this.audio.setVolume(this.settings.volume);
     if(key==='vegetation'){clearTimeout(this.vegetationConfigTimer);this.vegetationConfigTimer=setTimeout(()=>this.world.refreshEnvironment(),120);}
@@ -2195,7 +2224,22 @@ class Game{
     if(key==='showFps'&&$fpsReadout)$fpsReadout.classList.toggle('show',!!this.settings.showFps);
     if(key==='showClock'&&$clock)$clock.classList.toggle('hidden',!this.settings.showClock);
     if(key==='showDistance'&&$distance)$distance.classList.toggle('hidden',!this.settings.showDistance);
+    if(key==='renderScale')this.renderer.renderScale=clamp(this.settings.renderScale,.50,1.50);
+    if(key==='frameLimit')this.lastPresented=0;
+    if(key==='cleanUi'){document.body.classList.toggle('clean-ui',!!this.settings.cleanUi);if(this.settings.cleanUi){this.ui?.toggleConfigPanel(false);this.ui?.toggleMenu(false);this.ui?.toggleVehiclePanel(false);this.ui?.toggleAbout(false);}}
+    if(key==='fullscreen')this.setFullscreen(!!this.settings.fullscreen);
     if(key==='autopilotUnlimited'){const r=$configPanel?.querySelector('.configRange[data-setting="autopilotSpeedKmh"]');if(r)r.disabled=!!this.settings.autopilotUnlimited;this.refreshConfigValue('autopilotSpeedKmh');this.updateSettingReset('autopilotSpeedKmh');}
+  }
+  async setFullscreen(want){
+    const active=!!document.fullscreenElement;if(want===active)return;
+    try{
+      if(want){const fn=document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen;if(fn)await fn.call(document.documentElement);else throw new Error('Fullscreen API unavailable');}
+      else{const fn=document.exitFullscreen||document.webkitExitFullscreen;if(fn)await fn.call(document);}
+    }catch(_){
+      // Entry may be rejected without a transient user gesture (e.g. restored settings). Mirror the
+      // real browser state instead of leaving a lying checkbox behind.
+      this.settings.fullscreen=!!document.fullscreenElement;this.syncSettingControl('fullscreen');saveSettings(this.settings);this.updateSettingReset('fullscreen');
+    }
   }
   loadVehiclePreferences(){try{const si=Number(localStorage.getItem('driftway-vehicle-style')),pi=Number(localStorage.getItem('driftway-vehicle-paint'));if(Number.isInteger(si))this.vehicle.setStyle(si);if(Number.isInteger(pi))this.vehicle.setPaint(pi);}catch(_){}}
   setVehicleStyle(i){this.vehicle.setStyle(i);try{localStorage.setItem('driftway-vehicle-style',String(this.vehicle.styleIndex));}catch(_){}}
@@ -2249,10 +2293,14 @@ class Game{
     if($speed){const glow=8+boost*20*sense;$speed.style.textShadow=`0 2px 12px rgba(0,0,0,.48),0 0 ${glow.toFixed(0)}px rgba(225,244,255,${clamp(.06+boost*.30*sense,0,.42).toFixed(2)})`; }
   }
   commands(){
-    if(this.input.take('KeyC'))this.camera.cycle();if(this.input.take('KeyT'))this.toggleAutoForward();if(this.input.take('KeyG'))this.toggleAutopilot();if(this.input.take('KeyH'))this.ui.toggleHelp();if(this.input.take('KeyM'))this.audio.toggle();if(this.input.take('F2'))this.ui.toggleDebug();if(this.input.take('KeyP')||this.input.take('Escape'))this.togglePause();
+    if(this.input.take('KeyC'))this.camera.cycle();if(this.input.take('KeyT'))this.toggleAutoForward();if(this.input.take('KeyG'))this.toggleAutopilot();if(this.input.take('KeyH'))this.ui.toggleHelp();if(this.input.take('KeyM'))this.audio.toggle();if(this.input.take('KeyU')){this.settings.cleanUi=!this.settings.cleanUi;this.applySetting('cleanUi');this.syncSettingControl('cleanUi');saveSettings(this.settings);this.updateSettingReset('cleanUi');}if(this.input.take('F2'))this.ui.toggleDebug();if(this.input.take('KeyP')||this.input.take('Escape'))this.togglePause();
   }
   frame(now){
-    this.rafId=0;if(!this.running)return;const rawDt=(now-this.last)/1000,simDt=Math.min(rawDt,.0833);this.last=now;
+    this.rafId=0;if(!this.running)return;
+    const frameLimit=clamp(this.settings.frameLimit||0,0,120);
+    if(frameLimit>0&&this.lastPresented>0&&now-this.lastPresented<(1000/frameLimit)-.35){this.requestFrame();return;}
+    this.lastPresented=now;
+    const rawDt=(now-this.last)/1000,simDt=Math.min(rawDt,.0833);this.last=now;
     if(!this.started){
       this.camera.updateGarage(Math.min(simDt,.05),this.vehicle);const env=this.activeEnvironment();this.renderer.begin(this.camera,env,this.vehicle);this.world.render(this.renderer,this.camera,env);this.vehicle.render(this.renderer,env);this.ui.update(simDt);this.input.endFrame();this.requestFrame();return;
     }
