@@ -47,6 +47,15 @@
   .configTab.active{background:rgba(255,255,255,.10);color:#fff}
   .configPage{display:none}.configPage.active{display:block}
   .configSectionTitle{font-size:9px;letter-spacing:.12em;color:rgba(247,251,255,.46);margin:5px 1px 3px;text-transform:uppercase}
+  /* Graphics settings are split into lightweight collapsible sections so the page does not become
+     a wall of sliders. These are separators, not cards: no extra box chrome around passive info. */
+  .configGroup{margin:0;border-bottom:1px solid rgba(255,255,255,.075)}
+  .configGroup:first-child{border-top:1px solid rgba(255,255,255,.075)}
+  .configGroupSummary{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:31px;padding:5px 1px;list-style:none;cursor:pointer;user-select:none;-webkit-user-select:none;color:rgba(247,251,255,.78);font-size:10.5px;font-weight:650;letter-spacing:.02em}
+  .configGroupSummary::-webkit-details-marker{display:none}.configGroupSummary::marker{content:""}
+  .configGroupSummary::after{content:"›";font:700 15px/1 system-ui;color:rgba(247,251,255,.42);transform:rotate(0deg);transition:transform .16s ease,color .16s ease}
+  .configGroup[open]>.configGroupSummary::after{transform:rotate(90deg);color:rgba(247,251,255,.72)}
+  .configGroupSummary:hover{color:#fff}.configGroupBody{padding:0 0 6px}
   #configPanel .configNote{font-size:10px;line-height:1.5;color:rgba(247,251,255,.54);margin:4px 1px 9px}
   .configRow{display:grid;grid-template-columns:90px 1fr 48px 20px;align-items:center;gap:7px;min-height:31px}
   .configLabel{font-size:11px;color:rgba(247,251,255,.83);white-space:nowrap}
@@ -60,8 +69,8 @@
   .configToggleGrid{display:grid;grid-template-columns:1fr 1fr;gap:3px 9px;margin:1px 0 7px}
   .configToggleRow{display:grid;grid-template-columns:1fr 15px 18px;align-items:center;gap:6px;min-height:29px;font-size:10.5px;color:rgba(247,251,255,.82);cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none}
   .configCheck{width:15px;height:15px;min-width:15px;margin:0;accent-color:#d7eee5;cursor:pointer;touch-action:none}
-  .configItemReset{width:18px;height:18px;min-width:18px;min-height:18px;padding:0;border:0;border-radius:50%;display:grid;place-items:center;background:transparent;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;color:rgba(247,251,255,.50);font:700 13px/1 system-ui;opacity:0;pointer-events:none;transition:opacity .14s ease,background .14s ease,color .14s ease}
-  .configItemReset.show{opacity:1;pointer-events:auto}.configItemReset:hover{background:rgba(255,255,255,.10);color:#fff}
+  .configItemReset{width:18px;height:18px;min-width:18px;min-height:18px;padding:0;border:0;border-radius:50%;display:grid;place-items:center;background:transparent;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;color:rgba(247,251,255,.50);font:700 13px/1 system-ui;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .14s ease,background .14s ease,color .14s ease}
+  .configItemReset.show{opacity:1;visibility:visible;pointer-events:auto}.configItemReset:hover{background:rgba(255,255,255,.10);color:#fff}
   .configToggleRow .configItemReset{justify-self:end}.configToggleRow.wide{grid-column:1/-1}.configRange:disabled{opacity:.35;cursor:not-allowed}
   .qualityState{font-size:8.5px;color:rgba(247,251,255,.46);margin-left:3px}
   .configResetBtn{width:100%;min-height:32px;margin-top:4px;padding:6px 9px;border:1px solid rgba(255,255,255,.10);border-radius:9px;background:rgba(255,255,255,.045);box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;font-size:10.5px;color:rgba(247,251,255,.78)}
@@ -183,6 +192,25 @@
   body.garage #stats,body.garage #topRight,body.garage #help,body.garage #touchControls,body.garage #hint,body.garage #regionToast{opacity:0!important;pointer-events:none!important}
   body.garage #clock,body.garage #fpsReadout{opacity:.55}
   @media (hover:none) and (pointer:coarse){#garageOverlay{padding:18px 22px}#garageCard{padding:14px 16px;max-width:330px}#garageSub{font-size:9px}#garageActions button{min-height:34px;padding:7px 12px;font-size:10px}#garageTip{display:none}}
+  /* Accessibility / touch maintenance: keep coarse-pointer targets finger-sized without changing the compact desktop visual language. */
+  @media (hover:none) and (pointer:coarse){
+    #configBtn,#menuBtn,#autopilotBtn{min-width:44px!important;min-height:44px!important;padding:8px 9px!important}
+    #controlMenu .menuAction{min-height:44px!important;font-size:12px!important}
+    #configPanel{width:min(340px,calc(100% - 16px))!important}
+    .configTabs{gap:4px}.configTab{height:44px!important;min-height:44px!important;font-size:12px!important}
+    .configRow{grid-template-columns:92px 1fr 50px 44px!important;gap:6px!important;min-height:44px!important}
+    .configLabel{font-size:12px!important}.configValue{font-size:10.5px!important}.configRange{height:44px!important}
+    .configRange::-webkit-slider-thumb{width:20px;height:20px;margin-top:-9px}.configRange::-moz-range-thumb{width:20px;height:20px}
+    .configToggleRow{grid-template-columns:1fr 22px 44px!important;min-height:44px!important;font-size:12px!important}
+    .configCheck{width:20px!important;height:20px!important;min-width:20px!important}
+    .configItemReset{width:44px!important;height:44px!important;min-width:44px!important;min-height:44px!important}
+    #garageActions button{min-height:44px!important;font-size:12px!important}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .windStreak{animation:none!important}#speedFx,#windFx{display:none!important}
+    #configPanel.show,#controlMenu.show,#aboutPanel.show{animation:none!important}
+    .menuMorph i,.configMorph i,.actionSvg *,.configGroupSummary::after,.configItemReset,#hint,#regionToast,#garageOverlay,#help .helpSummary,#help .helpDetails{transition:none!important}
+  }
   /* Portrait phones still render the game as a landscape surface. No orientation lock or sensor takeover. */
   @media (hover:none) and (pointer:coarse) and (orientation:portrait){
     canvas,#ui{position:fixed;inset:auto;left:50%;top:50%;width:100vh;height:100vw;transform:translate(-50%,-50%) rotate(90deg);transform-origin:center center}
@@ -232,37 +260,60 @@
       <div class="configDivider"></div>
       <div class="configRow"><span class="configLabel">道路起伏</span><input class="configRange" type="range" min="0" max="500" step="1" data-setting="roadHills"><span class="configValue" data-value-for="roadHills"></span></div>
       <div class="configRow"><span class="configLabel">道路弯折</span><input class="configRange" type="range" min="0" max="500" step="1" data-setting="roadCurves"><span class="configValue" data-value-for="roadCurves"></span></div>
-      <div class="configRow"><span class="configLabel">植被丰富度</span><input class="configRange" type="range" min="0" max="200" step="1" data-setting="vegetation"><span class="configValue" data-value-for="vegetation"></span></div>
       <div class="configNote">道路起伏 / 弯折只影响之后生成的新路段。</div>
     </div>
 
     <div class="configPage" data-config-page="graphics">
-      <div class="configRow" title="调整所有驾驶视角的基础视野角"><span class="configLabel">基础 FOV</span><input class="configRange" type="range" min="50" max="75" step="1" data-setting="baseFov"><span class="configValue" data-value-for="baseFov"></span></div>
-      <div class="configRow" title="只控制随速度增加的 FOV 扩张，不改变基础视野角"><span class="configLabel">高速 FOV</span><input class="configRange" type="range" min="0" max="160" step="1" data-setting="fovEffect"><span class="configValue" data-value-for="fovEffect"></span></div>
-      <div class="configRow" title="控制高速时镜头距离、高度和前视位置的变化"><span class="configLabel">镜头速度感</span><input class="configRange" type="range" min="0" max="180" step="1" data-setting="cameraSpeed"><span class="configValue" data-value-for="cameraSpeed"></span></div>
-      <div class="configRow"><span class="configLabel">镜头震动</span><input class="configRange" type="range" min="0" max="200" step="1" data-setting="cameraShake"><span class="configValue" data-value-for="cameraShake"></span></div>
-      <div class="configRow"><span class="configLabel">速度线强度</span><input class="configRange" type="range" min="0" max="200" step="1" data-setting="speedLines"><span class="configValue" data-value-for="speedLines"></span></div>
-      <div class="configRow"><span class="configLabel">雾浓度</span><input class="configRange" type="range" min="0" max="200" step="1" data-setting="fogDensity"><span class="configValue" data-value-for="fogDensity"></span></div>
-      <div class="configDivider"></div>
-      <div class="configToggleGrid">
-        <label class="configToggleRow wide" title="允许天气系统随机进入小雨 / 中雨，再自然停雨；不是强制一直下"><span>概率下雨</span><input class="configCheck" type="checkbox" data-setting="rainEnabled"></label>
-        <label class="configToggleRow wide" title="让晴天、黄昏与夜晚按周期自然过渡"><span>自然昼夜</span><input class="configCheck" type="checkbox" data-setting="dayNightCycle"></label>
-        <label class="configToggleRow wide" title="在远离道路的位置生成塔楼、灯塔、热气球等视觉地标"><span>远景地标</span><input class="configCheck" type="checkbox" data-setting="landmarks"></label>
-        <label class="configToggleRow wide" title="偶尔让道路穿过小城镇、郊区和大都市边缘"><span>城镇 / 都市</span><input class="configCheck" type="checkbox" data-setting="settlements"></label>
-      </div>
-      <div class="configRow" title="一次降雨可能达到的最大强度"><span class="configLabel">最大雨势</span><input class="configRange" type="range" min="10" max="100" step="5" data-setting="rainIntensity"><span class="configValue" data-value-for="rainIntensity"></span></div>
-      <div class="configRow" title="越高越容易在天气检查时进入降雨；仍会有完整的晴天间隔"><span class="configLabel">降雨频率</span><input class="configRange" type="range" min="10" max="100" step="5" data-setting="rainChance"><span class="configValue" data-value-for="rainChance"></span></div>
-      <div class="configRow" title="完整昼夜循环所需的现实时间"><span class="configLabel">昼夜周期</span><input class="configRange" type="range" min="2" max="30" step="1" data-setting="dayNightMinutes"><span class="configValue" data-value-for="dayNightMinutes"></span></div>
-      <div class="configRow" title="改变远景地标出现频率"><span class="configLabel">地标丰富度</span><input class="configRange" type="range" min="25" max="200" step="5" data-setting="landmarkDensity"><span class="configValue" data-value-for="landmarkDensity"></span></div>
-      <div class="configRow" title="改变小城镇 / 大都市路段出现频率，不改变道路生成"><span class="configLabel">城镇丰富度</span><input class="configRange" type="range" min="25" max="200" step="5" data-setting="settlementDensity"><span class="configValue" data-value-for="settlementDensity"></span></div>
-      <div class="configNote">概率下雨默认开启；勾选表示“允许随机下雨”，不会持续一直下。</div>
-      <div class="configDivider"></div>
-      <div class="configRow" title="独立于自动画质的最终像素比例；降低可明显减轻 GPU 压力"><span class="configLabel">渲染比例</span><input class="configRange" type="range" min="50" max="150" step="5" data-setting="renderScale"><span class="configValue" data-value-for="renderScale"></span></div>
-      <div class="configRow" title="0 表示跟随浏览器 / 屏幕刷新率"><span class="configLabel">帧率上限</span><input class="configRange" type="range" min="0" max="120" step="30" data-setting="frameLimit"><span class="configValue" data-value-for="frameLimit"></span></div>
-      <div class="configDivider"></div>
-      <div class="configToggleGrid">
-        <label class="configToggleRow wide"><span>自动画质 <span id="qualityState" class="qualityState">Q0</span></span><input class="configCheck" type="checkbox" data-setting="autoQuality"></label>
-      </div>
+      <details class="configGroup" open>
+        <summary class="configGroupSummary">镜头与速度感</summary>
+        <div class="configGroupBody">
+          <div class="configRow" title="调整所有驾驶视角的基础视野角"><span class="configLabel">基础 FOV</span><input class="configRange" type="range" min="50" max="75" step="1" data-setting="baseFov"><span class="configValue" data-value-for="baseFov"></span></div>
+          <div class="configRow" title="只控制随速度增加的 FOV 扩张，不改变基础视野角"><span class="configLabel">高速 FOV</span><input class="configRange" type="range" min="0" max="160" step="1" data-setting="fovEffect"><span class="configValue" data-value-for="fovEffect"></span></div>
+          <div class="configRow" title="控制高速时镜头距离、高度和前视位置的变化"><span class="configLabel">镜头速度感</span><input class="configRange" type="range" min="0" max="180" step="1" data-setting="cameraSpeed"><span class="configValue" data-value-for="cameraSpeed"></span></div>
+          <div class="configRow"><span class="configLabel">镜头震动</span><input class="configRange" type="range" min="0" max="200" step="1" data-setting="cameraShake"><span class="configValue" data-value-for="cameraShake"></span></div>
+          <div class="configRow"><span class="configLabel">速度线强度</span><input class="configRange" type="range" min="0" max="200" step="1" data-setting="speedLines"><span class="configValue" data-value-for="speedLines"></span></div>
+        </div>
+      </details>
+
+      <details class="configGroup" open>
+        <summary class="configGroupSummary">灯光与阴影</summary>
+        <div class="configGroupBody">
+          <div class="configRow" title="独立调节车辆前灯照明与灯体发光强度；0% 可关闭车灯照明"><span class="configLabel">车灯亮度</span><input class="configRange" type="range" min="0" max="200" step="5" data-setting="headlightBrightness"><span class="configValue" data-value-for="headlightBrightness"></span></div>
+          <div class="configRow" title="控制有多少近景物体参与阴影；拉高后树木、建筑、花草与地形都会逐步加入"><span class="configLabel">阴影丰富度</span><input class="configRange" type="range" min="0" max="200" step="5" data-setting="shadowRichness"><span class="configValue" data-value-for="shadowRichness"></span></div>
+          <div class="configRow" title="控制 Shadow Map 分辨率和软阴影采样；150% 以上夜间启用车灯遮挡阴影"><span class="configLabel">阴影质量</span><input class="configRange" type="range" min="0" max="200" step="5" data-setting="shadowQuality"><span class="configValue" data-value-for="shadowQuality"></span></div>
+          <div class="configRow" title="控制夜间同时参与真实局部照明的路灯数量；越高城市里的灯带越连续"><span class="configLabel">灯光丰富度</span><input class="configRange" type="range" min="0" max="200" step="5" data-setting="lightRichness"><span class="configValue" data-value-for="lightRichness"></span></div>
+          <div class="configRow" title="控制每盏路灯真正照亮地面的距离；不会改变灯柱本身的可见距离"><span class="configLabel">灯光距离</span><input class="configRange" type="range" min="50" max="200" step="5" data-setting="lightDistance"><span class="configValue" data-value-for="lightDistance"></span></div>
+        </div>
+      </details>
+
+      <details class="configGroup">
+        <summary class="configGroupSummary">天气与世界</summary>
+        <div class="configGroupBody">
+          <div class="configRow"><span class="configLabel">雾浓度</span><input class="configRange" type="range" min="0" max="200" step="1" data-setting="fogDensity"><span class="configValue" data-value-for="fogDensity"></span></div>
+          <div class="configRow" title="统一控制自然植被、乡野小景、城镇细节、城市街景和远景内容的丰富程度；高档优先增加种类与层次，而不是简单复制同一种物体"><span class="configLabel">景观丰富度</span><input class="configRange" type="range" min="0" max="200" step="5" data-setting="sceneryRichness"><span class="configValue" data-value-for="sceneryRichness"></span></div>
+          <div class="configToggleGrid">
+            <label class="configToggleRow wide" title="允许天气系统随机进入小雨 / 中雨，再自然停雨；不是强制一直下"><span>概率下雨</span><input class="configCheck" type="checkbox" data-setting="rainEnabled"></label>
+            <label class="configToggleRow wide" title="让晴天、黄昏与夜晚按周期自然过渡"><span>自然昼夜</span><input class="configCheck" type="checkbox" data-setting="dayNightCycle"></label>
+            <label class="configToggleRow wide" title="在远离道路的位置生成塔楼、灯塔、热气球等视觉地标"><span>远景地标</span><input class="configCheck" type="checkbox" data-setting="landmarks"></label>
+            <label class="configToggleRow wide" title="偶尔让道路穿过小城镇、郊区和大都市边缘"><span>城镇 / 都市</span><input class="configCheck" type="checkbox" data-setting="settlements"></label>
+          </div>
+          <div class="configRow" title="一次降雨可能达到的最大强度"><span class="configLabel">最大雨势</span><input class="configRange" type="range" min="10" max="100" step="5" data-setting="rainIntensity"><span class="configValue" data-value-for="rainIntensity"></span></div>
+          <div class="configRow" title="越高越容易在天气检查时进入降雨；仍会有完整的晴天间隔"><span class="configLabel">降雨频率</span><input class="configRange" type="range" min="10" max="100" step="5" data-setting="rainChance"><span class="configValue" data-value-for="rainChance"></span></div>
+          <div class="configRow" title="完整昼夜循环所需的现实时间"><span class="configLabel">昼夜周期</span><input class="configRange" type="range" min="2" max="30" step="1" data-setting="dayNightMinutes"><span class="configValue" data-value-for="dayNightMinutes"></span></div>
+          <div class="configNote">景观丰富度同时影响乡野、花草、城镇细节和远景变化；城镇 / 都市与远景地标仍可单独关闭。</div>
+        </div>
+      </details>
+
+      <details class="configGroup">
+        <summary class="configGroupSummary">性能</summary>
+        <div class="configGroupBody">
+          <div class="configRow" title="独立于自动画质的最终像素比例；降低可明显减轻 GPU 压力"><span class="configLabel">渲染比例</span><input class="configRange" type="range" min="50" max="150" step="5" data-setting="renderScale"><span class="configValue" data-value-for="renderScale"></span></div>
+          <div class="configRow" title="0 表示跟随浏览器 / 屏幕刷新率"><span class="configLabel">帧率上限</span><input class="configRange" type="range" min="0" max="120" step="30" data-setting="frameLimit"><span class="configValue" data-value-for="frameLimit"></span></div>
+          <div class="configToggleGrid">
+            <label class="configToggleRow wide"><span>自动画质 <span id="qualityState" class="qualityState">Q0</span></span><input class="configCheck" type="checkbox" data-setting="autoQuality"></label>
+          </div>
+        </div>
+      </details>
     </div>
 
     <div class="configPage" data-config-page="interface">
@@ -430,6 +481,8 @@ const $garageOverlay = document.getElementById('garageOverlay');
 const $garageStart = document.getElementById('garageStart');
 const $garageVehicle = document.getElementById('garageVehicle');
 const IS_COARSE_POINTER = window.matchMedia ? window.matchMedia('(hover:none) and (pointer:coarse)').matches : false;
+const REDUCED_MOTION_QUERY = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : {matches:false};
+const reducedMotionActive = ()=>!!REDUCED_MOTION_QUERY.matches;
 
 function fatal(title, text){
   $errorTitle.textContent = title;
@@ -459,11 +512,11 @@ const lerp = (a,b,t)=>a+(b-a)*t;
 const smoothstep = (a,b,x)=>{ x=clamp((x-a)/(b-a),0,1); return x*x*(3-2*x); };
 const expLerp = (a,b,rate,dt)=>lerp(a,b,1-Math.exp(-rate*dt));
 const SETTINGS_KEY='driftway-settings-v1';
-const SETTINGS_VERSION=10;
+const SETTINGS_VERSION=14;
 const BASE_SPEED_REF=300/3.6;
 const AUTOPILOT_SAFE_CAP_KMH=1000;
 const MAX_SPEED_INFINITY_SLIDER=1001;
-const DEFAULT_SETTINGS={volume:.68,motorVolume:1,windVolume:1,tireVolume:1,rainVolume:.82,maxSpeedKmh:300,autopilotSpeedKmh:300,acceleration:1,steering:1,grip:1,onePedal:0,roadHills:1,roadCurves:1,vegetation:1,baseFov:61,fovEffect:1,cameraSpeed:1,cameraShake:1,speedLines:1,fogDensity:1,renderScale:1,frameLimit:0,rainEnabled:true,rainIntensity:.72,rainChance:.42,dayNightCycle:true,dayNightMinutes:10,landmarks:true,landmarkDensity:1,settlements:true,settlementDensity:1,speedAccelFade:true,highSpeedSteer:true,offroadDrag:true,paceBoost:true,autoQuality:true,showFps:false,showClock:false,showDistance:true,fullscreen:false,cleanUi:false,noCollision:false,autopilotUnlimited:false};
+const DEFAULT_SETTINGS={volume:.68,motorVolume:1,windVolume:1,tireVolume:1,rainVolume:.82,maxSpeedKmh:300,autopilotSpeedKmh:300,acceleration:1,steering:1,grip:1,onePedal:0,roadHills:1,roadCurves:1,sceneryRichness:1,baseFov:61,fovEffect:1,cameraSpeed:1,cameraShake:1,speedLines:1,fogDensity:1,shadowRichness:1,shadowQuality:.70,headlightBrightness:.10,lightRichness:1,lightDistance:1,renderScale:1,frameLimit:0,rainEnabled:true,rainIntensity:.72,rainChance:.42,dayNightCycle:true,dayNightMinutes:10,landmarks:true,settlements:true,speedAccelFade:true,highSpeedSteer:true,offroadDrag:true,paceBoost:true,autoQuality:true,showFps:false,showClock:false,showDistance:true,fullscreen:false,cleanUi:false,noCollision:false,autopilotUnlimited:false};
 function loadSettings(){
   const out={...DEFAULT_SETTINGS};
   try{
@@ -472,7 +525,7 @@ function loadSettings(){
       for(const k of Object.keys(out)){if(typeof out[k]==='boolean'){if(typeof raw[k]==='boolean')out[k]=raw[k];}else if(Number.isFinite(raw[k]))out[k]=raw[k];}
       // One-time migration: the previous default master volume was 50%. If the player never
       // moved it away from that exact default, adopt the new, fuller 68% mix automatically.
-      const version=Number(raw._version)||1;if(version<2&&Math.abs(out.volume-.50)<.0001)out.volume=.68;if(version<3){if(Math.abs(out.maxSpeedKmh-240)<.0001)out.maxSpeedKmh=300;if(Math.abs(out.autopilotSpeedKmh-210)<.0001)out.autopilotSpeedKmh=300;}if(version<4&&out.autopilotSpeedKmh<0){out.autopilotUnlimited=true;out.autopilotSpeedKmh=AUTOPILOT_SAFE_CAP_KMH;}if(version<6){out.showClock=false;out.showDistance=true;}if(version<10){out.rainEnabled=true;out.dayNightCycle=true;}out.autopilotSpeedKmh=clamp(out.autopilotSpeedKmh,0,AUTOPILOT_SAFE_CAP_KMH);
+      const version=Number(raw._version)||1;if(version<2&&Math.abs(out.volume-.50)<.0001)out.volume=.68;if(version<3){if(Math.abs(out.maxSpeedKmh-240)<.0001)out.maxSpeedKmh=300;if(Math.abs(out.autopilotSpeedKmh-210)<.0001)out.autopilotSpeedKmh=300;}if(version<4&&out.autopilotSpeedKmh<0){out.autopilotUnlimited=true;out.autopilotSpeedKmh=AUTOPILOT_SAFE_CAP_KMH;}if(version<6){out.showClock=false;out.showDistance=true;}if(version<10){out.rainEnabled=true;out.dayNightCycle=true;}if(version<13){const legacy=[raw.vegetation,raw.landmarkDensity,raw.settlementDensity].filter(Number.isFinite);if(legacy.length)out.sceneryRichness=clamp(legacy.reduce((a,b)=>a+b,0)/legacy.length,0,2);}if(version<14&&Math.abs(out.headlightBrightness-1)<.0001)out.headlightBrightness=.10;out.autopilotSpeedKmh=clamp(out.autopilotSpeedKmh,0,AUTOPILOT_SAFE_CAP_KMH);
       // Fullscreen is intentionally not restored from localStorage: browsers only allow entry from
       // a fresh user gesture. The checkbox mirrors the actual fullscreen state for this session.
       out.fullscreen=false;
@@ -483,6 +536,21 @@ function loadSettings(){
 function saveSettings(settings){try{localStorage.setItem(SETTINGS_KEY,JSON.stringify({...settings,_version:SETTINGS_VERSION}));}catch(_){}}
 function maxRoadSpeed(settings){return settings.maxSpeedKmh<0?Infinity:Math.max(0,settings.maxSpeedKmh)/3.6;}
 function speedReference(settings){const m=maxRoadSpeed(settings);return Number.isFinite(m)&&m>10?Math.max(35,m):BASE_SPEED_REF;}
+
+
+// One deterministic settlement classifier is shared by road styling and environment decoration.
+// This keeps a city from looking like buildings pasted beside a rural highway.
+function settlementInfoForChunk(id,seed,settings){
+  const richness=clamp(settings?.sceneryRichness??1,0,2);
+  const density=clamp(.25+.75*richness,.18,1.75);
+  const center=(period,salt)=>{const group=Math.floor(id/period),span=Math.max(1,period-18),h=hashU32((seed^hashU32((Math.imul(group|0,0x45d9f3b)^salt)>>>0))>>>0);return group*period+9+(h%span);};
+  const townPeriod=Math.max(38,Math.round(82/density)),cityPeriod=Math.max(132,Math.round(260/density));
+  const townCenter=center(townPeriod,0x21874d31),cityCenter=center(cityPeriod,0x6d2b79f5);
+  const townDist=Math.abs(id-townCenter),cityDist=Math.abs(id-cityCenter),townRadius=3,cityRadius=11;
+  const kind=!settings?.settlements?0:(cityDist<=cityRadius?2:(townDist<=townRadius?1:0));
+  const falloff=kind===2?clamp(1-cityDist/(cityRadius+1),.15,1):kind===1?clamp(1-townDist/(townRadius+1),.22,1):0;
+  return {kind,falloff,isCity:kind===2,richness,density};
+}
 
 
 function hashU32(x){
@@ -543,6 +611,13 @@ const M4 = {
     o[4]=0;o[5]=f;o[6]=0;o[7]=0;
     o[8]=0;o[9]=0;o[10]=(far+near)*nf;o[11]=-1;
     o[12]=0;o[13]=0;o[14]=2*far*near*nf;o[15]=0; return o;
+  },
+  ortho(o,left,right,bottom,top,near,far){
+    const lr=1/(left-right),bt=1/(bottom-top),nf=1/(near-far);
+    o[0]=-2*lr;o[1]=0;o[2]=0;o[3]=0;
+    o[4]=0;o[5]=-2*bt;o[6]=0;o[7]=0;
+    o[8]=0;o[9]=0;o[10]=2*nf;o[11]=0;
+    o[12]=(left+right)*lr;o[13]=(top+bottom)*bt;o[14]=(far+near)*nf;o[15]=1;return o;
   },
   lookAt(o,eye,target,up){
     let zx=eye[0]-target[0], zy=eye[1]-target[1], zz=eye[2]-target[2];
@@ -633,17 +708,27 @@ class Mesh{
   destroy(){const gl=this.gl;if(this.vao)gl.deleteVertexArray(this.vao);if(this.vbo)gl.deleteBuffer(this.vbo);if(this.ibo)gl.deleteBuffer(this.ibo);this.vao=this.vbo=this.ibo=null;this.count=0;}
 }
 
+
+const VS_SHADOW=`#version 300 es
+precision highp float;
+layout(location=0) in vec3 aPos;
+uniform mat4 uLightVP,uModel;
+void main(){gl_Position=uLightVP*uModel*vec4(aPos,1.0);}`;
+const FS_SHADOW=`#version 300 es
+precision highp float;
+void main(){}`;
 const VS_SCENE=`#version 300 es
 precision highp float;
 layout(location=0) in vec3 aPos;
 layout(location=1) in vec3 aNormal;
 layout(location=2) in vec4 aColor;
-uniform mat4 uProj,uView,uModel;
+uniform mat4 uProj,uView,uModel,uSunShadowVP,uHeadShadowVP,uStreetShadowVP;
 uniform mat3 uNormalMat;
 uniform float uPeripheralWarp;
-out vec3 vWorld; out vec3 vNormal; out vec4 vColor;
+out vec3 vWorld; out vec3 vNormal; out vec4 vColor;out vec4 vSunShadowCoord;out vec4 vHeadShadowCoord;out vec4 vStreetShadowCoord;
 void main(){
   vec4 w=uModel*vec4(aPos,1.0);vWorld=w.xyz;vNormal=normalize(uNormalMat*aNormal);vColor=aColor;
+  vSunShadowCoord=uSunShadowVP*w;vHeadShadowCoord=uHeadShadowVP*w;vStreetShadowCoord=uStreetShadowVP*w;
   vec4 clip=uProj*uView*w;
   float ndcX=clip.x/max(abs(clip.w),0.0001);
   float edge=smoothstep(0.38,0.96,abs(ndcX));
@@ -652,19 +737,81 @@ void main(){
 }`;
 const FS_SCENE=`#version 300 es
 precision highp float;
-in vec3 vWorld,vNormal; in vec4 vColor;
+in vec3 vWorld,vNormal; in vec4 vColor;in vec4 vSunShadowCoord,vHeadShadowCoord,vStreetShadowCoord;
 uniform vec3 uCameraPos,uLightDir,uLightColor,uFogColor,uSkyTop,uSkyBottom;
 uniform vec3 uHeadlightPos,uHeadlightDir,uHeadlightRight;
 uniform vec3 uBrakePos,uBrakeDir;
-uniform float uAmbient,uDiffuse,uFogNear,uFogFar,uEmissive,uAlpha,uSpecular,uHeadlightStrength,uBrakeStrength,uWetness;
+uniform vec3 uStreetPos[24];uniform int uStreetCount;uniform vec3 uStreetShadowPos;
+uniform float uAmbient,uDiffuse,uFogNear,uFogFar,uEmissive,uAlpha,uSpecular,uHeadlightStrength,uBrakeStrength,uWetness,uStreetStrength,uStreetRange;
+uniform sampler2D uSunShadowMap,uHeadShadowMap,uStreetShadowMap;uniform float uSunShadowEnabled,uHeadShadowEnabled,uStreetShadowEnabled,uSunShadowTexel,uHeadShadowTexel,uStreetShadowTexel,uShadowQuality;
 out vec4 outColor;
+
+float shadowSun(vec4 sc,float bias){
+  if(uSunShadowEnabled<.5)return 1.0;vec3 p=sc.xyz/max(sc.w,.00001);p=p*.5+.5;
+  if(p.z<=0.0||p.z>=1.0||p.x<=0.0||p.x>=1.0||p.y<=0.0||p.y>=1.0)return 1.0;
+  float ref=p.z-bias;
+  if(uShadowQuality<.55)return texture(uSunShadowMap,p.xy).r>=ref?1.0:0.0;
+  float t=uSunShadowTexel*(uShadowQuality>1.35?1.25:1.0),sum=0.0;
+  if(uShadowQuality<1.15){
+    sum+=(texture(uSunShadowMap,p.xy+vec2(-t,-t)).r>=ref?1.0:0.0);
+    sum+=(texture(uSunShadowMap,p.xy+vec2(t,-t)).r>=ref?1.0:0.0);
+    sum+=(texture(uSunShadowMap,p.xy+vec2(-t,t)).r>=ref?1.0:0.0);
+    sum+=(texture(uSunShadowMap,p.xy+vec2(t,t)).r>=ref?1.0:0.0);return sum*.25;
+  }
+  for(int x=-1;x<=1;x++)for(int y=-1;y<=1;y++)sum+=(texture(uSunShadowMap,p.xy+vec2(float(x),float(y))*t).r>=ref?1.0:0.0);
+  return sum/9.0;
+}
+float headPcf(vec2 uv,float ref,float radius){
+  float sum=0.0;
+  for(int x=-1;x<=1;x++)for(int y=-1;y<=1;y++){
+    vec2 o=vec2(float(x),float(y))*uHeadShadowTexel*radius;
+    sum+=(texture(uHeadShadowMap,uv+o).r>=ref?1.0:0.0);
+  }
+  return sum/9.0;
+}
+float shadowHead(vec4 sc,float bias,float receiverDist){
+  if(uHeadShadowEnabled<.5)return 1.0;vec3 p=sc.xyz/max(sc.w,.00001);p=p*.5+.5;
+  if(p.z<=0.0||p.z>=1.0||p.x<=0.0||p.x>=1.0||p.y<=0.0||p.y>=1.0)return 1.0;
+  float ref=p.z-bias;
+  // Headlight shadows are strongest close to the car. Farther away the lamp contribution is weaker,
+  // so a thin bollard must not leave a hard, kilometre-long-looking stripe across the scene.
+  // Increase the PCF footprint with distance (wider penumbra), while reducing contrast at the same
+  // time. This keeps nearby tree/building shadows readable but makes distant roadside-furniture
+  // shadows become soft and visually short instead of dominating the beam.
+  float distFade=smoothstep(18.0,78.0,receiverDist);
+  float qualityRadius=mix(.78,1.22,smoothstep(.70,2.0,uShadowQuality));
+  float radius=qualityRadius*mix(1.0,2.70,distFade);
+  float vis=headPcf(p.xy,ref,radius);
+  // Beyond roughly 70–80 m a tiny roadside bollard should no longer paint a long black stripe.
+  float minVisibility=mix(.10,.94,distFade);
+  return mix(minVisibility,1.0,vis);
+}
+float streetPcf(vec2 uv,float ref,float radius){
+  float sum=0.0;
+  for(int x=-1;x<=1;x++)for(int y=-1;y<=1;y++){
+    vec2 o=vec2(float(x),float(y))*uStreetShadowTexel*radius;
+    sum+=(texture(uStreetShadowMap,uv+o).r>=ref?1.0:0.0);
+  }
+  return sum/9.0;
+}
+float shadowStreet(vec4 sc,float bias,float receiverDist){
+  if(uStreetShadowEnabled<.5)return 1.0;vec3 p=sc.xyz/max(sc.w,.00001);p=p*.5+.5;
+  if(p.z<=0.0||p.z>=1.0||p.x<=0.0||p.x>=1.0||p.y<=0.0||p.y>=1.0)return 1.0;
+  float ref=p.z-bias;
+  float edgeFade=smoothstep(uStreetRange*.28,uStreetRange*.98,receiverDist);
+  float radius=mix(.80,2.20,edgeFade);
+  float vis=streetPcf(p.xy,ref,radius);
+  float minVisibility=mix(.16,.94,edgeFade);
+  return mix(minVisibility,1.0,vis);
+}
 void main(){
   vec3 N=normalize(vNormal),L=normalize(-uLightDir);
   float ndl=max(dot(N,L),0.0);
   float hemi=clamp(N.y*.5+.5,0.0,1.0);
   vec3 ambientTint=mix(vec3(.86,.89,.91),uSkyBottom,.10);
-  vec3 lit=vColor.rgb*(ambientTint*(uAmbient*(.86+hemi*.18))+uLightColor*(ndl*uDiffuse));
-  if(uSpecular>.001){vec3 V=normalize(uCameraPos-vWorld),H=normalize(L+V);float spec=pow(max(dot(N,H),0.0),28.0)*uSpecular;lit+=uLightColor*spec;}
+  float sunBias=mix(.00010,.00034,1.0-clamp(dot(N,L),0.0,1.0));float sunVis=shadowSun(vSunShadowCoord,sunBias);
+  vec3 lit=vColor.rgb*(ambientTint*(uAmbient*(.86+hemi*.18))+uLightColor*(ndl*uDiffuse*sunVis));
+  if(uSpecular>.001){vec3 V=normalize(uCameraPos-vWorld),H=normalize(L+V);float spec=pow(max(dot(N,H),0.0),28.0)*uSpecular*sunVis;lit+=uLightColor*spec;}
   // Wet asphalt is darker head-on and develops a soft glancing sheen.  Detect the road from its
   // low-saturation, dark material plus upward normal so vehicle trim is not accidentally wetted.
   float wetMx=max(vColor.r,max(vColor.g,vColor.b)),wetMn=min(vColor.r,min(vColor.g,vColor.b));
@@ -689,6 +836,11 @@ void main(){
     float lampR=onR*farR*(coreR*1.28+spillR*.28)/(1.0+max(hfR,0.0)*.0062);
     float groundFacing=clamp(N.y*.58+.58,0.14,1.0);
     float headLight=(max(lampL,lampR)+min(lampL,lampR)*.42)*groundFacing*uHeadlightStrength;
+    // Keep the receiver bias small.  Too much depth bias causes classic peter-panning: the shadow
+    // separates from the pole/tree that casts it and looks as if it is floating above the ground.
+    vec3 headVec=uHeadlightPos-vWorld;float headDist=length(headVec);vec3 headToLamp=headVec/max(headDist,.0001);
+    float headBias=mix(.00046,.00102,1.0-clamp(dot(N,headToLamp),0.0,1.0));
+    headLight*=shadowHead(vHeadShadowCoord,headBias,headDist);
 
     // Retro-reflective paint/road furniture returns substantially more energy toward a camera that
     // sits close to the lamps.  This makes lane paint and roadside caps pop only when the beam sweeps
@@ -702,6 +854,32 @@ void main(){
     float retro=1.0+(pale*1.82+warmReflect*1.08)*(1.0+retroAlign*1.85)*sparkle;
     lit+=vec3(1.00,.935,.79)*headLight*retro;
     if(wet>.001){float streak=pow(clamp(1.0-abs(dot(normalize(uCameraPos-vWorld),N)),0.0,1.0),1.8);lit+=vec3(1.0,.91,.72)*headLight*wet*(.14+.34*streak);}
+  }
+
+
+  // Road lamps are real local lights. Richness controls active count; range controls each light pool.
+  if(uStreetStrength>.001&&uStreetRange>1.0){
+    float streetEnergy=0.0;
+    float streetNorm=mix(1.0,.72,clamp((float(uStreetCount)-6.0)/18.0,0.0,1.0));
+    for(int i=0;i<24;i++){
+      if(i>=uStreetCount)break;vec3 toL=uStreetPos[i]-vWorld;float d=length(toL);
+      if(d<uStreetRange){vec3 ldir=toL/max(d,.001);float down=smoothstep(.02,.62,ldir.y);float lambert=max(dot(N,ldir),0.0);
+        float inner=max(2.5,uStreetRange*.10),att=1.0-smoothstep(inner,uStreetRange,d);att*=att;
+        float pool=down*(.20+.80*lambert)*att*uStreetStrength*streetNorm;
+        // The one dynamic street-light shadow belongs only to the lamp that generated its map.
+        // Do not assume slot 0: forward-biased light selection may reorder the active lamps.
+        if(uStreetShadowEnabled>.5&&distance(uStreetPos[i],uStreetShadowPos)<.75){
+          vec3 stl=uStreetShadowPos-vWorld;float sd=length(stl);vec3 sdir=stl/max(sd,.001);
+          float sbias=mix(.00022,.00062,1.0-clamp(dot(N,sdir),0.0,1.0));
+          pool*=shadowStreet(vStreetShadowCoord,sbias,sd);
+        }
+        streetEnergy+=pool;
+      }
+    }
+    // Compress overlapping lamp pools instead of summing them to white.  More lamps extend the
+    // illuminated corridor; they should not multiply exposure at the car.
+    float streetLight=(1.0-exp(-streetEnergy*.92))*.64;
+    lit+=vec3(1.00,.88,.70)*streetLight*(1.0+wet*.20);
   }
 
   // Brake lamps softly tint nearby asphalt/grass behind the car.  This is intentionally a tiny
@@ -748,9 +926,80 @@ void main(){
 
 class Renderer{
   constructor(gl){
-    this.gl=gl;this.scene=new GLProgram(gl,VS_SCENE,FS_SCENE);this.sky=new GLProgram(gl,VS_SKY,FS_SKY);this.skyVao=gl.createVertexArray();
+    this.gl=gl;this.scene=new GLProgram(gl,VS_SCENE,FS_SCENE);this.sky=new GLProgram(gl,VS_SKY,FS_SKY);this.shadow=new GLProgram(gl,VS_SHADOW,FS_SHADOW);this.skyVao=gl.createVertexArray();
     this.identity=M4.create();this.normalMat=new Float32Array(9);this.drawCalls=0;this.maxDpr=IS_COARSE_POINTER?1.25:1.5;this.renderScale=1;
+    this.shadowPass=false;this.shadowSupported=true;this.shadowFrame=0;this.sunTarget=null;this.headTarget=null;this.streetTarget=null;this.sunShadowEnabled=false;this.headShadowEnabled=false;this.streetShadowEnabled=false;this.shadowStatus='关闭';
+    this.shadowView=M4.create();this.shadowProj=M4.create();this.sunShadowVP=M4.create();this.headShadowVP=M4.create();this.streetShadowVP=M4.create();
+    this._streetPos=new Float32Array(72);this._streetShadowPos=new Float32Array(3);this._headPos=new Float32Array(3);this._headDir=new Float32Array([0,0,1]);this._headRight=new Float32Array([1,0,0]);this._brakePos=new Float32Array(3);this._brakeDir=new Float32Array([0,0,-1]);
     gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.cullFace(gl.BACK);gl.frontFace(gl.CCW);
+  }
+  _destroyShadowTarget(t){if(!t)return;const gl=this.gl;if(t.fbo)gl.deleteFramebuffer(t.fbo);if(t.tex)gl.deleteTexture(t.tex);}
+  _ensureShadowTarget(kind,size){
+    if(!this.shadowSupported||size<=0)return null;let t=kind==='sun'?this.sunTarget:kind==='head'?this.headTarget:this.streetTarget;if(t&&t.size===size)return t;
+    if(t)this._destroyShadowTarget(t);const gl=this.gl;try{
+      const tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texImage2D(gl.TEXTURE_2D,0,gl.DEPTH_COMPONENT24,size,size,0,gl.DEPTH_COMPONENT,gl.UNSIGNED_INT,null);
+      const fbo=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,fbo);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.TEXTURE_2D,tex,0);gl.drawBuffers([gl.NONE]);gl.readBuffer(gl.NONE);
+      if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw new Error('shadow framebuffer incomplete');
+      gl.bindFramebuffer(gl.FRAMEBUFFER,null);t={fbo,tex,size,ready:false};if(kind==='sun')this.sunTarget=t;else if(kind==='head')this.headTarget=t;else this.streetTarget=t;return t;
+    }catch(e){console.warn('Shadow map disabled:',e);this.shadowSupported=false;gl.bindFramebuffer(gl.FRAMEBUFFER,null);return null;}
+  }
+  _beginShadow(target,lightVP){
+    const gl=this.gl;if(!target)return false;this.shadowPass=true;gl.bindFramebuffer(gl.FRAMEBUFFER,target.fbo);gl.viewport(0,0,target.size,target.size);gl.clearDepth(1);gl.clear(gl.DEPTH_BUFFER_BIT);gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.cullFace(gl.BACK);gl.disable(gl.BLEND);gl.depthMask(true);gl.enable(gl.POLYGON_OFFSET_FILL);gl.polygonOffset(2.0,4.0);this.shadow.use();gl.uniformMatrix4fv(this.shadow.loc('uLightVP'),false,lightVP);return true;
+  }
+  _endShadow(){const gl=this.gl;this.shadowPass=false;gl.disable(gl.POLYGON_OFFSET_FILL);gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.cullFace(gl.BACK);}
+  _shadowSize(q,head=false){if(head)return q>=1.85?1536:1024;return q<.35?512:q<.75?768:q<1.20?1024:q<1.65?1536:2048;}
+  prepareShadows(world,camera,env,vehicle,settings,qualityLevel=0){
+    this.shadowFrame++;this.sunShadowEnabled=false;this.headShadowEnabled=false;this.streetShadowEnabled=false;this.shadowStatus='关闭';
+    if(!this.shadowSupported||!world||!vehicle)return;
+    let richness=clamp(settings?.shadowRichness??1,0,2),quality=clamp(settings?.shadowQuality??.70,0,2);
+    if(settings?.autoQuality){const f=[1,.96,.88,.78,.67,.56,.45][clamp(qualityLevel|0,0,6)];quality*=f;richness*=lerp(1,.78,smoothstep(3,6,qualityLevel));}
+    if(richness<.035||quality<.08)return;
+    const night=env.nightFactor??0,parts=[];
+    if(night<.72&&env.diffuse>.15){
+      const size=this._shadowSize(quality,false),target=this._ensureShadowTarget('sun',size),radius=55+richness*88;
+      if(target){
+        const stride=quality<.65?3:quality<1.15?2:1,update=this.shadowFrame%stride===0||!target.ready;
+        if(update){
+          const ld=env.lightDir,ll=Math.hypot(ld[0],ld[1],ld[2])||1,lx=ld[0]/ll,ly=ld[1]/ll,lz=ld[2]/ll;
+          const ahead=radius*.16,cx=vehicle.x+Math.sin(vehicle.yaw)*ahead,cy=vehicle.y+1.0,cz=vehicle.z+Math.cos(vehicle.yaw)*ahead,dist=radius*2.55;
+          const eye=[cx-lx*dist,cy-ly*dist,cz-lz*dist],ctr=[cx,cy,cz];
+          M4.lookAt(this.shadowView,eye,ctr,[0,1,0]);M4.ortho(this.shadowProj,-radius,radius,-radius,radius,.5,radius*5.2);M4.multiply(this.sunShadowVP,this.shadowProj,this.shadowView);
+          if(this._beginShadow(target,this.sunShadowVP)){world.renderSunShadow(this,cx,cz,radius,richness);vehicle.render(this,env);this._endShadow();target.ready=true;}
+        }
+        this.sunShadowEnabled=!!target.ready;parts.push(`日光 ${size}`);
+      }
+    }
+    if(night>.25&&quality>=1.45&&richness>=.55&&clamp(settings?.headlightBrightness??1,0,2)>.015){
+      const size=this._shadowSize(quality,true),target=this._ensureShadowTarget('head',size);
+      if(target){
+        const stride=quality>=1.82?1:2,update=this.shadowFrame%stride===0||!target.ready;
+        if(update){
+          const cp=Math.cos(vehicle.pitch||0),sp=Math.sin(vehicle.pitch||0),fy=Math.sin(vehicle.yaw),fz=Math.cos(vehicle.yaw),front=vehicle.style?.frontLight??1.75;
+          // Match the shadow camera to the same virtual headlamp origin/direction used by lighting.
+          // Mismatched height/aim makes otherwise-correct shadows look detached from the ground.
+          const hx=vehicle.x+fy*(front-.08),hy=vehicle.y+.13,hz=vehicle.z+fz*(front-.08),dx=fy*cp,dy=sp*.30-.034,dz=fz*cp;
+          M4.lookAt(this.shadowView,[hx,hy,hz],[hx+dx*78,hy+dy*78,hz+dz*78],[0,1,0]);M4.perspective(this.shadowProj,62*DEG,1,.22,118);M4.multiply(this.headShadowVP,this.shadowProj,this.shadowView);
+          if(this._beginShadow(target,this.headShadowVP)){world.renderHeadShadow(this,vehicle.x,vehicle.z,128,richness);this._endShadow();target.ready=true;}
+        }
+        this.headShadowEnabled=!!target.ready;parts.push(`车灯 ${size}`);
+      }
+    }
+    const lightRich=clamp(settings?.lightRichness??1,0,2),lightRange=30*clamp(settings?.lightDistance??1,.5,2);
+    if(night>.28&&quality>=1.82&&richness>=.70&&lightRich>.10){
+      const probe=this._streetShadowPos,streetCount=world.collectStreetLights?.([vehicle.x,vehicle.y,vehicle.z],probe,1,Math.max(48,lightRange*1.35))||0;
+      if(streetCount>0){
+        const size=quality>=1.95?1536:1024,target=this._ensureShadowTarget('street',size);
+        if(target){
+          const sx=probe[0],sy=probe[1],sz=probe[2],update=this.shadowFrame%2===0||!target.ready;
+          if(update){
+            M4.lookAt(this.shadowView,[sx,sy-.04,sz],[sx,sy-8,sz],[0,0,1]);M4.perspective(this.shadowProj,154*DEG,1,.18,Math.max(18,lightRange+8));M4.multiply(this.streetShadowVP,this.shadowProj,this.shadowView);
+            if(this._beginShadow(target,this.streetShadowVP)){world.renderStreetShadow(this,sx,sz,Math.min(50,lightRange+6),richness);vehicle.render(this,env);this._endShadow();target.ready=true;}
+          }
+          this.streetShadowEnabled=!!target.ready;parts.push(`路灯 ${size}`);
+        }
+      }
+    }
+    this.shadowStatus=parts.length?parts.join(' + '):'投影';
   }
   resize(){
     const touchCoarse=matchMedia('(hover:none) and (pointer:coarse)').matches,forcedLandscape=touchCoarse&&innerHeight>innerWidth;
@@ -758,18 +1007,19 @@ class Renderer{
     const dpr=Math.min(window.devicePixelRatio||1,this.maxDpr)*clamp(this.renderScale,.50,1.50), w=Math.max(2,Math.floor(cssW*dpr)), h=Math.max(2,Math.floor(cssH*dpr));
     if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;} this.gl.viewport(0,0,w,h);
   }
-  begin(camera,env,vehicle=null){
-    this.resize();this.drawCalls=0;const gl=this.gl;
+  begin(camera,env,vehicle=null,world=null,settings=null){
+    this.resize();this.drawCalls=0;const gl=this.gl;this.headlightBrightness=clamp(settings?.headlightBrightness??1,0,2);
     gl.disable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);this.sky.use();gl.bindVertexArray(this.skyVao);
     gl.uniform3fv(this.sky.loc('uSkyTop'),env.skyTop);gl.uniform3fv(this.sky.loc('uSkyBottom'),env.skyBottom);gl.uniform3fv(this.sky.loc('uSunColor'),env.sunColor);gl.uniform1f(this.sky.loc('uSunStrength'),env.sunStrength);
     const skyDx=camera.target[0]-camera.pos[0],skyDy=camera.target[1]-camera.pos[1],skyDz=camera.target[2]-camera.pos[2],skyFlat=Math.max(.0001,Math.hypot(skyDx,skyDz));
     gl.uniform1f(this.sky.loc('uSkyYaw'),Math.atan2(skyDx,skyDz));gl.uniform1f(this.sky.loc('uSkyPitch'),Math.atan2(skyDy,skyFlat));gl.uniform1f(this.sky.loc('uSkyTime'),performance.now()*.001);gl.uniform1f(this.sky.loc('uStarVisibility'),clamp((env.nightFactor||0)*(1-(env.rainFactor||0)*.92),0,1));
     gl.drawArrays(gl.TRIANGLES,0,3);this.drawCalls++;
     gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.clear(gl.DEPTH_BUFFER_BIT);
-    this.scene.use();gl.uniformMatrix4fv(this.scene.loc('uProj'),false,camera.proj);gl.uniformMatrix4fv(this.scene.loc('uView'),false,camera.view);
+    this.scene.use();gl.uniformMatrix4fv(this.scene.loc('uProj'),false,camera.proj);gl.uniformMatrix4fv(this.scene.loc('uView'),false,camera.view);gl.uniformMatrix4fv(this.scene.loc('uSunShadowVP'),false,this.sunShadowVP);gl.uniformMatrix4fv(this.scene.loc('uHeadShadowVP'),false,this.headShadowVP);gl.uniformMatrix4fv(this.scene.loc('uStreetShadowVP'),false,this.streetShadowVP);
     gl.uniform3fv(this.scene.loc('uCameraPos'),camera.pos);gl.uniform3fv(this.scene.loc('uLightDir'),env.lightDir);gl.uniform3fv(this.scene.loc('uLightColor'),env.lightColor);gl.uniform3fv(this.scene.loc('uFogColor'),env.fogColor);gl.uniform3fv(this.scene.loc('uSkyTop'),env.skyTop);gl.uniform3fv(this.scene.loc('uSkyBottom'),env.skyBottom);
-    const nightFactor=env.nightFactor??(env.name==='夜晚'?1:env.name==='黄昏'?.16:0),headStrength=vehicle?nightFactor*1.78:0;
-    this._headPos=this._headPos||new Float32Array(3);this._headDir=this._headDir||new Float32Array([0,0,1]);this._headRight=this._headRight||new Float32Array([1,0,0]);this._brakePos=this._brakePos||new Float32Array(3);this._brakeDir=this._brakeDir||new Float32Array([0,0,-1]);
+    gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,this.sunTarget?.tex||null);gl.uniform1i(this.scene.loc('uSunShadowMap'),0);gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,this.headTarget?.tex||null);gl.uniform1i(this.scene.loc('uHeadShadowMap'),1);gl.activeTexture(gl.TEXTURE2);gl.bindTexture(gl.TEXTURE_2D,this.streetTarget?.tex||null);gl.uniform1i(this.scene.loc('uStreetShadowMap'),2);
+    gl.uniform1f(this.scene.loc('uSunShadowEnabled'),this.sunShadowEnabled?1:0);gl.uniform1f(this.scene.loc('uHeadShadowEnabled'),this.headShadowEnabled?1:0);gl.uniform1f(this.scene.loc('uStreetShadowEnabled'),this.streetShadowEnabled?1:0);gl.uniform1f(this.scene.loc('uSunShadowTexel'),this.sunTarget?1/this.sunTarget.size:1);gl.uniform1f(this.scene.loc('uHeadShadowTexel'),this.headTarget?1/this.headTarget.size:1);gl.uniform1f(this.scene.loc('uStreetShadowTexel'),this.streetTarget?1/this.streetTarget.size:1);gl.uniform1f(this.scene.loc('uShadowQuality'),clamp(settings?.shadowQuality??.70,0,2));
+    const nightFactor=env.nightFactor??(env.name==='夜晚'?1:env.name==='黄昏'?.16:0),headStrength=vehicle?nightFactor*1.78*this.headlightBrightness:0;
     let brakeStrength=0;
     if(vehicle){
       const cp=Math.cos(vehicle.pitch||0),sp=Math.sin(vehicle.pitch||0),fy=Math.sin(vehicle.yaw),fz=Math.cos(vehicle.yaw),rx=Math.cos(vehicle.yaw),rz=-Math.sin(vehicle.yaw),front=vehicle.style?.frontLight??1.75,rear=vehicle.style?.rearLight??-1.75;
@@ -780,11 +1030,14 @@ class Renderer{
     }
     gl.uniform3fv(this.scene.loc('uHeadlightPos'),this._headPos);gl.uniform3fv(this.scene.loc('uHeadlightDir'),this._headDir);gl.uniform3fv(this.scene.loc('uHeadlightRight'),this._headRight);gl.uniform1f(this.scene.loc('uHeadlightStrength'),headStrength);
     gl.uniform3fv(this.scene.loc('uBrakePos'),this._brakePos);gl.uniform3fv(this.scene.loc('uBrakeDir'),this._brakeDir);gl.uniform1f(this.scene.loc('uBrakeStrength'),brakeStrength);
+    const lightRich=clamp(settings?.lightRichness??1,0,2),streetRange=30*clamp(settings?.lightDistance??1,.5,2),streetMax=lightRich<.03?0:Math.min(24,Math.max(2,Math.round(6+lightRich*9))),streetSearch=Math.max(150,streetRange*3.5);
+    const streetCount=streetMax>0?(world?.collectStreetLights?.(camera.pos,this._streetPos,streetMax,streetSearch,vehicle?this._headDir:null)||0):0;gl.uniform1i(this.scene.loc('uStreetCount'),streetCount);gl.uniform3fv(this.scene.loc('uStreetPos[0]'),this._streetPos);gl.uniform1f(this.scene.loc('uStreetStrength'),nightFactor*(.54+.10*lightRich)*(.96+(env.rainFactor||0)*.10));gl.uniform1f(this.scene.loc('uStreetRange'),streetRange);gl.uniform3fv(this.scene.loc('uStreetShadowPos'),this._streetShadowPos);
     gl.uniform1f(this.scene.loc('uAmbient'),env.ambient);gl.uniform1f(this.scene.loc('uDiffuse'),env.diffuse);gl.uniform1f(this.scene.loc('uWetness'),env.rainFactor||0);gl.uniform1f(this.scene.loc('uFogNear'),env.fogNear);gl.uniform1f(this.scene.loc('uFogFar'),env.fogFar);gl.uniform1f(this.scene.loc('uPeripheralWarp'),camera.peripheralWarp||0);
   }
   draw(mesh,model=this.identity,emissive=0,alpha=1,blend=false,cull=true,specular=0){
-    const gl=this.gl;if(!mesh||!mesh.count)return;this.scene.use();
-    gl.uniformMatrix4fv(this.scene.loc('uModel'),false,model);normalMat3FromMat4(this.normalMat,model);gl.uniformMatrix3fv(this.scene.loc('uNormalMat'),false,this.normalMat);gl.uniform1f(this.scene.loc('uEmissive'),emissive);gl.uniform1f(this.scene.loc('uAlpha'),alpha);gl.uniform1f(this.scene.loc('uSpecular'),specular);
+    const gl=this.gl;if(!mesh||!mesh.count)return;
+    if(this.shadowPass){if(blend||alpha<.985)return;this.shadow.use();gl.uniformMatrix4fv(this.shadow.loc('uModel'),false,model);if(cull)gl.enable(gl.CULL_FACE);else gl.disable(gl.CULL_FACE);mesh.draw();if(!cull)gl.enable(gl.CULL_FACE);return;}
+    this.scene.use();gl.uniformMatrix4fv(this.scene.loc('uModel'),false,model);normalMat3FromMat4(this.normalMat,model);gl.uniformMatrix3fv(this.scene.loc('uNormalMat'),false,this.normalMat);gl.uniform1f(this.scene.loc('uEmissive'),emissive);gl.uniform1f(this.scene.loc('uAlpha'),alpha);gl.uniform1f(this.scene.loc('uSpecular'),specular);
     if(blend){gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);}else{gl.disable(gl.BLEND);gl.depthMask(true);}
     if(cull)gl.enable(gl.CULL_FACE);else gl.disable(gl.CULL_FACE);
     mesh.draw();this.drawCalls++;
@@ -807,7 +1060,7 @@ const C={
   road:[.155,.168,.178,1], road2:[.164,.176,.186,1], roadEdge:[.147,.156,.163,1], roadFleckDark:[.135,.146,.154,1], roadFleckLight:[.185,.194,.200,1], shoulder:[.355,.355,.325,1], shoulder2:[.385,.385,.345,1], edge:[.88,.90,.89,1], center:[.93,.89,.70,1],
   grass1:[.33,.52,.34,1], grass2:[.40,.59,.39,1], grass3:[.28,.46,.31,1], grassDry:[.48,.53,.35,1], grassVerge:[.29,.48,.30,1], dirt:[.41,.36,.28,1],
   trunk:[.31,.215,.14,1], leaf1:[.235,.425,.285,1], leaf2:[.315,.515,.335,1], leaf3:[.195,.365,.265,1], leafFar:[.37,.49,.37,1],
-  rock:[.43,.46,.46,1], rockFar:[.49,.51,.48,1], bush:[.30,.48,.31,1], bushFar:[.38,.50,.37,1], metal:[.60,.63,.62,1], sign:[.82,.74,.49,1], delineator:[.56,.59,.59,1], delineatorBand:[.12,.14,.15,1], reflector:[1.00,.30,.045,1], lamp:[.68,.70,.69,1], lampHead:[.94,.88,.67,1]
+  rock:[.43,.46,.46,1], rockFar:[.49,.51,.48,1], bush:[.30,.48,.31,1], bushFar:[.38,.50,.37,1], metal:[.60,.63,.62,1], sign:[.82,.74,.49,1], delineator:[.56,.59,.59,1], delineatorBand:[.12,.14,.15,1], reflector:[1.00,.30,.045,1], lamp:[.30,.33,.35,1], lampHead:[1.00,.90,.72,1]
 };
 function mixColor4(a,b,t){t=clamp(t,0,1);return [lerp(a[0],b[0],t),lerp(a[1],b[1],t),lerp(a[2],b[2],t),lerp(a[3]??1,b[3]??1,t)];}
 function scaleColor4(a,s){return [clamp(a[0]*s,0,1),clamp(a[1]*s,0,1),clamp(a[2]*s,0,1),a[3]??1];}
@@ -1001,6 +1254,8 @@ class RoadGenerator{
   }
   nextChunk(id){return this.generateChunk(id);}
   previousChunk(id){return this.generateChunk(id);}
+  snapshot(){const hist=new Float32Array(this.history.length*6);for(let i=0;i<this.history.length;i++)for(let j=0;j<6;j++)hist[i*6+j]=this.history[i][j]||0;return {x:this.x,y:this.y,z:this.z,heading:this.heading,curvature:this.curvature,slope:this.slope,s:this.s,sampleIndex:this.sampleIndex,failureStreak:this.failureStreak,recoveryRemaining:this.recoveryRemaining,lastScore:this.lastScore,history:hist,settings:{roadCurves:this.settings.roadCurves,roadHills:this.settings.roadHills}};}
+  restore(state){this.x=state.x;this.y=state.y;this.z=state.z;this.heading=state.heading;this.curvature=state.curvature;this.slope=state.slope;this.s=state.s;this.sampleIndex=state.sampleIndex|0;this.failureStreak=state.failureStreak|0;this.recoveryRemaining=state.recoveryRemaining||0;this.lastScore=state.lastScore||0;const h=state.history||new Float32Array(0);this.history=[];for(let i=0;i<h.length;i+=6)this.history.push([h[i],h[i+1],h[i+2],h[i+3],h[i+4],h[i+5]]);this.settings={...this.settings,roadCurves:state.settings?.roadCurves??this.settings.roadCurves,roadHills:state.settings?.roadHills??this.settings.roadHills};return this;}
 }
 
 class TerrainGenerator{
@@ -1033,7 +1288,7 @@ class TerrainGenerator{
 // ------------------------------------------------------------
 class WorldChunk{
   constructor(gl,terrainGen,seed,settings=DEFAULT_SETTINGS){
-    this.gl=gl;this.terrainGen=terrainGen;this.seed=seed;this.settings=settings;this.id=-1;this.points=null;this.tangents=null;this.roadMesh=new Mesh(gl,true);this.terrainMesh=new Mesh(gl,true);this.envMesh=new Mesh(gl,true);this.colliders=[];this.cx=0;this.cy=0;this.cz=0;this.anchorX=0;this.anchorY=0;this.anchorZ=0;this.model=M4.create();this.lod=0;this.envScale=1;this.envTriangles=0;
+    this.gl=gl;this.terrainGen=terrainGen;this.seed=seed;this.settings=settings;this.id=-1;this.points=null;this.tangents=null;this.roadMesh=new Mesh(gl,true);this.terrainMesh=new Mesh(gl,true);this.envMesh=new Mesh(gl,true);this.lightMesh=new Mesh(gl,true);this.windowMesh=new Mesh(gl,true);this.colliders=[];this.streetLights=[];this.cx=0;this.cy=0;this.cz=0;this.anchorX=0;this.anchorY=0;this.anchorZ=0;this.model=M4.create();this.lod=0;this.envScale=1;this.envTriangles=0;
   }
   update(id,data,origin,lod=0,envScale=1){
     this.id=id;this.tangents=data.tangents;this.lod=lod;this.envScale=envScale;const logical=data.points,mid=(SEG_PER_CHUNK>>1)*3;this.anchorX=logical[mid];this.anchorY=logical[mid+1];this.anchorZ=logical[mid+2];this.points=new Float32Array(logical.length);
@@ -1048,7 +1303,7 @@ class WorldChunk{
     const n=normalFromTangent(tx,ty,tz);return [tx,ty,tz,n[0],n[1],n[2],n[3],n[4]];
   }
   buildRoad(){
-    const b=new Builder();
+    const b=new Builder(),urban=settlementInfoForChunk(this.id,this.seed,this.settings),urbanKind=urban.kind;
     for(let i=0;i<SEG_PER_CHUNK;i++){
       const k0=i*3,k1=(i+1)*3,p=this.points;
       const bas0=this.basisAt(i),bas1=this.basisAt(i+1),r0x=bas0[6],r0z=bas0[7],r1x=bas1[6],r1z=bas1[7];
@@ -1058,19 +1313,29 @@ class WorldChunk{
       // Use shared endpoint tones so road and shoulder colour changes interpolate smoothly along
       // the road instead of exposing the underlying 4 m segment structure.
       const tone=(g,salt,a,b,lo,span)=>{const t=lo+valueNoise1D(g*.22,this.seed^salt)*span;return [lerp(a[0],b[0],t),lerp(a[1],b[1],t),lerp(a[2],b[2],t),1];};
-      const shoulder0=tone(globalSeg,0x13c6a5d1,C.shoulder,C.shoulder2,.20,.52),shoulder1=tone(globalSeg+1,0x13c6a5d1,C.shoulder,C.shoulder2,.20,.52);
+      const shoulder0=urbanKind?(urbanKind===2?[.43,.44,.43,1]:[.43,.42,.37,1]):tone(globalSeg,0x13c6a5d1,C.shoulder,C.shoulder2,.20,.52),shoulder1=urbanKind?(urbanKind===2?[.45,.46,.45,1]:[.45,.44,.39,1]):tone(globalSeg+1,0x13c6a5d1,C.shoulder,C.shoulder2,.20,.52);
       // shoulders
       b.quadGradient(q(k0,r0x,r0z,-5.2,.00),q(k1,r1x,r1z,-5.2,.00),q(k1,r1x,r1z,-4.0,.00),q(k0,r0x,r0z,-4.0,.00),n,shoulder0,shoulder1);
       b.quadGradient(q(k0,r0x,r0z,4.0,.00),q(k1,r1x,r1z,4.0,.00),q(k1,r1x,r1z,5.2,.00),q(k0,r0x,r0z,5.2,.00),n,shoulder0,shoulder1);
-      const road0=tone(globalSeg,0x45d9f3b1,C.road,C.road2,.18,.46),road1=tone(globalSeg+1,0x45d9f3b1,C.road,C.road2,.18,.46);
+      if(urbanKind){
+        const curb=urbanKind===2?[.60,.61,.60,1]:[.55,.54,.49,1],walk=urbanKind===2?[.47,.48,.47,1]:[.48,.46,.41,1];
+        b.quad(q(k0,r0x,r0z,-4.24,.078),q(k1,r1x,r1z,-4.24,.078),q(k1,r1x,r1z,-4.00,.078),q(k0,r0x,r0z,-4.00,.078),n,curb);
+        b.quad(q(k0,r0x,r0z,4.00,.078),q(k1,r1x,r1z,4.00,.078),q(k1,r1x,r1z,4.24,.078),q(k0,r0x,r0z,4.24,.078),n,curb);
+        b.quad(q(k0,r0x,r0z,-5.18,.046),q(k1,r1x,r1z,-5.18,.046),q(k1,r1x,r1z,-4.26,.046),q(k0,r0x,r0z,-4.26,.046),n,walk);
+        b.quad(q(k0,r0x,r0z,4.26,.046),q(k1,r1x,r1z,4.26,.046),q(k1,r1x,r1z,5.18,.046),q(k0,r0x,r0z,5.18,.046),n,walk);
+      }
+      const road0=urbanKind?(urbanKind===2?[.135,.145,.153,1]:[.148,.157,.164,1]):tone(globalSeg,0x45d9f3b1,C.road,C.road2,.18,.46),road1=urbanKind?(urbanKind===2?[.142,.151,.159,1]:[.154,.163,.170,1]):tone(globalSeg+1,0x45d9f3b1,C.road,C.road2,.18,.46);
       b.quadGradient(q(k0,r0x,r0z,-4.02,.02),q(k1,r1x,r1z,-4.02,.02),q(k1,r1x,r1z,4.02,.02),q(k0,r0x,r0z,4.02,.02),n,road0,road1);
       // A very mild darker margin separates asphalt from the shoulder. The previous continuous
       // tyre-wear strips were too legible as two black rails, so they are deliberately removed.
       b.quad(q(k0,r0x,r0z,-4.00,.038),q(k1,r1x,r1z,-4.00,.038),q(k1,r1x,r1z,-3.80,.038),q(k0,r0x,r0z,-3.80,.038),n,C.roadEdge);
       b.quad(q(k0,r0x,r0z,3.80,.038),q(k1,r1x,r1z,3.80,.038),q(k1,r1x,r1z,4.00,.038),q(k0,r0x,r0z,4.00,.038),n,C.roadEdge);
-      // edge lines
-      b.quad(q(k0,r0x,r0z,-3.72,.055),q(k1,r1x,r1z,-3.72,.055),q(k1,r1x,r1z,-3.53,.055),q(k0,r0x,r0z,-3.53,.055),n,C.edge);
-      b.quad(q(k0,r0x,r0z,3.53,.055),q(k1,r1x,r1z,3.53,.055),q(k1,r1x,r1z,3.72,.055),q(k0,r0x,r0z,3.72,.055),n,C.edge);
+      // Rural highways keep bright edge lines; inside settlements the curb itself defines the edge,
+      // which stops a city street from looking like the same highway with buildings pasted beside it.
+      if(!urbanKind){
+        b.quad(q(k0,r0x,r0z,-3.72,.055),q(k1,r1x,r1z,-3.72,.055),q(k1,r1x,r1z,-3.53,.055),q(k0,r0x,r0z,-3.53,.055),n,C.edge);
+        b.quad(q(k0,r0x,r0z,3.53,.055),q(k1,r1x,r1z,3.53,.055),q(k1,r1x,r1z,3.72,.055),q(k0,r0x,r0z,3.72,.055),n,C.edge);
+      }
       // 4 m dash + 8 m gap.
       if(((globalSeg%3)+3)%3===0){b.quad(q(k0,r0x,r0z,-.10,.065),q(k1,r1x,r1z,-.10,.065),q(k1,r1x,r1z,.10,.065),q(k0,r0x,r0z,.10,.065),n,C.center);}
       // Tiny deterministic asphalt flecks provide close-range optic flow without a texture.
@@ -1125,27 +1390,19 @@ class WorldChunk{
     const a=b.arrays();this.terrainMesh.update(a[0],a[1]);
   }
   buildEnvironment(){
-    const b=new Builder();this.colliders.length=0;
+    const b=new Builder(),lightB=new Builder(),windowB=new Builder();this.colliders.length=0;this.streetLights.length=0;
     const mod=(v,m)=>((v%m)+m)%m;
     // Each prop family owns its own deterministic RNG stream. LOD changes can no longer advance
     // one shared RNG by a different amount and silently replace trees/bushes with new identities.
     const rngFor=salt=>mulberry32(hashU32((this.seed ^ Math.imul(this.id+1,0x9e3779b1) ^ salt)>>>0));
-    const treeRng=rngFor(0x19f123bb),rockRng=rngFor(0x5a17c9e3),bushRng=rngFor(0x7d4e2a91),tuftRng=rngFor(0x2c6d8fb5),flowerRng=rngFor(0x61a5e9d3),landmarkRng=rngFor(0x4f3a91c7),settlementRng=rngFor(0x73c21ab5);
+    const treeRng=rngFor(0x19f123bb),rockRng=rngFor(0x5a17c9e3),bushRng=rngFor(0x7d4e2a91),tuftRng=rngFor(0x2c6d8fb5),flowerRng=rngFor(0x61a5e9d3),landmarkRng=rngFor(0x4f3a91c7),settlementRng=rngFor(0x73c21ab5),windowRng=rngFor(0x51d4a9ef),sceneryRng=rngFor(0x31c87ae5),parkedRng=rngFor(0x18ab4f63),urbanGreenRng=rngFor(0x69cd1b27);
     const centerBio=biomeAtS((this.id*SEG_PER_CHUNK+SEG_PER_CHUNK*.5)*ROAD_STEP,this.seed);
-    const richness=clamp(this.settings.vegetation,0,2),treeDensity=biomeValue(centerBio,'treeDensity'),rockDensity=biomeValue(centerBio,'rockDensity'),bushDensity=biomeValue(centerBio,'bushDensity'),broadleaf=biomeValue(centerBio,'broadleaf'),dryness=biomeValue(centerBio,'dry');
+    const richness=clamp(this.settings.sceneryRichness??1,0,2),treeDensity=biomeValue(centerBio,'treeDensity'),rockDensity=biomeValue(centerBio,'rockDensity'),bushDensity=biomeValue(centerBio,'bushDensity'),broadleaf=biomeValue(centerBio,'broadleaf'),dryness=biomeValue(centerBio,'dry');
     const biomeTree=biomeColor(centerBio,'tree');
     const place=(row,off)=>{row=clamp(row,0,SEG_PER_CHUNK);const k=row*3,bas=this.basisAt(row),rx=bas[6],rz=bas[7],x=this.points[k]+rx*off,z=this.points[k+2]+rz*off,y=this.terrainGen.height(x+this.anchorX,z+this.anchorZ,this.points[k+1]+this.anchorY,Math.abs(off))-this.anchorY;return [x,y,z,Math.atan2(bas[0],bas[2])];};
 
-    // Deterministic settlement bands: most of the world stays rural, but long drives occasionally
-    // pass through a small town or the edge of a much larger city.  These bands only decorate the
-    // existing road; they never alter road topology, so autopilot and Seed determinism stay intact.
-    const settlementDensity=clamp(this.settings.settlementDensity??1,.25,2);
-    const settlementCenter=(period,salt)=>{const group=Math.floor(this.id/period),span=Math.max(1,period-18),h=hashU32((this.seed^hashU32((Math.imul(group|0,0x45d9f3b)^salt)>>>0))>>>0);return group*period+9+(h%span);};
-    const townPeriod=Math.max(42,Math.round(82/settlementDensity)),cityPeriod=Math.max(150,Math.round(260/settlementDensity));
-    const townCenter=settlementCenter(townPeriod,0x21874d31),cityCenter=settlementCenter(cityPeriod,0x6d2b79f5);
-    const townDist=Math.abs(this.id-townCenter),cityDist=Math.abs(this.id-cityCenter),townRadius=3,cityRadius=11;
-    const settlementKind=!this.settings.settlements?0:(cityDist<=cityRadius?2:(townDist<=townRadius?1:0));
-    const settlementFalloff=settlementKind===2?clamp(1-cityDist/(cityRadius+1),.15,1):settlementKind===1?clamp(1-townDist/(townRadius+1),.22,1):0;
+    // Road styling and scenery share one deterministic settlement classifier.
+    const settlement=settlementInfoForChunk(this.id,this.seed,this.settings),settlementKind=settlement.kind,settlementFalloff=settlement.falloff;
     const urbanTreeMul=settlementKind===2?lerp(.10,.26,1-settlementFalloff):settlementKind===1?lerp(.42,.68,1-settlementFalloff):1;
 
     // Trees are now stable across Near/Mid/Far. Distance LOD only changes terrain resolution;
@@ -1195,6 +1452,28 @@ class WorldChunk{
       if(flowerRng()<.26){const dx=(flowerRng()-.5)*.36,dz=(flowerRng()-.5)*.36;appendCylinder(b,p[0]+dx,p[1]+h*.38,p[2]+dz,.014,h*.72,4,stem);appendBush(b,p[0]+dx,p[1]+h*.76,p[2]+dz,.060,flowerCols[Math.floor(flowerRng()*flowerCols.length)]);}
     }
 
+    // Scenery richness adds variety first, raw quantity second.  Rural chunks can become farmland,
+    // a tiny homestead or a rest stop; settlements get street furniture and parked vehicles below.
+    if(settlementKind===0&&richness>.28){
+      const featureRoll=sceneryRng();
+      if(featureRoll<.38*clamp(richness,0,1.5)){
+        // Farmland: parallel low crop strips plus a few hay bales.  They sit well away from the road.
+        const side=sceneryRng()<.5?-1:1,row=2+Math.floor(sceneryRng()*8),baseOff=side*(18+sceneryRng()*18),crop=[.52+.16*dryness,.50,.22,1];
+        for(let q=-2;q<=2;q++){const p=place(clamp(row+q,0,SEG_PER_CHUNK),baseOff+side*q*1.35);appendBox(b,p[0],p[1]+.045,p[2],.34,.09,7.0,crop,p[3]);}
+        const baleCount=richness>1.1?2:1;
+        for(let q=0;q<baleCount;q++){const p=place(clamp(row+2+q*2,0,SEG_PER_CHUNK),baseOff+side*(4.5+q*2.0));appendBox(b,p[0],p[1]+.43,p[2],1.05,.86,.86,[.72,.57,.25,1],p[3]+.12*q);}
+      }else if(featureRoll<.63*clamp(richness,0,1.45)){
+        // A small farmhouse / barn ensemble: enough silhouette to make the countryside feel inhabited.
+        const side=sceneryRng()<.5?-1:1,p=place(4+Math.floor(sceneryRng()*5),side*(25+sceneryRng()*14)),yaw=p[3]+(sceneryRng()-.5)*.18;
+        appendBox(b,p[0],p[1]+1.7,p[2],4.8,3.4,6.0,[.58,.47,.38,1],yaw);appendBox(b,p[0],p[1]+3.55,p[2],5.15,.34,6.3,[.31,.22,.18,1],yaw);
+        const bx=p[0]+Math.cos(yaw)*6.0,bz=p[2]-Math.sin(yaw)*6.0,by=this.terrainGen.height(bx+this.anchorX,bz+this.anchorZ,p[1]+this.anchorY,Math.abs(side*31))-this.anchorY;
+        appendBox(b,bx,by+2.05,bz,5.6,4.1,7.2,[.49,.26,.20,1],yaw);appendBox(b,bx,by+4.28,bz,6.0,.36,7.55,[.26,.20,.18,1],yaw);
+      }else if(featureRoll<.78*clamp(richness,0,1.35)){
+        // Tiny roadside rest pull-off: shelter, bench and information board.
+        const side=sceneryRng()<.5?-1:1,p=place(6,side*9.2),yaw=p[3];appendBox(b,p[0],p[1]+1.48,p[2],2.8,.16,1.8,[.28,.31,.30,1],yaw);appendBox(b,p[0],p[1]+.54,p[2],2.0,.18,.52,[.42,.31,.22,1],yaw);appendBox(b,p[0],p[1]+1.75,p[2],.10,1.6,.10,C.metal,yaw);
+      }
+    }
+
     // Town / city scenery is merged into the same environment mesh, so even a skyline costs no
     // additional draw calls.  Small towns are short and warm; cities get a denser, taller centre.
     if(settlementKind){
@@ -1210,22 +1489,71 @@ class WorldChunk{
         if(isCity){if(h>13){appendBox(b,p[0],p[1]+h+.32,p[2],w*.42,.64,d*.38,[.24,.27,.28,1],yaw);if(settlementRng()<.35)appendBox(b,p[0],p[1]+h+1.15,p[2],.18,1.65,.18,C.metal,yaw);}}
         else{appendBox(b,p[0],p[1]+h+.18,p[2],w*1.04,.36,d*1.05,settlementRng()<.5?[.34,.23,.20,1]:[.30,.31,.29,1],yaw);}
         // A simple pale facade strip suggests windows, especially when headlights sweep the town.
-        const lx=-side*(w*.505),fx=p[0]+Math.cos(yaw)*lx,fz=p[2]-Math.sin(yaw)*lx,windowCol=isCity?[.76,.79,.72,1]:[.84,.73,.55,1];
-        appendBox(b,fx,p[1]+h*.57,fz,.045,Math.max(.45,h*.18),d*.68,windowCol,yaw);
-        if(isCity&&h>16)appendBox(b,fx,p[1]+h*.78,fz,.047,Math.max(.45,h*.12),d*.62,windowCol,yaw);
+        const lx=-side*(w*.505),fx=p[0]+Math.cos(yaw)*lx,fz=p[2]-Math.sin(yaw)*lx;
+        // Facades stay dark; only a deterministic subset of windows is emissive at night.
+        // A separate mesh lets windows glow without making the whole building self-lit.
+        const facadeCol=scaleColor4(col,isCity?.72:.78);
+        appendBox(b,fx,p[1]+h*.57,fz,.040,Math.max(.34,h*.095),d*.62,facadeCol,yaw);
+        if(isCity&&h>16)appendBox(b,fx,p[1]+h*.78,fz,.042,Math.max(.30,h*.070),d*.56,facadeCol,yaw);
+        const floors=isCity?Math.max(2,Math.min(10,Math.floor((h-1.8)/2.8))):Math.max(1,Math.min(3,Math.floor((h-1.2)/2.3)));
+        const cols=isCity?Math.max(2,Math.min(5,Math.floor(d/2.5))):Math.max(1,Math.min(3,Math.floor(d/2.7)));
+        const litChance=isCity?.38:.30,span=d*.58,outward=-side*.038;
+        const warmWindows=[[1.00,.73,.38,1],[1.00,.84,.57,1],[.78,.88,1.00,1],[1.00,.61,.28,1]];
+        for(let fl=0;fl<floors;fl++)for(let co=0;co<cols;co++){
+          if(windowRng()>litChance)continue;
+          const wy=p[1]+.95+(fl+.58)*Math.max(1.45,(h-1.5)/floors);
+          if(wy>p[1]+h-.45)continue;
+          const lz=cols===1?0:((co/(cols-1))-.5)*span;
+          const wx=fx+Math.cos(yaw)*outward+Math.sin(yaw)*lz,wz=fz-Math.sin(yaw)*outward+Math.cos(yaw)*lz;
+          const wc=warmWindows[Math.floor(windowRng()*warmWindows.length)];
+          appendBox(windowB,wx,wy,wz,.055,isCity?.46:.40,isCity?.62:.54,wc,yaw);
+        }
         if(Math.abs(off)<34)this.colliders.push(p[0],p[2],Math.max(w,d)*.43);
       }
-      // More regular lighting and roadside rhythm immediately sells an inhabited stretch at night.
-      const lampRows=isCity?[1,3,5,7,9,11]:[2,6,10];
-      for(const row of lampRows)for(const side of [-1,1]){const p=place(row,side*(isCity?7.2:6.9));appendCylinder(b,p[0],p[1]+2.65,p[2],.07,5.3,6,C.lamp);appendBox(b,p[0]+Math.sin(p[3])*.52,p[1]+5.20,p[2]+Math.cos(p[3])*.52,1.04,.08,.08,C.lamp,p[3]);appendBox(b,p[0]+Math.sin(p[3])*.95,p[1]+5.10,p[2]+Math.cos(p[3])*.95,.25,.15,.25,C.lampHead,p[3]);}
+      // Street-scale detail keeps settlements from reading as empty towers beside a rural road.
+      if(richness>.35){
+        const detailCount=Math.max(1,Math.floor((isCity?5:2)*this.envScale*(.45+richness*.42)));
+        for(let q=0;q<detailCount;q++){
+          const row=Math.floor(urbanGreenRng()*(SEG_PER_CHUNK+1)),side=urbanGreenRng()<.5?-1:1,p=place(row,side*(isCity?6.7:7.4));
+          if((q+this.id)&1){ // compact street tree / planter
+            const h=2.4+urbanGreenRng()*2.2;appendCylinder(b,p[0],p[1]+h*.27,p[2],.10,h*.54,6,[.31,.25,.18,1]);appendBush(b,p[0],p[1]+h*.72,p[2],.62+urbanGreenRng()*.35,[.25,.43,.29,1]);
+          }else{ // bench / bus-stop style furniture
+            appendBox(b,p[0],p[1]+.46,p[2],1.45,.16,.42,[.34,.29,.24,1],p[3]);appendBox(b,p[0],p[1]+1.30,p[2],.08,1.55,.08,C.metal,p[3]);
+            if(isCity&&richness>1.0)appendBox(b,p[0],p[1]+1.45,p[2],1.35,.72,.055,[.32,.40,.43,1],p[3]);
+          }
+        }
+      }
+      if(richness>.72){
+        // Parked cars are deliberately static scenery, not AI traffic.  A body/cabin + four dark wheel
+        // blocks is enough to break the "empty apocalypse city" look without another draw call.
+        const parkedCount=Math.max(0,Math.floor((isCity?3.2:1.1)*this.envScale*(richness-.45)));
+        const parkedCols=[[.30,.44,.60,1],[.65,.26,.25,1],[.72,.70,.64,1],[.24,.27,.29,1],[.50,.32,.55,1]];
+        for(let q=0;q<parkedCount;q++){
+          const row=1+Math.floor(parkedRng()*10),side=parkedRng()<.5?-1:1,p=place(row,side*(isCity?5.75:6.25)),yaw=p[3]+(parkedRng()-.5)*.035,col=parkedCols[Math.floor(parkedRng()*parkedCols.length)];
+          appendBox(b,p[0],p[1]+.34,p[2],1.55,.50,3.15,col,yaw);appendBox(b,p[0],p[1]+.72,p[2]-.12,1.22,.43,1.62,scaleColor4(col,.86),yaw);
+          for(const sx of [-.70,.70])for(const sz of [-.92,.92]){const wx=p[0]+Math.cos(yaw)*sx+Math.sin(yaw)*sz,wz=p[2]-Math.sin(yaw)*sx+Math.cos(yaw)*sz;appendBox(b,wx,p[1]+.22,wz,.18,.42,.48,[.055,.060,.064,1],yaw);}
+        }
+      }
+
+      // Street lights should create rhythm, not a picket fence.  City lamps are staggered side-to-side
+      // at roughly 12 m along the road (about 24 m per side); towns are much sparser.  The pole itself
+      // stays cool dark metal while only the luminaire emits warm-white light.
+      const lampRows=isCity?[1,4,7,10]:[3,9];
+      for(let li=0;li<lampRows.length;li++){
+        const row=lampRows[li],side=((this.id+li)&1)?1:-1,p=place(row,side*(isCity?7.2:6.9)),lx=p[0]+Math.sin(p[3])*.95,ly=p[1]+5.10,lz=p[2]+Math.cos(p[3])*.95;
+        appendCylinder(b,p[0],p[1]+2.65,p[2],.065,5.3,6,C.lamp);
+        appendBox(b,p[0]+Math.sin(p[3])*.48,p[1]+5.20,p[2]+Math.cos(p[3])*.48,.96,.07,.07,C.lamp,p[3]);
+        appendBox(lightB,lx,ly,lz,.23,.13,.23,C.lampHead,p[3]);
+        this.streetLights.push(lx,ly,lz);
+      }
     }
 
     // Sparse, deterministic distant landmarks give the horizon memorable anchors without becoming
     // obstacles or gameplay objectives. They live far outside the road corridor and never collide.
     if(this.settings.landmarks){
-      const lmDensity=clamp(this.settings.landmarkDensity,.25,2),period=Math.max(7,Math.round(19/lmDensity)),slot=hashU32((this.seed^0x41c6ce57)>>>0)%period;
+      const lmDensity=clamp(.28+richness*.72,.18,1.72),period=Math.max(8,Math.round(19/lmDensity)),slot=hashU32((this.seed^0x41c6ce57)>>>0)%period;
       if(mod(this.id,period)===slot){
-        const row=2+Math.floor(landmarkRng()*9),side=landmarkRng()<.5?-1:1,off=side*(72+landmarkRng()*55),p=place(row,off),kind=Math.floor(landmarkRng()*3);
+        const row=2+Math.floor(landmarkRng()*9),side=landmarkRng()<.5?-1:1,off=side*(72+landmarkRng()*55),p=place(row,off),kind=Math.floor(landmarkRng()*5);
         if(kind===0){
           // Lighthouse / observation beacon.
           appendCylinder(b,p[0],p[1]+5.8,p[2],.72,11.6,8,[.68,.68,.64,1]);
@@ -1236,25 +1564,36 @@ class WorldChunk{
           appendBox(b,p[0],p[1]+3.2,p[2],3.4,6.4,3.4,[.48,.47,.43,1],p[3]);
           appendBox(b,p[0],p[1]+7.25,p[2],1.45,3.0,1.45,[.43,.42,.39,1],p[3]);
           appendCone(b,p[0],p[1]+8.75,p[2],1.35,2.0,6,[.33,.20,.16,1]);
-        }else{
+        }else if(kind===2){
           // Hot-air balloon: intentionally high and non-colliding, visible from several chunks away.
           const by=p[1]+18+landmarkRng()*8;appendBush(b,p[0],by,p[2],3.4,[.72,.34,.24,1]);appendBush(b,p[0],by+1.9,p[2],2.5,[.84,.52,.27,1]);appendBox(b,p[0],by-4.0,p[2],.75,.60,.75,[.28,.20,.14,1]);
+        }else if(kind===3){
+          // Wind turbine: a tall, clean silhouette for open farmland / ridgelines.
+          appendCylinder(b,p[0],p[1]+9.0,p[2],.28,18.0,8,[.76,.78,.76,1]);appendBox(b,p[0],p[1]+18.05,p[2],1.05,.52,.62,[.72,.74,.73,1],p[3]);
+          for(let a=0;a<3;a++){const ang=a*TAU/3,dx=Math.cos(ang)*3.1,dy=Math.sin(ang)*3.1;appendBox(b,p[0]+dx*.48,p[1]+18.1+dy*.48,p[2],.22,6.0,.16,[.82,.83,.80,1],p[3]+ang);}
+        }else{
+          // Water tower: recognisable rural / suburban landmark without needing a texture.
+          for(const sx of [-1,1])for(const sz of [-1,1])appendBox(b,p[0]+sx*1.15,p[1]+5.2,p[2]+sz*1.15,.20,10.4,.20,[.42,.45,.45,1]);
+          appendCylinder(b,p[0],p[1]+11.0,p[2],2.5,3.1,10,[.54,.58,.58,1]);appendCone(b,p[0],p[1]+12.55,p[2],2.55,1.2,10,[.44,.47,.47,1]);
         }
       }
     }
 
-    // Road furniture remains fixed across LOD too, avoiding visible swaps while approaching it.
-    for(const row of [1,4,7,10])for(const side of [-1,1]){const p=place(row,side*5.85);appendBox(b,p[0],p[1]+.36,p[2],.11,.72,.11,C.delineator,p[3]);appendBox(b,p[0],p[1]+.50,p[2],.145,.18,.13,C.delineatorBand,p[3]);appendBox(b,p[0],p[1]+.62,p[2],.17,.12,.14,C.reflector,p[3]);}
-    if(mod(this.id,6)===2){const p=place(7,6.6);appendBox(b,p[0],p[1]+1.5,p[2],.10,3.0,.10,C.metal,p[3]);appendBox(b,p[0],p[1]+2.55,p[2],1.15,.70,.10,C.sign,p[3]);this.colliders.push(p[0],p[2],.55);}
-    if(mod(this.id,9)===4){const p=place(4,-7.3);appendCylinder(b,p[0],p[1]+2.5,p[2],.075,5.0,6,C.lamp);appendBox(b,p[0]+Math.sin(p[3])*.5,p[1]+4.95,p[2]+Math.cos(p[3])*.5,1.0,.09,.09,C.lamp,p[3]);appendBox(b,p[0]+Math.sin(p[3])*.92,p[1]+4.86,p[2]+Math.cos(p[3])*.92,.23,.16,.23,C.lampHead,p[3]);}
+    // Rural road furniture remains fixed across LOD. Settlements switch to curb / sidewalk language,
+    // so highway reflector posts and isolated country lamps disappear there.
+    if(!settlementKind){
+      for(const row of [1,4,7,10])for(const side of [-1,1]){const p=place(row,side*5.85);appendBox(b,p[0],p[1]+.36,p[2],.11,.72,.11,C.delineator,p[3]);appendBox(b,p[0],p[1]+.50,p[2],.145,.18,.13,C.delineatorBand,p[3]);appendBox(b,p[0],p[1]+.62,p[2],.17,.12,.14,C.reflector,p[3]);}
+      if(mod(this.id,6)===2){const p=place(7,6.6);appendBox(b,p[0],p[1]+1.5,p[2],.10,3.0,.10,C.metal,p[3]);appendBox(b,p[0],p[1]+2.55,p[2],1.15,.70,.10,C.sign,p[3]);this.colliders.push(p[0],p[2],.55);}
+      if(mod(this.id,9)===4){const p=place(4,-7.3),lx=p[0]+Math.sin(p[3])*.92,ly=p[1]+4.86,lz=p[2]+Math.cos(p[3])*.92;appendCylinder(b,p[0],p[1]+2.5,p[2],.075,5.0,6,C.lamp);appendBox(b,p[0]+Math.sin(p[3])*.5,p[1]+4.95,p[2]+Math.cos(p[3])*.5,1.0,.09,.09,C.lamp,p[3]);appendBox(lightB,lx,ly,lz,.23,.16,.23,C.lampHead,p[3]);this.streetLights.push(lx,ly,lz);}
+    }
     // Golden/open regions get more fence rhythm, forests less; all choices are chunk deterministic.
     const fenceBias=clamp(dryness*.9+(1-treeDensity)*.35,0,1);
     if(mod(this.id,8)===5 || (fenceBias>.55&&mod(this.id,5)===1)){const side=mod(this.id,16)===5?1:-1;for(let q=2;q<=10;q+=2){const p=place(q,side*6.0);appendBox(b,p[0],p[1]+.48,p[2],.10,.96,.10,C.metal,p[3]);}for(let q=2;q<10;q+=2){const p=place(q+1,side*6.0);appendBox(b,p[0],p[1]+.72,p[2],.10,.13,8.2,C.metal,p[3]);}}
-    const a=b.arrays();this.envTriangles=a[1].length/3;this.envMesh.update(a[0],a[1]);
+    const a=b.arrays(),la=lightB.arrays(),wa=windowB.arrays();this.envTriangles=a[1].length/3;this.envMesh.update(a[0],a[1]);this.lightMesh.update(la[0],la[1]);this.windowMesh.update(wa[0],wa[1]);
   }
   destroy(){
-    this.roadMesh?.destroy();this.terrainMesh?.destroy();this.envMesh?.destroy();
-    this.points=null;this.tangents=null;this.colliders.length=0;
+    this.roadMesh?.destroy();this.terrainMesh?.destroy();this.envMesh?.destroy();this.lightMesh?.destroy();this.windowMesh?.destroy();
+    this.points=null;this.tangents=null;this.colliders.length=0;this.streetLights.length=0;
   }
 }
 
@@ -1264,27 +1603,31 @@ class WorldChunk{
 class ChunkManager{
   constructor(gl,seed,settings=DEFAULT_SETTINGS){
     this.gl=gl;this.seed=seed>>>0;this.settings=settings;this.terrainGen=new TerrainGenerator(seed);this.roadGen=new RoadGenerator(seed,1,this.terrainGen,settings);this.reverseRoadGen=new RoadGenerator(seed,-1,this.terrainGen,settings);this.chunks=[];this.roadData=new Map();this.count=30;this.targetBehind=7;this.minGeneratedId=0;this.maxGeneratedId=-1;this.origin={x:0,z:0};this.originShiftCount=0;this.qualityLevel=0;this.drawScale=1;this.envScale=1;this.worldProgress=0;this.nearest={dist2:1e30,x:0,y:0,z:0,tx:0,ty:0,tz:1,roadDist:0,chunkArrayIndex:0,segment:0,t:0,s:0};
+    this.roadCacheMargin=96;this.roadCheckpointEvery=64;this.forwardCheckpoints=new Map([[-1,this.roadGen.snapshot()]]);this.reverseCheckpoints=new Map([[0,this.reverseRoadGen.snapshot()]]);
     const forwardCount=this.count-this.targetBehind;
-    for(let id=0;id<forwardCount;id++){this.roadData.set(id,this.roadGen.nextChunk(id));this.maxGeneratedId=id;}
-    for(let id=-1;id>=-this.targetBehind;id--){this.roadData.set(id,this.reverseRoadGen.previousChunk(id));this.minGeneratedId=id;}
+    for(let id=0;id<forwardCount;id++){this.roadData.set(id,this.roadGen.nextChunk(id));this.maxGeneratedId=id;this._maybeCheckpoint(id,1);}
+    for(let id=-1;id>=-this.targetBehind;id--){this.roadData.set(id,this.reverseRoadGen.previousChunk(id));this.minGeneratedId=id;this._maybeCheckpoint(id,-1);}
     for(let id=-this.targetBehind;id<forwardCount;id++){const c=new WorldChunk(gl,this.terrainGen,seed,settings),slot=id+this.targetBehind;c.update(id,this.roadData.get(id),this.origin,this.lodForSlot(slot),this.envScaleForSlot(slot));this.chunks.push(c);}
   }
   lodForSlot(slot){const d=Math.abs(slot-this.targetBehind);return d<=3?0:d<=10?1:(this.qualityLevel>=5?3:2);}
   envScaleForSlot(slot){return this.envScale;}
   refreshLODs(){for(let i=0;i<this.chunks.length;i++)this.chunks[i].setLOD(this.lodForSlot(i),this.envScaleForSlot(i));}
   setQuality(level){this.qualityLevel=clamp(level,0,6);this.envScale=this.qualityLevel>=4?.72:1;this.drawScale=this.qualityLevel>=6?.82:1;this.refreshLODs();}
+  _maybeCheckpoint(id,dir){if(dir>0&&((id+1)%this.roadCheckpointEvery===0))this.forwardCheckpoints.set(id,this.roadGen.snapshot());if(dir<0&&((-id)%this.roadCheckpointEvery===0))this.reverseCheckpoints.set(id,this.reverseRoadGen.snapshot());}
+  captureRoadCheckpoints(){this.forwardCheckpoints.set(this.maxGeneratedId,this.roadGen.snapshot());this.reverseCheckpoints.set(this.minGeneratedId,this.reverseRoadGen.snapshot());}
+  _rehydratePositive(id){const start=Math.max(0,id-80),end=Math.min(this.maxGeneratedId,id+20);let cp=-1;for(const k of this.forwardCheckpoints.keys())if(k<start&&k>cp)cp=k;const snap=this.forwardCheckpoints.get(cp)||this.forwardCheckpoints.get(-1),gen=new RoadGenerator(this.seed,1,this.terrainGen,{...this.settings});gen.restore(snap);for(let j=cp+1;j<=end;j++){const boundary=this.forwardCheckpoints.get(j-1);if(j-1!==cp&&boundary)gen.restore(boundary);const d=gen.nextChunk(j);if(j>=start)this.roadData.set(j,d);}}
+  _rehydrateNegative(id){const high=Math.min(-1,id+80),low=Math.max(this.minGeneratedId,id-20);let cp=0;for(const k of this.reverseCheckpoints.keys())if(k>high&&k<cp)cp=k;const snap=this.reverseCheckpoints.get(cp)||this.reverseCheckpoints.get(0),gen=new RoadGenerator(this.seed,-1,this.terrainGen,{...this.settings});gen.restore(snap);for(let j=cp-1;j>=low;j--){const boundary=this.reverseCheckpoints.get(j+1);if(j+1!==cp&&boundary)gen.restore(boundary);const d=gen.previousChunk(j);if(j<=high)this.roadData.set(j,d);}}
+  pruneRoadData(){if(!this.chunks.length)return;const lo=this.chunks[0].id-this.roadCacheMargin,hi=this.chunks[this.chunks.length-1].id+this.roadCacheMargin;for(const id of this.roadData.keys())if(id<lo||id>hi)this.roadData.delete(id);}
   roadDataFor(id){
     let data=this.roadData.get(id);if(data)return data;
-    if(id===this.maxGeneratedId+1){data=this.roadGen.nextChunk(id);this.maxGeneratedId=id;}
-    else if(id===this.minGeneratedId-1){data=this.reverseRoadGen.previousChunk(id);this.minGeneratedId=id;}
-    else throw new Error(`道路区块 ${id} 不在可生成边界`);
-    this.roadData.set(id,data);return data;
+    if(id===this.maxGeneratedId+1){data=this.roadGen.nextChunk(id);this.maxGeneratedId=id;this._maybeCheckpoint(id,1);}
+    else if(id===this.minGeneratedId-1){data=this.reverseRoadGen.previousChunk(id);this.minGeneratedId=id;this._maybeCheckpoint(id,-1);}
+    else if(id>=0&&id<=this.maxGeneratedId){this._rehydratePositive(id);data=this.roadData.get(id);}
+    else if(id<0&&id>=this.minGeneratedId){this._rehydrateNegative(id);data=this.roadData.get(id);}
+    if(!data)throw new Error(`道路区块 ${id} 无法重建`);this.roadData.set(id,data);return data;
   }
-  ensureRoadData(id){
-    while(id>this.maxGeneratedId)this.roadDataFor(this.maxGeneratedId+1);
-    while(id<this.minGeneratedId)this.roadDataFor(this.minGeneratedId-1);
-    return this.roadData.get(id);
-  }
+  ensureRoadData(id){while(id>this.maxGeneratedId)this.roadDataFor(this.maxGeneratedId+1);while(id<this.minGeneratedId)this.roadDataFor(this.minGeneratedId-1);return this.roadData.get(id)||this.roadDataFor(id);}
+
   sampleRoadAtS(s){
     const id=Math.floor(s/CHUNK_LEN),data=this.ensureRoadData(id),u=clamp((s-id*CHUNK_LEN)/ROAD_STEP,0,SEG_PER_CHUNK);
     const i=Math.min(SEG_PER_CHUNK-1,Math.floor(u)),t=clamp(u-i,0,1),k=i*3,n=(i+1)*3,p=data.points,q=data.tangents,c=data.curvatures;
@@ -1315,8 +1658,9 @@ class ChunkManager{
     while(n<this.targetBehind){
       const c=this.chunks.pop(),first=this.chunks[0],newId=first.id-1;c.update(newId,this.roadDataFor(newId),this.origin,2,this.envScaleForSlot(0));this.chunks.unshift(c);n++;
     }
-    this.refreshLODs();
+    this.refreshLODs();this.pruneRoadData();
   }
+  gpuMeshCount(){let n=0;for(const c of this.chunks)for(const k of ['roadMesh','terrainMesh','envMesh','lightMesh','windowMesh'])if(c[k])n++;return n;}
   maybeShiftOrigin(vehicle,camera){
     if(Math.hypot(vehicle.x,vehicle.z)<ORIGIN_SHIFT_DISTANCE)return false;
     const dx=Math.round(vehicle.x/CHUNK_LEN)*CHUNK_LEN,dz=Math.round(vehicle.z/CHUNK_LEN)*CHUNK_LEN;this.origin.x+=dx;this.origin.z+=dz;vehicle.x-=dx;vehicle.z-=dz;vehicle.shiftEffects?.(dx,dz);camera.shift(dx,dz);
@@ -1344,10 +1688,42 @@ class ChunkManager{
     for(const c of this.chunks){const dx=c.cx-camera.pos[0],dz=c.cz-camera.pos[2];if(dx*dx+dz*dz<ff2)renderer.draw(c.roadMesh,c.model);}
     const envFar=Math.min(env.fogFar,520)*this.drawScale,ef2=envFar*envFar;
     for(const c of this.chunks){const dx=c.cx-camera.pos[0],dz=c.cz-camera.pos[2];if(dx*dx+dz*dz<ef2)renderer.draw(c.envMesh,c.model);}
+    const lampGlow=clamp((env.nightFactor||0)*1.65+(env.duskFactor||0)*.28,0,1.8);
+    const windowGlow=clamp((env.nightFactor||0)*.92+(env.duskFactor||0)*.18,0,1.05);
+    for(const c of this.chunks){const dx=c.cx-camera.pos[0],dz=c.cz-camera.pos[2];if(dx*dx+dz*dz<ef2){renderer.draw(c.lightMesh,c.model,lampGlow,1,false,true,.18);renderer.draw(c.windowMesh,c.model,windowGlow,1,false,true,.08);}}
+  }
+  renderSunShadow(renderer,cx,cz,radius,richness){
+    const r2=(radius+CHUNK_LEN*.75)*(radius+CHUNK_LEN*.75);
+    for(const c of this.chunks){const dx=c.cx-cx,dz=c.cz-cz;if(dx*dx+dz*dz>r2)continue;if(richness>.05)renderer.draw(c.envMesh,c.model);if(richness>.72)renderer.draw(c.terrainMesh,c.model);if(richness>1.55)renderer.draw(c.lightMesh,c.model);}
+  }
+  renderHeadShadow(renderer,cx,cz,radius,richness){
+    const r2=(radius+CHUNK_LEN*.55)*(radius+CHUNK_LEN*.55);
+    for(const c of this.chunks){const dx=c.cx-cx,dz=c.cz-cz;if(dx*dx+dz*dz>r2)continue;renderer.draw(c.envMesh,c.model);if(richness>1.45)renderer.draw(c.lightMesh,c.model);}
+  }
+  renderStreetShadow(renderer,cx,cz,radius,richness){
+    const r2=(radius+CHUNK_LEN*.42)*(radius+CHUNK_LEN*.42);
+    for(const c of this.chunks){const dx=c.cx-cx,dz=c.cz-cz;if(dx*dx+dz*dz>r2)continue;renderer.draw(c.envMesh,c.model);}
+  }
+  collectStreetLights(cameraPos,out,max=4,range=92,forward=null){
+    const bestD=this._streetBestD||(this._streetBestD=new Float64Array(24));
+    for(let i=0;i<max;i++){bestD[i]=Infinity;out[i*3]=out[i*3+1]=out[i*3+2]=0;}
+    let count=0;
+    const fx=forward?.[0]||0,fz=forward?.[2]||0,hasForward=Math.hypot(fx,fz)>.2,range2=range*range;
+    for(const c of this.chunks){const a=c.streetLights;for(let i=0;i<a.length;i+=3){
+      const x=a[i]+c.cx,y=a[i+1]+c.cy,z=a[i+2]+c.cz,dx=x-cameraPos[0],dy=y-cameraPos[1],dz=z-cameraPos[2],d2=dx*dx+dy*dy+dz*dz;if(d2>range2)continue;
+      // Favor lamps in front of the car so distant road pools remain visible instead of spending
+      // every slot on already-passed lamps. Nearby rear lamps still win when they are truly close.
+      const along=hasForward?(dx*fx+dz*fz):0,dirWeight=!hasForward?1:(along>10?.55:(along>-12?.82:1.65)),score=d2*dirWeight;
+      if(score>=bestD[max-1])continue;let j=Math.min(count,max-1);if(count<max)count++;
+      while(j>0&&score<bestD[j-1]){bestD[j]=bestD[j-1];out[j*3]=out[(j-1)*3];out[j*3+1]=out[(j-1)*3+1];out[j*3+2]=out[(j-1)*3+2];j--;}
+      bestD[j]=score;out[j*3]=x;out[j*3+1]=y;out[j*3+2]=z;
+    }}
+    return count;
   }
   maxRoadSpeed(){return maxRoadSpeed(this.settings);}
   speedReference(){return speedReference(this.settings);}
   refreshEnvironment(){for(const c of this.chunks)c.buildEnvironment();}
+  refreshScenery(){for(const c of this.chunks){c.buildRoad();c.buildEnvironment();}}
   totalEnvTriangles(){let n=0;for(const c of this.chunks)n+=c.envTriangles;return n;}
   destroy(){
     for(const c of this.chunks)c.destroy?.();
@@ -1608,11 +1984,13 @@ class Vehicle{
     if(input.take('KeyR'))this.reset();
   }
   renderDirectionalShadow(renderer,env){
+    // Cheap fallback used only when the true directional shadow map is off.
+    const rich=clamp(this.world.settings.shadowRichness??1,0,2);if(rich<=.01||renderer.sunShadowEnabled)return;
     // Cheap projected car shadow: cast a few flattened silhouettes along the actual sun direction.
     // It rotates with the car and lengthens naturally at dusk, while contact shadows still handle
     // tyre-to-ground grounding on uneven terrain. No shadow map or extra framebuffer is required.
     const ly=Math.min(-.12,env.lightDir[1]),castX=env.lightDir[0]/(-ly),castZ=env.lightDir[2]/(-ly);
-    const nf=env.nightFactor??(env.name==='夜晚'?1:0),df=env.duskFactor??(env.name==='黄昏'?1:0),alpha=clamp(.24+df*.10-nf*.195,.045,.34);
+    const nf=env.nightFactor??(env.name==='夜晚'?1:0),df=env.duskFactor??(env.name==='黄昏'?1:0),alpha=clamp(.24+df*.10-nf*.195,.045,.34)*smoothstep(.04,.60,rich);
     if(alpha<=.01)return;
     const cy=Math.cos(this.yaw),sy=Math.sin(this.yaw),st=this.style;
     const drawProjected=(lx,lz,h,sx,sz,a=1)=>{
@@ -1647,7 +2025,7 @@ class Vehicle{
     const st=this.style,frontZ=st.frontZ,rearZ=st.rearZ,wx=this.wheelTrack,shadowPitch=-this.terrainPitch,shadowRoll=this.terrainRoll;
     for(let i=0;i<4;i++){if(!this.wheelContact[i])continue;const sx=this.wheelWorldX[i],sz=this.wheelWorldZ[i],gy=this.wheelGround[i]||this.groundCenter;M4.fromTRS(this.shadowModel,sx,gy+.018,sz,this.yaw,shadowPitch,shadowRoll,.42,1,.64);renderer.draw(this.shadow,this.shadowModel,0,.23,true,false);}
     const b=st.body,c=st.cabin,g=st.glass;
-    const nightFactor=env.nightFactor??(env.name==='夜晚'?1:0),duskFactor=env.duskFactor??(env.name==='黄昏'?1:0),paintSpec=lerp(.31,.34,nightFactor)+duskFactor*.08;
+    const nightFactor=env.nightFactor??(env.name==='夜晚'?1:0),duskFactor=env.duskFactor??(env.name==='黄昏'?1:0),headlightVisual=clamp(renderer.headlightBrightness??1,0,2),paintSpec=lerp(.31,.34,nightFactor)+duskFactor*.08;
     drawPart(this.body,0,b[3],b[4],b[0],b[1],b[2],0,0,0,0,1,false,paintSpec);
     drawPart(this.body2,0,c[3],c[4],c[0],c[1],c[2],0,0,0,0,1,false,paintSpec*.82);
     drawPart(this.glass,0,g[3],g[4],g[0],g[1],g[2],0,0,0,.018,1,false,.68);
@@ -1689,27 +2067,31 @@ class Vehicle{
     }else{ // wagon / SUV: twin roof rails
       for(const side of [-1,1])drawPart(this.darkTrim,side*c[0]*.38,c[3]+c[1]*.57,c[4]-.05,.045,.045,c[2]*.82,0,0,0,0,1,false,.12);
     }
-    const drawWheelWorld=(mesh,index,front,sx,sy,sz,spec=0)=>{const wyaw=this.yaw+(front?this.currentSteer:0),wpitch=this.wheelSpin-this.terrainPitch;M4.fromTRS(this.model,this.wheelWorldX[index],this.wheelCenterY[index],this.wheelWorldZ[index],wyaw,wpitch,this.terrainRoll,sx,sy,sz);renderer.draw(mesh,this.model,0,1,false,true,spec);};
+    // Wheel contact height is independent per corner, but the tyre's axle must stay rigid.  Feeding the
+    // sampled terrain roll directly into each tyre made the wheel itself look bent on cross-slopes.
+    // Suspension now owns vertical travel while the visual wheel only steers + spins.
+    const wheelCamber=clamp(this.roll*.10,-.035,.035);
+    const drawWheelWorld=(mesh,index,front,sx,sy,sz,spec=0)=>{const wyaw=this.yaw+(front?this.currentSteer:0),wpitch=this.wheelSpin;M4.fromTRS(this.model,this.wheelWorldX[index],this.wheelCenterY[index],this.wheelWorldZ[index],wyaw,wpitch,wheelCamber,sx,sy,sz);renderer.draw(mesh,this.model,0,1,false,true,spec);};
     for(let i=0;i<4;i++){
-      const front=i<2,side=i%2===0?-1:1,wyaw=this.yaw+(front?this.currentSteer:0),wpitch=this.wheelSpin-this.terrainPitch;
+      const front=i<2,side=i%2===0?-1:1,wyaw=this.yaw+(front?this.currentSteer:0),wpitch=this.wheelSpin;
       drawWheelWorld(this.wheel,i,front,.42,.82,.82,.04);
       drawWheelWorld(this.rim,i,front,.435,.47,.47,.56);
       drawWheelWorld(this.hub,i,front,.450,.19,.19,.78);
       // Put a five-spoke face just outside the cylinder cap.  It rotates with the tyre, while the
       // red caliper below remains attached to the upright.  This is deliberately geometry-only.
       const ax=Math.cos(wyaw),az=-Math.sin(wyaw),faceOff=side*.226,fx=this.wheelWorldX[i]+ax*faceOff,fz=this.wheelWorldZ[i]+az*faceOff;
-      for(let k=0;k<5;k++){M4.fromTRS(this.model,fx,this.wheelCenterY[i],fz,wyaw,wpitch+k*TAU/5,this.terrainRoll,.055,.075,.50);renderer.draw(this.rimSpoke,this.model,0,1,false,true,.72);}
-      M4.fromTRS(this.model,fx+ax*side*.006,this.wheelCenterY[i],fz+az*side*.008,wyaw,wpitch,this.terrainRoll,.060,.19,.19);renderer.draw(this.rimCap,this.model,0,1,false,true,.82);
+      for(let k=0;k<5;k++){M4.fromTRS(this.model,fx,this.wheelCenterY[i],fz,wyaw,wpitch+k*TAU/5,wheelCamber,.055,.075,.50);renderer.draw(this.rimSpoke,this.model,0,1,false,true,.72);}
+      M4.fromTRS(this.model,fx+ax*side*.006,this.wheelCenterY[i],fz+az*side*.008,wyaw,wpitch,wheelCamber,.060,.19,.19);renderer.draw(this.rimCap,this.model,0,1,false,true,.82);
       // Brake caliper stays visually fixed relative to the upright instead of spinning with the tyre.
-      M4.fromTRS(this.model,this.wheelWorldX[i],this.wheelCenterY[i]-.06,this.wheelWorldZ[i],wyaw,-this.terrainPitch,this.terrainRoll,.57,.12,.17);renderer.draw(this.brakeCaliper,this.model,0,1,false,true,.20);
+      M4.fromTRS(this.model,this.wheelWorldX[i],this.wheelCenterY[i]-.06,this.wheelWorldZ[i],wyaw,0,wheelCamber,.57,.12,.17);renderer.draw(this.brakeCaliper,this.model,0,1,false,true,.20);
     }
     for(const side of [-1,1]){
-      drawPart(this.head,side*.59,.12,st.frontLight,.42,.20,.09,0,0,0,.45+nightFactor*1.70+duskFactor*.16);
+      drawPart(this.head,side*.59,.12,st.frontLight,.42,.20,.09,0,0,0,.10+headlightVisual*(.35+nightFactor*1.70+duskFactor*.16));
       drawPart(this.indicator,side*.82,.115,st.frontLight+.018,.12,.12,.095,0,0,0,.12,.94,true);
       drawPart(this.tail,side*.59,.13,st.rearLight,.44,.22,.08,0,0,0,.35+this.brakeLight*2.0);
     }
-    drawPart(this.chrome,0,.025,st.frontLight+.055,.50,.035,.028,0,0,0,.06+nightFactor*.29+duskFactor*.04,.72,true,.18);
-    if(nightFactor>.035)for(const side of [-1,1])drawPart(this.beam,side*.56,-.39,15.5,.50,.010,24.5,0,-.034,0,.20+nightFactor*.14,.010+nightFactor*.010,true);
+    drawPart(this.chrome,0,.025,st.frontLight+.055,.50,.035,.028,0,0,0,.04+headlightVisual*(.02+nightFactor*.29+duskFactor*.04),.72,true,.18);
+    if(nightFactor>.035&&headlightVisual>.01)for(const side of [-1,1])drawPart(this.beam,side*.56,-.39,15.5,.50,.010,24.5,0,-.034,0,(.20+nightFactor*.14)*headlightVisual,(.010+nightFactor*.010)*Math.min(1.35,headlightVisual),true);
   }
 }
 
@@ -1902,7 +2284,7 @@ class Camera{
   beginTransition(duration=.82){
     if(!this.initialized)return;
     V3.copy(this.transitionStartPos,this.pos);V3.copy(this.transitionStartTarget,this.target);this.transitionStartFov=this.currentFov;this.transitionStartWarp=this.peripheralWarp;
-    this.transitionDuration=Math.max(.12,duration);this.transitionElapsed=0;this.transitioning=true;
+    this.transitionDuration=reducedMotionActive()?.08:Math.max(.12,duration);this.transitionElapsed=0;this.transitioning=true;
   }
   cycle(){this.beginTransition(.24);this.mode=(this.mode+1)%3;}
   shift(dx,dz){
@@ -1911,7 +2293,7 @@ class Camera{
     if(this.initialized){this.lastVehicleX-=dx;this.lastVehicleZ-=dz;}
   }
   updateGarage(dt,vehicle,freezeOrbit=false){
-    if(!freezeOrbit){this.garageUserTimer=Math.max(0,this.garageUserTimer-dt);if(this.garageUserTimer<=0)this.garageAngle=(this.garageAngle+dt*.18)%TAU;}
+    if(!freezeOrbit){this.garageUserTimer=Math.max(0,this.garageUserTimer-dt);if(this.garageUserTimer<=0&&!reducedMotionActive())this.garageAngle=(this.garageAngle+dt*.18)%TAU;}
     const a=vehicle.yaw+this.garageAngle,r=this.garageRadius,px=vehicle.x+Math.sin(a)*r,pz=vehicle.z+Math.cos(a)*r,py=vehicle.y+lerp(1.95,2.55,smoothstep(5.2,8.8,r));
     const tx=vehicle.x,ty=vehicle.y+.35,tz=vehicle.z,desiredFov=48*DEG;
     if(!this.initialized){V3.set(this.pos,px,py,pz);V3.set(this.target,tx,ty,tz);this.currentFov=desiredFov;this.initialized=true;}
@@ -1975,7 +2357,7 @@ class Camera{
     if(this.mode<2&&driftBlend>0){
       const signedSlip=clamp(vehicle.slipAngle/(16*DEG),-1,1);side+=signedSlip*driftBlend*(this.mode===0?.72:.34);look+=driftBlend*1.4;baseFov+=driftBlend*(this.mode===0?3.2:2.0);
     }
-    const shakeMul=clamp(vehicle.world.settings.cameraShake,0,2),highShake=smoothstep(25,BASE_SPEED_REF,spd),high2=highShake*highShake,accelShake=Math.abs(vehicle.accelVisual);
+    const shakeMul=reducedMotionActive()?0:clamp(vehicle.world.settings.cameraShake,0,2),highShake=smoothstep(25,BASE_SPEED_REF,spd),high2=highShake*highShake,accelShake=Math.abs(vehicle.accelVisual);
     const suspensionKick=clamp(vehicle.heaveVel*.0045+vehicle.pitchVel*.010,-.020,.020)*shakeMul;
     const shakeY=(((Math.sin(this.shakeTime*17.0)*.006+Math.sin(this.shakeTime*31.0)*.003)*high2+Math.sin(this.shakeTime*7.0)*.010*accelShake)*shakeMul)+suspensionKick;
     const shakeX=0;
@@ -2113,7 +2495,7 @@ class AdaptiveQuality{
 // 13. UI
 // ------------------------------------------------------------
 class UI{
-  constructor(game){this.game=game;this.acc=0;this.fps=60;this.debug=false;this.regionName=biomeAtS(0,game.seed).name;this.regionTimer=0;this.buildVehiclePanel();this.updateClock();this.clockTimer=setInterval(()=>this.updateClock(),1000);setTimeout(()=>$hint.classList.add('hide'),4200);setTimeout(()=>{if(!$regionToast)return;$regionToast.textContent=this.regionName;$regionToast.classList.add('show');clearTimeout(this.regionTimer);this.regionTimer=setTimeout(()=>$regionToast.classList.remove('show'),2600);},4700);}
+  constructor(game){this.game=game;this.acc=0;this.fps=60;this.fpsElapsed=0;this.fpsFrames=0;this.debug=false;this.regionName=biomeAtS(0,game.seed).name;this.regionTimer=0;this.buildVehiclePanel();this.updateClock();this.clockTimer=setInterval(()=>this.updateClock(),1000);setTimeout(()=>$hint.classList.add('hide'),4200);setTimeout(()=>{if(!$regionToast)return;$regionToast.textContent=this.regionName;$regionToast.classList.add('show');clearTimeout(this.regionTimer);this.regionTimer=setTimeout(()=>$regionToast.classList.remove('show'),2600);},4700);}
   updateClock(){if(!$clock)return;const d=new Date(),hh=String(d.getHours()).padStart(2,'0'),mm=String(d.getMinutes()).padStart(2,'0');$clock.textContent=`${hh}:${mm}`;$clock.setAttribute('aria-label',`当前时间 ${hh}:${mm}`);}
   updateRegion(){if(!$regionToast)return;const info=biomeAtS(this.game.world.worldProgress,this.game.seed),name=info.name;if(name===this.regionName)return;this.regionName=name;$regionToast.textContent=name;$regionToast.classList.add('show');clearTimeout(this.regionTimer);this.regionTimer=setTimeout(()=>$regionToast.classList.remove('show'),2800);}
   buildVehiclePanel(){
@@ -2130,13 +2512,18 @@ class UI{
   toggleVehiclePanel(force){if(!$vehiclePanel)return;const show=typeof force==='boolean'?force:!$vehiclePanel.classList.contains('show');$vehiclePanel.classList.toggle('show',show);$vehiclePanel.setAttribute('aria-hidden',String(!show));if($vehicleBtn)$vehicleBtn.setAttribute('aria-expanded',String(show));}
   toggleMenu(force){if(!$controlMenu)return;const show=typeof force==='boolean'?force:!$controlMenu.classList.contains('show');$controlMenu.classList.toggle('show',show);$controlMenu.setAttribute('aria-hidden',String(!show));if($menuBtn){$menuBtn.setAttribute('aria-expanded',String(show));$menuBtn.setAttribute('aria-label',show?'关闭菜单':'打开菜单');}}
   toggleAbout(force){if(!$aboutPanel)return;const show=typeof force==='boolean'?force:!$aboutPanel.classList.contains('show');$aboutPanel.classList.toggle('show',show);$aboutPanel.setAttribute('aria-hidden',String(!show));if($aboutBtn)$aboutBtn.setAttribute('aria-expanded',String(show));}
-  update(dt){
-    this.acc+=dt;if(this.acc<.1)return;this.fps=lerp(this.fps,1/Math.max(dt,.001),.08);this.acc=0;
+  update(dt,frameDt=dt){
+    // FPS must be measured over a real time window, not from one sampled frame interval. On high-refresh
+    // displays an intentional 90/120 cap produces a cadence such as 6.3/12.6 ms; sampling one of those
+    // intervals makes an otherwise correct 90/120 limiter falsely read near 80 or 160 FPS.
+    this.fpsElapsed+=Math.max(0,frameDt);this.fpsFrames++;
+    if(this.fpsElapsed>=.50){this.fps=this.fpsFrames/Math.max(this.fpsElapsed,.001);this.fpsElapsed=0;this.fpsFrames=0;}
+    this.acc+=dt;if(this.acc<.1)return;this.acc=0;
     const kmh=Math.round(Math.abs(this.game.vehicle.speed)*3.6);let speedPrefix='';
     if(this.game.autopilot.enabled)speedPrefix='自动驾驶中 · ';
     else if(this.game.autoForward)speedPrefix='自动前进中 · ';
     $speed.textContent=`${speedPrefix}${kmh} km/h`;$distance.textContent=`${(this.game.vehicle.odometer/1000).toFixed(1)} km`;if($fpsReadout){$fpsReadout.textContent=`${Math.round(this.fps)} FPS`;$fpsReadout.classList.toggle('show',!!this.game.settings.showFps);$fpsReadout.setAttribute('aria-label',`当前帧率 ${Math.round(this.fps)} FPS`);}this.updateRegion();
-    if(this.debug){const n=this.game.world.nearestRoad(this.game.vehicle.x,this.game.vehicle.z),o=this.game.world.origin;$debug.textContent=`帧率 ~ ${this.fps.toFixed(0)}\n画质 Q${this.game.quality.level} / DPR ${this.game.renderer.maxDpr.toFixed(2)}\n绘制 ${this.game.renderer.drawCalls}\n区块 ${this.game.world.chunks.length} / GPU 网格 ${this.game.world.chunks.length*3}\n历史 ${this.game.world.roadData.size} 个区块\n环境三角形 ${this.game.world.totalEnvTriangles()}\n道路偏移 ${n.roadDist.toFixed(1)} m\n道路进度 ${(n.s/1000).toFixed(2)} km\n原点 ${o.x.toFixed(0)}, ${o.z.toFixed(0)} (${this.game.world.originShiftCount})\n局部坐标 ${this.game.vehicle.x.toFixed(1)}, ${this.game.vehicle.z.toFixed(1)}\n视角 C${this.game.camera.mode+1} / FOV ${(this.game.camera.currentFov/DEG).toFixed(1)}° / 边缘 ${(this.game.camera.peripheralWarp*100).toFixed(0)}% / 距离 ${Math.hypot(this.game.camera.pos[0]-this.game.vehicle.x,this.game.camera.pos[1]-this.game.vehicle.y,this.game.camera.pos[2]-this.game.vehicle.z).toFixed(2)} m / 车体视觉 ${(lerp(1,1.02,smoothstep(24,BASE_SPEED_REF,Math.abs(this.game.vehicle.speed)))*100).toFixed(0)}%\n转向 ${(this.game.vehicle.currentSteer/DEG).toFixed(1)}° / 侧滑 ${(this.game.vehicle.slipAngle/DEG).toFixed(1)}°\n区域 ${biomeAtS(n.s,this.game.seed).name}\n自动状态 ${this.game.autopilot.enabled?this.game.autopilot.state:(this.game.autoForward?'自动前进':'关闭')}\n自动横向 ${this.game.autopilot.enabled?this.game.autopilot.currentLateral.toFixed(2)+' m':'-'} / 预测余量 ${this.game.autopilot.enabled?this.game.autopilot.predictedMargin.toFixed(2)+' m':'-'} / 感知 ${this.game.autopilot.enabled?this.game.autopilot.sensorHorizon.toFixed(0)+' m':'-'}\n制动预判 ${this.game.autopilot.enabled&&Number.isFinite(this.game.autopilot.brakePlanDistance)?this.game.autopilot.brakePlanDistance.toFixed(0)+' m → '+(this.game.autopilot.brakePlanCurveSpeed*3.6).toFixed(0)+' km/h':'-'}`; }
+    if(this.debug){const n=this.game.world.nearestRoad(this.game.vehicle.x,this.game.vehicle.z),o=this.game.world.origin,frameTarget=this.game.lastFrameTarget||0;$debug.textContent=`帧率 ~ ${this.fps.toFixed(0)} / ${frameTarget>0?frameTarget+' 目标':'屏幕'}\n画质 Q${this.game.quality.level} / DPR ${this.game.renderer.maxDpr.toFixed(2)}\n绘制 ${this.game.renderer.drawCalls}\n阴影 ${this.game.renderer.shadowStatus}\n区块 ${this.game.world.chunks.length} / GPU 网格 ${this.game.world.gpuMeshCount()}\n历史 ${this.game.world.roadData.size} 个区块\n环境三角形 ${this.game.world.totalEnvTriangles()}\n道路偏移 ${n.roadDist.toFixed(1)} m\n道路进度 ${(n.s/1000).toFixed(2)} km\n原点 ${o.x.toFixed(0)}, ${o.z.toFixed(0)} (${this.game.world.originShiftCount})\n局部坐标 ${this.game.vehicle.x.toFixed(1)}, ${this.game.vehicle.z.toFixed(1)}\n视角 C${this.game.camera.mode+1} / FOV ${(this.game.camera.currentFov/DEG).toFixed(1)}° / 边缘 ${(this.game.camera.peripheralWarp*100).toFixed(0)}% / 距离 ${Math.hypot(this.game.camera.pos[0]-this.game.vehicle.x,this.game.camera.pos[1]-this.game.vehicle.y,this.game.camera.pos[2]-this.game.vehicle.z).toFixed(2)} m / 车体视觉 ${(lerp(1,1.02,smoothstep(24,BASE_SPEED_REF,Math.abs(this.game.vehicle.speed)))*100).toFixed(0)}%\n转向 ${(this.game.vehicle.currentSteer/DEG).toFixed(1)}° / 侧滑 ${(this.game.vehicle.slipAngle/DEG).toFixed(1)}°\n区域 ${biomeAtS(n.s,this.game.seed).name}\n自动状态 ${this.game.autopilot.enabled?this.game.autopilot.state:(this.game.autoForward?'自动前进':'关闭')}\n自动横向 ${this.game.autopilot.enabled?this.game.autopilot.currentLateral.toFixed(2)+' m':'-'} / 预测余量 ${this.game.autopilot.enabled?this.game.autopilot.predictedMargin.toFixed(2)+' m':'-'} / 感知 ${this.game.autopilot.enabled?this.game.autopilot.sensorHorizon.toFixed(0)+' m':'-'}\n制动预判 ${this.game.autopilot.enabled&&Number.isFinite(this.game.autopilot.brakePlanDistance)?this.game.autopilot.brakePlanDistance.toFixed(0)+' m → '+(this.game.autopilot.brakePlanCurveSpeed*3.6).toFixed(0)+' km/h':'-'}`; }
   }
   setPaused(p){$pauseScreen.classList.remove('show');const label=$pauseBtn.querySelector('.buttonLabel');if(label)label.textContent=p?'继续':'暂停';$pauseBtn.setAttribute('aria-pressed',String(p));$pauseBtn.setAttribute('aria-label',p?'继续游戏':'暂停游戏');if($garageStart)$garageStart.textContent=p?'继续驾驶':'开始驾驶';}
   setAutoForward(on){
@@ -2153,7 +2540,7 @@ class UI{
 // ------------------------------------------------------------
 class Game{
   constructor(gl,seed){
-    this.gl=gl;this.seed=seed>>>0;this.settings=loadSettings();this.renderer=new Renderer(gl);this.renderer.renderScale=clamp(this.settings.renderScale,.50,1.50);this.input=new Input();this.world=new ChunkManager(gl,seed,this.settings);this.vehicle=new Vehicle(gl,this.world);this.loadVehiclePreferences();this.autopilot=new Autopilot(this.world,gl);this.camera=new Camera();this.audio=new AudioManager(this.settings);this.quality=new AdaptiveQuality(this);this.ui=new UI(this);this.initWindFx();this.envIndex=0;this.envFromIndex=0;this.envTransitionStart=-1;this.envTransitionDuration=1450;this.dayCycleStart=performance.now()-clamp(this.settings.dayNightMinutes,2,30)*60000*.30;this.envScratch={name:'',skyTop:new Float32Array(3),skyBottom:new Float32Array(3),fogColor:new Float32Array(3),lightDir:new Float32Array(3),lightColor:new Float32Array(3),sunColor:new Float32Array(3),sunStrength:0,ambient:0,diffuse:0,fogNear:0,fogFar:0,nightFactor:0,duskFactor:0,rainFactor:0};this.autoForward=false;this.paused=false;this.pausePreview=false;this.started=false;document.body.classList.add('garage');document.body.classList.toggle('clean-ui',!!this.settings.cleanUi);this.last=performance.now();this.lastPresented=0;this.running=true;this.rafId=0;this.frameBound=t=>this.frame(t);
+    this.gl=gl;this.seed=seed>>>0;this.settings=loadSettings();this.renderer=new Renderer(gl);this.renderer.renderScale=clamp(this.settings.renderScale,.50,1.50);this.input=new Input();this.world=new ChunkManager(gl,seed,this.settings);this.vehicle=new Vehicle(gl,this.world);this.loadVehiclePreferences();this.autopilot=new Autopilot(this.world,gl);this.camera=new Camera();this.audio=new AudioManager(this.settings);this.quality=new AdaptiveQuality(this);this.ui=new UI(this);this.initWindFx();this.envIndex=0;this.envFromIndex=0;this.envTransitionStart=-1;this.envTransitionDuration=1450;this.dayCycleStart=performance.now()-clamp(this.settings.dayNightMinutes,2,30)*60000*.30;this.envScratch={name:'',skyTop:new Float32Array(3),skyBottom:new Float32Array(3),fogColor:new Float32Array(3),lightDir:new Float32Array(3),lightColor:new Float32Array(3),sunColor:new Float32Array(3),sunStrength:0,ambient:0,diffuse:0,fogNear:0,fogFar:0,nightFactor:0,duskFactor:0,rainFactor:0};this.autoForward=false;this.paused=false;this.pausePreview=false;this.started=false;document.body.classList.add('garage');document.body.classList.toggle('clean-ui',!!this.settings.cleanUi);this.last=performance.now();this.nextFrameAt=0;this.previewShadowAt=0;this.lastFrameTarget=0;this.running=true;this.rafId=0;this.pageHidden=!!document.hidden;this.frameBound=t=>this.frame(t);
     if($seedInput){$seedInput.value=String(this.seed);$seedInput.title=`当前世界种子 ${this.seed}`;}
     this.bindUI();this.initConfigPanel();this.initRainFx();this.initWeatherSystem();this.updateEnvironmentButton();this.camera.updateGarage(.016,this.vehicle);this.requestFrame();
   }
@@ -2226,7 +2613,11 @@ class Game{
       }
       if(this.paused&&(e.code==='KeyP'||e.code==='Escape')){e.preventDefault();e.stopPropagation();this.input.clearCode(e.code);this.togglePause(false);}
     },{passive:false});
-    document.addEventListener('visibilitychange',()=>{if(document.hidden&&!this.paused)this.togglePause(true);});
+    document.addEventListener('visibilitychange',()=>{
+      this.pageHidden=!!document.hidden;
+      if(this.pageHidden){if(!this.paused)this.togglePause(true);if(this.rafId){cancelAnimationFrame(this.rafId);this.rafId=0;}}
+      else{this.last=performance.now();this.nextFrameAt=0;this.previewShadowAt=0;this.requestFrame();}
+    });
     document.addEventListener('fullscreenchange',()=>{
       const active=!!document.fullscreenElement;if(this.settings.fullscreen===active)return;
       this.settings.fullscreen=active;this.syncSettingControl('fullscreen');saveSettings(this.settings);this.updateSettingReset('fullscreen');this.restoreCanvasFocus();
@@ -2235,7 +2626,7 @@ class Game{
   startDriving(){
     if(this.started)return;
     this.camera.beginTransition(.92);this.started=true;document.body.classList.remove('garage');this.ui.toggleAbout(false);this.ui.toggleVehiclePanel(false);this.camera.rigYawInitialized=false;
-    this.last=performance.now();this.audio.ensureStarted();this.restoreCanvasFocus();
+    this.last=performance.now();this.nextFrameAt=0;this.previewShadowAt=0;this.audio.ensureStarted();this.restoreCanvasFocus();
   }
   restoreCanvasFocus(){if(IS_COARSE_POINTER)return;requestAnimationFrame(()=>{try{canvas.focus({preventScroll:true});}catch(_){try{canvas.focus();}catch(__){}}});}
   applySeedFromMenu(){
@@ -2278,11 +2669,11 @@ class Game{
     if($seedInput){$seedInput.value=String(nextSeed);$seedInput.title=`当前世界种子 ${nextSeed}`;}
     this.ui.toggleMenu(false);this.ui.toggleAbout(false);this.ui.toggleVehiclePanel(false);this.ui.toggleConfigPanel(false);
     oldWorld?.destroy?.();
-    this.last=performance.now();this.requestFrame();this.restoreCanvasFocus();
+    this.last=performance.now();this.nextFrameAt=0;this.previewShadowAt=0;this.requestFrame();this.restoreCanvasFocus();
   }
   initConfigPanel(){
     if(!$configPanel)return;
-    const percentKeys=new Set(['acceleration','steering','grip','onePedal','roadHills','roadCurves','vegetation','fovEffect','cameraSpeed','cameraShake','speedLines','fogDensity','renderScale','motorVolume','windVolume','tireVolume','rainVolume','rainIntensity','rainChance','landmarkDensity','settlementDensity']);
+    const percentKeys=new Set(['acceleration','steering','grip','onePedal','roadHills','roadCurves','sceneryRichness','fovEffect','cameraSpeed','cameraShake','speedLines','fogDensity','shadowRichness','shadowQuality','headlightBrightness','lightRichness','lightDistance','renderScale','motorVolume','windVolume','tireVolume','rainVolume','rainIntensity','rainChance',]);
     const restoreCanvasFocus=()=>this.restoreCanvasFocus();
     const tabs=[...$configPanel.querySelectorAll('.configTab')],pages=[...$configPanel.querySelectorAll('.configPage')];
     const selectTab=name=>{for(const tab of tabs){const active=tab.dataset.configTab===name;tab.classList.toggle('active',active);tab.setAttribute('aria-selected',String(active));}for(const page of pages)page.classList.toggle('active',page.dataset.configPage===name);};
@@ -2292,8 +2683,13 @@ class Game{
       tab.addEventListener('pointerdown',e=>{if(!IS_COARSE_POINTER&&e.pointerType!=='touch')e.preventDefault();},{passive:false});
       tab.addEventListener('click',e=>{e.preventDefault();selectTab(tab.dataset.configTab);if(e.detail>0)restoreCanvasFocus();});
     }
+    for(const summary of $configPanel.querySelectorAll('.configGroupSummary')){
+      // Native <details> keeps the UI lightweight. Pointer activation may toggle the group, but must
+      // hand keyboard driving focus straight back to the canvas afterwards.
+      summary.addEventListener('click',e=>{if(e.detail>0)restoreCanvasFocus();});
+    }
     for(const input of $configPanel.querySelectorAll('.configRange')){
-      const key=input.dataset.setting;
+      const key=input.dataset.setting,label=input.closest('.configRow')?.querySelector('.configLabel')?.textContent?.trim();if(label)input.setAttribute('aria-label',label);
       if(key==='volume')input.value=String(Math.round(this.settings.volume*100));
       else if(key==='baseFov')input.value=String(Math.round(this.settings.baseFov));
       else if(key==='frameLimit')input.value=String(Math.round(this.settings.frameLimit||0));else if(key==='dayNightMinutes')input.value=String(Math.round(this.settings.dayNightMinutes));
@@ -2324,7 +2720,7 @@ class Game{
       this.refreshConfigValue(key);
     }
     for(const input of $configPanel.querySelectorAll('.configCheck')){
-      const key=input.dataset.setting,invert=input.dataset.invert==='true';input.checked=invert?!this.settings[key]:!!this.settings[key];
+      const key=input.dataset.setting,invert=input.dataset.invert==='true',label=input.closest('.configToggleRow')?.querySelector('span')?.textContent?.trim();if(label)input.setAttribute('aria-label',label);input.checked=invert?!this.settings[key]:!!this.settings[key];
       // Do not prevent the checkbox's native pointer/mouse behavior: doing so can suppress its
       // checked/change action on some browsers. Focus returns to the canvas after the change.
       input.addEventListener('change',()=>{this.settings[key]=invert?!input.checked:input.checked;this.applySetting(key);saveSettings(this.settings);this.updateSettingReset(key);restoreCanvasFocus();});
@@ -2334,8 +2730,8 @@ class Game{
   settingIsDefault(key){const a=this.settings[key],b=DEFAULT_SETTINGS[key];return typeof b==='number'?Math.abs(a-b)<1e-6:a===b;}
   installSettingResetButtons(){
     if(!$configPanel)return;
-    for(const input of $configPanel.querySelectorAll('.configRange')){const key=input.dataset.setting,row=input.closest('.configRow');if(!row||row.querySelector('.configItemReset'))continue;const b=document.createElement('button');b.type='button';b.className='configItemReset';b.textContent='↺';b.title='恢复此项';b.setAttribute('aria-label',`恢复${row.querySelector('.configLabel')?.textContent||key}`);b.dataset.resetSetting=key;b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();this.resetOneSetting(key);this.restoreCanvasFocus();});row.appendChild(b);}
-    for(const input of $configPanel.querySelectorAll('.configCheck')){const key=input.dataset.setting,row=input.closest('.configToggleRow');if(!row||row.querySelector('.configItemReset'))continue;const b=document.createElement('span');b.className='configItemReset';b.textContent='↺';b.title='恢复此项';b.setAttribute('role','button');b.setAttribute('tabindex','-1');b.dataset.resetSetting=key;b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();});b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();this.resetOneSetting(key);this.restoreCanvasFocus();});row.appendChild(b);}
+    for(const input of $configPanel.querySelectorAll('.configRange')){const key=input.dataset.setting,row=input.closest('.configRow');if(!row||row.querySelector('.configItemReset'))continue;const b=document.createElement('button');b.type='button';b.className='configItemReset';b.textContent='↺';b.title='恢复此项';b.tabIndex=-1;b.setAttribute('aria-label',`恢复${row.querySelector('.configLabel')?.textContent||key}`);b.dataset.resetSetting=key;b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();this.resetOneSetting(key);if(e.detail>0)this.restoreCanvasFocus();});row.appendChild(b);}
+    for(const input of $configPanel.querySelectorAll('.configCheck')){const key=input.dataset.setting,row=input.closest('.configToggleRow');if(!row||row.querySelector('.configItemReset'))continue;const b=document.createElement('button');b.type='button';b.className='configItemReset';b.textContent='↺';b.title='恢复此项';b.tabIndex=-1;b.setAttribute('aria-label',`恢复${input.getAttribute('aria-label')||key}`);b.dataset.resetSetting=key;b.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();});b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();this.resetOneSetting(key);if(e.detail>0)this.restoreCanvasFocus();});row.appendChild(b);}
   }
   syncSettingControl(key){
     const range=$configPanel?.querySelector(`.configRange[data-setting="${key}"]`);
@@ -2343,29 +2739,30 @@ class Game{
     const check=$configPanel?.querySelector(`.configCheck[data-setting="${key}"]`);if(check){const invert=check.dataset.invert==='true';check.checked=invert?!this.settings[key]:!!this.settings[key];}
   }
   resetOneSetting(key){if(!(key in DEFAULT_SETTINGS))return;this.settings[key]=DEFAULT_SETTINGS[key];this.syncSettingControl(key);this.applySetting(key);saveSettings(this.settings);this.updateSettingReset(key);}
-  updateSettingReset(key){const el=$configPanel?.querySelector(`[data-reset-setting="${key}"]`);if(el)el.classList.toggle('show',!this.settingIsDefault(key));}
+  updateSettingReset(key){const el=$configPanel?.querySelector(`[data-reset-setting="${key}"]`);if(el){const show=!this.settingIsDefault(key);el.classList.toggle('show',show);el.tabIndex=show?0:-1;el.setAttribute('aria-hidden',String(!show));}}
   updateAllSettingResets(){for(const k of Object.keys(DEFAULT_SETTINGS))this.updateSettingReset(k);}
   updateQualityState(){if($qualityState)$qualityState.textContent=this.settings.autoQuality?`Q${this.quality?.level||0}`:'最高';}
   resetConfigToDefaults(){
-    Object.assign(this.settings,DEFAULT_SETTINGS);saveSettings(this.settings);
-    const percentKeys=new Set(['acceleration','steering','grip','onePedal','roadHills','roadCurves','vegetation','fovEffect','cameraSpeed','cameraShake','speedLines','fogDensity','renderScale','motorVolume','windVolume','tireVolume','rainVolume','rainIntensity','rainChance','landmarkDensity','settlementDensity']);
+    Object.assign(this.settings,DEFAULT_SETTINGS);this.world.captureRoadCheckpoints();saveSettings(this.settings);
+    const percentKeys=new Set(['acceleration','steering','grip','onePedal','roadHills','roadCurves','sceneryRichness','fovEffect','cameraSpeed','cameraShake','speedLines','fogDensity','shadowRichness','shadowQuality','headlightBrightness','lightRichness','lightDistance','renderScale','motorVolume','windVolume','tireVolume','rainVolume','rainIntensity','rainChance',]);
     for(const input of $configPanel?.querySelectorAll('.configRange')||[]){
       const key=input.dataset.setting;if(key==='volume')input.value=String(Math.round(this.settings.volume*100));else if(key==='baseFov')input.value=String(Math.round(this.settings.baseFov));else if(key==='frameLimit')input.value=String(Math.round(this.settings.frameLimit||0));else if(key==='dayNightMinutes')input.value=String(Math.round(this.settings.dayNightMinutes));else if(key==='maxSpeedKmh')input.value=String(Math.round(this.settings.maxSpeedKmh));else if(key==='autopilotSpeedKmh'){input.value=String(Math.round(clamp(this.settings.autopilotSpeedKmh,0,AUTOPILOT_SAFE_CAP_KMH)));input.disabled=!!this.settings.autopilotUnlimited;}else if(percentKeys.has(key))input.value=String(Math.round(this.settings[key]*100));this.refreshConfigValue(key);
     }
     for(const input of $configPanel?.querySelectorAll('.configCheck')||[]){const key=input.dataset.setting,invert=input.dataset.invert==='true';input.checked=invert?!this.settings[key]:!!this.settings[key];}
     this.audio.setVolume(this.settings.volume);if($fpsReadout)$fpsReadout.classList.toggle('show',!!this.settings.showFps);this.applySetting('showClock');this.applySetting('showDistance');this.applySetting('renderScale');this.applySetting('frameLimit');this.applySetting('cleanUi');this.applySetting('fullscreen');this.applySetting('autopilotUnlimited');this.applySetting('dayNightCycle');this.applySetting('landmarks');this.applySetting('settlements');
-    clearTimeout(this.vegetationConfigTimer);this.world.refreshEnvironment();this.quality.badWindows=0;this.quality.goodSeconds=0;this.quality.cooldown=0;this.quality.level=0;this.renderer.maxDpr=this.quality.dpr[0];this.world.setQuality(0);this.updateAllSettingResets();this.updateQualityState();this.restoreCanvasFocus();
+    clearTimeout(this.vegetationConfigTimer);this.world.refreshScenery();this.quality.badWindows=0;this.quality.goodSeconds=0;this.quality.cooldown=0;this.quality.level=0;this.renderer.maxDpr=this.quality.dpr[0];this.world.setQuality(0);this.updateAllSettingResets();this.updateQualityState();this.restoreCanvasFocus();
   }
-  refreshConfigValue(key){const el=$configPanel?.querySelector(`[data-value-for="${key}"]`);if(!el)return;if(key==='volume')el.textContent=`${Math.round(this.settings.volume*100)}%`;else if(key==='baseFov')el.textContent=`${Math.round(this.settings.baseFov)}°`;else if(key==='frameLimit')el.textContent=this.settings.frameLimit>0?`${Math.round(this.settings.frameLimit)} FPS`:'跟随屏幕';else if(key==='dayNightMinutes')el.textContent=`${Math.round(this.settings.dayNightMinutes)} 分钟`;else if(key==='maxSpeedKmh')el.textContent=this.settings.maxSpeedKmh<0?'∞':`${Math.round(this.settings.maxSpeedKmh)}`;else if(key==='autopilotSpeedKmh')el.textContent=this.settings.autopilotUnlimited?'∞':`${Math.round(clamp(this.settings.autopilotSpeedKmh,0,AUTOPILOT_SAFE_CAP_KMH))}`;else el.textContent=`${Math.round(this.settings[key]*100)}%`;}
+  refreshConfigValue(key){const el=$configPanel?.querySelector(`[data-value-for="${key}"]`);if(!el)return;if(key==='volume')el.textContent=`${Math.round(this.settings.volume*100)}%`;else if(key==='baseFov')el.textContent=`${Math.round(this.settings.baseFov)}°`;else if(key==='frameLimit')el.textContent=this.settings.frameLimit>0?`${Math.round(this.settings.frameLimit)} FPS`:'跟随屏幕';else if(key==='dayNightMinutes')el.textContent=`${Math.round(this.settings.dayNightMinutes)} 分钟`;else if(key==='maxSpeedKmh')el.textContent=this.settings.maxSpeedKmh<0?'∞':`${Math.round(this.settings.maxSpeedKmh)}`;else if(key==='autopilotSpeedKmh')el.textContent=this.settings.autopilotUnlimited?'∞':`${Math.round(clamp(this.settings.autopilotSpeedKmh,0,AUTOPILOT_SAFE_CAP_KMH))}`;else el.textContent=`${Math.round(this.settings[key]*100)}%`;const range=$configPanel?.querySelector(`.configRange[data-setting="${key}"]`);if(range)range.setAttribute('aria-valuetext',el.textContent);}
   applySetting(key){
     if(key==='volume')this.audio.setVolume(this.settings.volume);
-    if(key==='vegetation'||key==='landmarks'||key==='landmarkDensity'||key==='settlements'||key==='settlementDensity'){clearTimeout(this.vegetationConfigTimer);this.vegetationConfigTimer=setTimeout(()=>this.world.refreshEnvironment(),120);}
+    if(key==='roadHills'||key==='roadCurves')this.world.captureRoadCheckpoints();
+    if(key==='sceneryRichness'||key==='settlements'){clearTimeout(this.vegetationConfigTimer);this.vegetationConfigTimer=setTimeout(()=>this.world.refreshScenery(),120);}else if(key==='landmarks'){clearTimeout(this.vegetationConfigTimer);this.vegetationConfigTimer=setTimeout(()=>this.world.refreshEnvironment(),120);}
     if(key==='autoQuality'){this.quality.badWindows=0;this.quality.goodSeconds=0;this.quality.cooldown=0;if(!this.settings.autoQuality){this.quality.level=0;this.renderer.maxDpr=this.quality.dpr[0];this.world.setQuality(0);}this.updateQualityState();}
     if(key==='showFps'&&$fpsReadout)$fpsReadout.classList.toggle('show',!!this.settings.showFps);
     if(key==='showClock'&&$clock)$clock.classList.toggle('hidden',!this.settings.showClock);
     if(key==='showDistance'&&$distance)$distance.classList.toggle('hidden',!this.settings.showDistance);
     if(key==='renderScale')this.renderer.renderScale=clamp(this.settings.renderScale,.50,1.50);
-    if(key==='frameLimit')this.lastPresented=0;
+    if(key==='frameLimit'){this.nextFrameAt=0;if(this.ui){this.ui.fpsElapsed=0;this.ui.fpsFrames=0;}}
     if(key==='dayNightCycle'){if(this.settings.dayNightCycle)this.dayCycleStart=performance.now()-clamp(this.settings.dayNightMinutes,2,30)*60000*.30;this.updateEnvironmentButton();}
     if(key==='dayNightMinutes'&&this.settings.dayNightCycle)this.dayCycleStart=performance.now()-clamp(this.settings.dayNightMinutes,2,30)*60000*.30;
     if(key==='rainEnabled'){if(this.settings.rainEnabled){this.weatherPhase='dry';this.weatherRainTarget=0;this.weatherNextChange=performance.now()+12000+(this.weatherRng?.()??.5)*30000;}else{this.weatherPhase='dry';this.weatherRainTarget=0;}}
@@ -2424,10 +2821,10 @@ class Game{
   }
   updateEnvironmentButton(){if(!$envBtn)return;$envBtn.textContent=this.settings.dayNightCycle?'环境 · 自动昼夜':`环境 · ${ENVIRONMENTS[this.envIndex].name}`;}
   cycleEnvironment(){if(this.settings.dayNightCycle){this.settings.dayNightCycle=false;this.syncSettingControl('dayNightCycle');saveSettings(this.settings);this.updateSettingReset('dayNightCycle');this.envFromIndex=this.envIndex;this.envTransitionStart=-1;}else{this.envFromIndex=this.envIndex;this.envIndex=(this.envIndex+1)%ENVIRONMENTS.length;this.envTransitionStart=performance.now();}this.updateEnvironmentButton();}
-  requestFrame(){if(!this.rafId&&this.running&&(!this.paused||this.pausePreview))this.rafId=requestAnimationFrame(this.frameBound);}
+  requestFrame(){if(!this.rafId&&this.running&&!this.pageHidden&&(!this.paused||this.pausePreview))this.rafId=requestAnimationFrame(this.frameBound);}
   togglePause(force){
     const next=typeof force==='boolean'?force:!this.paused;if(next===this.paused)return;
-    this.paused=next;this.ui.toggleAbout(false);this.ui.toggleMenu(false);this.ui.setPaused(next);this.audio.setPaused(next);this.last=performance.now();
+    this.paused=next;this.ui.toggleAbout(false);this.ui.toggleMenu(false);this.ui.setPaused(next);this.audio.setPaused(next);this.last=performance.now();this.nextFrameAt=0;this.previewShadowAt=0;
     document.body.classList.toggle('garage',next);
     if(next){
       // Freeze physics/audio immediately, then return to the same live showroom behavior as the
@@ -2440,29 +2837,24 @@ class Game{
     }
   }
   updateSpeedEffects(){
-    const s=Math.abs(this.vehicle.speed),intensity=smoothstep(24,BASE_SPEED_REF,s),boost=intensity*intensity,mobileScale=IS_COARSE_POINTER?.72:1,lineMul=clamp(this.settings.speedLines,0,2),sense=this.settings.paceBoost?1.35:.62;
+    const s=Math.abs(this.vehicle.speed),intensity=smoothstep(24,BASE_SPEED_REF,s),boost=intensity*intensity,mobileScale=IS_COARSE_POINTER?.72:1,lineMul=reducedMotionActive()?0:clamp(this.settings.speedLines,0,2),sense=this.settings.paceBoost?1.35:.62;
     if($speedFx){$speedFx.style.opacity=String(clamp(boost*.42*mobileScale*lineMul*sense,0,.72));$speedFx.style.transform=`scale(${(1.012+boost*.085*sense).toFixed(3)})`; }
-    if($windFx){const wind=smoothstep(20,70,s);$windFx.style.opacity=String(clamp(wind*wind*.34*mobileScale*sense,0,.58));}
+    if($windFx){const wind=reducedMotionActive()?0:smoothstep(20,70,s);$windFx.style.opacity=String(clamp(wind*wind*.34*mobileScale*sense,0,.58));}
     if($speed){const glow=8+boost*20*sense;$speed.style.textShadow=`0 2px 12px rgba(0,0,0,.48),0 0 ${glow.toFixed(0)}px rgba(225,244,255,${clamp(.06+boost*.30*sense,0,.42).toFixed(2)})`; }
   }
   commands(){
     if(this.input.take('KeyC'))this.camera.cycle();if(this.input.take('KeyT'))this.toggleAutoForward();if(this.input.take('KeyG'))this.toggleAutopilot();if(this.input.take('KeyH'))this.ui.toggleHelp();if(this.input.take('KeyM'))this.audio.toggle();if(this.input.take('KeyU')){this.settings.cleanUi=!this.settings.cleanUi;this.applySetting('cleanUi');this.syncSettingControl('cleanUi');saveSettings(this.settings);this.updateSettingReset('cleanUi');}if(this.input.take('F2'))this.ui.toggleDebug();if(this.input.take('KeyP')||this.input.take('Escape'))this.togglePause();
   }
   frame(now){
-    this.rafId=0;if(!this.running)return;
-    const frameLimit=clamp(this.settings.frameLimit||0,0,120);
-    if(frameLimit>0&&this.lastPresented>0&&now-this.lastPresented<(1000/frameLimit)-.35){this.requestFrame();return;}
-    this.lastPresented=now;
+    this.rafId=0;if(!this.running||this.pageHidden)return;
+    const configured=clamp(this.settings.frameLimit||0,0,120),preview=!this.started||this.paused,targetFps=preview?(configured>0?Math.min(configured,60):60):configured;this.lastFrameTarget=targetFps;
+    if(targetFps>0){const interval=1000/targetFps;if(!this.nextFrameAt||now-this.nextFrameAt>interval*4)this.nextFrameAt=now;if(now+.18<this.nextFrameAt){this.requestFrame();return;}do{this.nextFrameAt+=interval;}while(this.nextFrameAt<=now-.18);}else this.nextFrameAt=0;
     const rawDt=(now-this.last)/1000,simDt=Math.min(rawDt,.0833);this.last=now;this.updateWeather(simDt,now);
     if(!this.started){
-      this.camera.updateGarage(Math.min(simDt,.05),this.vehicle);const env=this.activeEnvironment();this.updateRainFx(simDt);this.renderer.begin(this.camera,env,this.vehicle);this.world.render(this.renderer,this.camera,env);this.vehicle.render(this.renderer,env);this.ui.update(simDt);this.input.endFrame();this.requestFrame();return;
+      this.camera.updateGarage(Math.min(simDt,.05),this.vehicle);const env=this.activeEnvironment();this.updateRainFx(simDt);if(!this.previewShadowAt||now-this.previewShadowAt>=50){this.renderer.prepareShadows(this.world,this.camera,env,this.vehicle,this.settings,this.quality.level);this.previewShadowAt=now;}this.renderer.begin(this.camera,env,this.vehicle,this.world,this.settings);this.world.render(this.renderer,this.camera,env);this.vehicle.render(this.renderer,env);this.ui.update(simDt,rawDt);this.input.endFrame();this.requestFrame();return;
     }
     if(this.paused){
-      this.camera.updateGarage(Math.min(simDt,.05),this.vehicle,false);const env=this.activeEnvironment();this.updateRainFx(simDt);this.renderer.begin(this.camera,env,this.vehicle);this.world.render(this.renderer,this.camera,env);this.vehicle.render(this.renderer,env);this.ui.update(simDt);this.input.endFrame();
-      // Keep the showroom alive while paused so the camera continues its slow orbit. Physics and
-      // audio are still frozen; only the lightweight presentation render keeps running.
-      this.requestFrame();
-      return;
+      this.camera.updateGarage(Math.min(simDt,.05),this.vehicle,false);const env=this.activeEnvironment();this.updateRainFx(simDt);if(!this.previewShadowAt||now-this.previewShadowAt>=50){this.renderer.prepareShadows(this.world,this.camera,env,this.vehicle,this.settings,this.quality.level);this.previewShadowAt=now;}this.renderer.begin(this.camera,env,this.vehicle,this.world,this.settings);this.world.render(this.renderer,this.camera,env);this.vehicle.render(this.renderer,env);this.ui.update(simDt,rawDt);this.input.endFrame();this.requestFrame();return;
     }
     this.commands();
     if(this.paused){this.input.endFrame();this.requestFrame();return;}
@@ -2481,7 +2873,7 @@ class Game{
       this.world.maybeShiftOrigin(this.vehicle,this.camera);
     }
     this.camera.update(simDt,this.vehicle);const env=this.activeEnvironment();this.audio.update(this.vehicle,env.rainFactor||0);this.updateRainFx(simDt);this.updateSpeedEffects();this.autopilot.updatePrediction(this.vehicle);
-    this.renderer.begin(this.camera,env,this.vehicle);this.world.render(this.renderer,this.camera,env);this.autopilot.renderPrediction(this.renderer,this.ui.debug);this.vehicle.render(this.renderer,env);this.quality.update(rawDt);this.ui.update(simDt);this.input.endFrame();this.requestFrame();
+    this.renderer.prepareShadows(this.world,this.camera,env,this.vehicle,this.settings,this.quality.level);this.renderer.begin(this.camera,env,this.vehicle,this.world,this.settings);this.world.render(this.renderer,this.camera,env);this.autopilot.renderPrediction(this.renderer,this.ui.debug);this.vehicle.render(this.renderer,env);this.quality.update(rawDt);this.ui.update(simDt,rawDt);this.input.endFrame();this.requestFrame();
   }
 }
 
