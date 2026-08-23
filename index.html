@@ -39,8 +39,14 @@
   #configPanel{position:absolute;right:18px;top:52px;width:286px;padding:12px 13px;border-radius:16px;display:none;pointer-events:auto;text-shadow:none;max-height:calc(100% - 68px);overflow:auto;overscroll-behavior:contain}
   #configPanel.show{display:block;animation:panelPop .18s cubic-bezier(.2,.8,.2,1)}
   @keyframes panelPop{from{opacity:0;transform:translateY(-5px) scale(.985)}to{opacity:1;transform:none}}
-  #configPanel .panelTitle{font-size:14px;font-weight:700;margin-bottom:9px}
-  #configPanel .configNote{font-size:10px;line-height:1.5;color:rgba(247,251,255,.54);margin:2px 1px 9px}
+  #configPanel .panelTitle{font-size:14px;font-weight:700;margin-bottom:8px}
+  .configTabs{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;margin:0 0 9px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.08)}
+  .configTab{min-width:0;min-height:26px;height:26px;padding:4px 2px;border:0;border-radius:7px;background:transparent;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;font-size:9.5px;color:rgba(247,251,255,.52);white-space:nowrap}
+  .configTab:hover{background:rgba(255,255,255,.06);color:rgba(247,251,255,.82)}
+  .configTab.active{background:rgba(255,255,255,.10);color:#fff}
+  .configPage{display:none}.configPage.active{display:block}
+  .configSectionTitle{font-size:9px;letter-spacing:.12em;color:rgba(247,251,255,.46);margin:5px 1px 3px;text-transform:uppercase}
+  #configPanel .configNote{font-size:10px;line-height:1.5;color:rgba(247,251,255,.54);margin:4px 1px 9px}
   .configRow{display:grid;grid-template-columns:90px 1fr 48px 20px;align-items:center;gap:7px;min-height:31px}
   .configLabel{font-size:11px;color:rgba(247,251,255,.83);white-space:nowrap}
   .configValue{font:600 10px/1 ui-monospace,SFMono-Regular,Consolas,monospace;text-align:right;color:rgba(247,251,255,.72);white-space:nowrap}
@@ -201,35 +207,71 @@
   </div>
   <div id="configPanel" class="glass" aria-hidden="true">
     <div class="panelTitle">配置</div>
-    <div class="configRow"><span class="configLabel">声音大小</span><input id="cfgVolume" class="configRange" type="range" min="0" max="100" step="1" data-setting="volume"><span class="configValue" data-value-for="volume"></span></div>
-    <div class="configRow"><span class="configLabel">最大速度</span><input id="cfgMaxSpeed" class="configRange" type="range" min="0" max="1001" step="1" data-setting="maxSpeedKmh"><span class="configValue" data-value-for="maxSpeedKmh"></span></div>
-    <div class="configRow"><span class="configLabel">自动巡航</span><input class="configRange" type="range" min="0" max="1000" step="1" data-setting="autopilotSpeedKmh"><span class="configValue" data-value-for="autopilotSpeedKmh"></span></div>
-    <div class="configRow"><span class="configLabel">加速力度</span><input class="configRange" type="range" min="50" max="160" step="1" data-setting="acceleration"><span class="configValue" data-value-for="acceleration"></span></div>
-    <div class="configRow"><span class="configLabel">转向灵敏度</span><input class="configRange" type="range" min="50" max="160" step="1" data-setting="steering"><span class="configValue" data-value-for="steering"></span></div>
-    <div class="configDivider"></div>
-    <div class="configRow"><span class="configLabel">道路起伏</span><input class="configRange" type="range" min="0" max="500" step="1" data-setting="roadHills"><span class="configValue" data-value-for="roadHills"></span></div>
-    <div class="configRow"><span class="configLabel">道路弯折</span><input class="configRange" type="range" min="0" max="500" step="1" data-setting="roadCurves"><span class="configValue" data-value-for="roadCurves"></span></div>
-    <div class="configRow"><span class="configLabel">植被丰富度</span><input class="configRange" type="range" min="0" max="200" step="1" data-setting="vegetation"><span class="configValue" data-value-for="vegetation"></span></div>
-    <div class="configDivider"></div>
-    <div class="configRow"><span class="configLabel">镜头速度感</span><input class="configRange" type="range" min="0" max="180" step="1" data-setting="cameraSpeed"><span class="configValue" data-value-for="cameraSpeed"></span></div>
-    <div class="configRow"><span class="configLabel">镜头震动</span><input class="configRange" type="range" min="0" max="200" step="1" data-setting="cameraShake"><span class="configValue" data-value-for="cameraShake"></span></div>
-    <div class="configRow"><span class="configLabel">速度线强度</span><input class="configRange" type="range" min="0" max="200" step="1" data-setting="speedLines"><span class="configValue" data-value-for="speedLines"></span></div>
-    <div class="configRow"><span class="configLabel">雾浓度</span><input class="configRange" type="range" min="0" max="200" step="1" data-setting="fogDensity"><span class="configValue" data-value-for="fogDensity"></span></div>
-    <div class="configDivider"></div>
-    <div class="configToggleGrid">
-      <label class="configToggleRow" title="开启后持续踩油门会按固定 km/h/s 加速，不再被高速阻力吃掉"><span>恒定加速</span><input class="configCheck" type="checkbox" data-setting="speedAccelFade" data-invert="true"></label>
-      <label class="configToggleRow"><span>高速转向抑制</span><input class="configCheck" type="checkbox" data-setting="highSpeedSteer"></label>
-      <label class="configToggleRow"><span>草地额外阻力</span><input class="configCheck" type="checkbox" data-setting="offroadDrag"></label>
-      <label class="configToggleRow"><span>速度感增强</span><input class="configCheck" type="checkbox" data-setting="paceBoost"></label>
-      <label class="configToggleRow"><span>自动画质 <span id="qualityState" class="qualityState">Q0</span></span><input class="configCheck" type="checkbox" data-setting="autoQuality"></label>
-      <label class="configToggleRow"><span>显示 FPS</span><input class="configCheck" type="checkbox" data-setting="showFps"></label>
-      <label class="configToggleRow"><span>显示时间</span><input class="configCheck" type="checkbox" data-setting="showClock"></label>
-      <label class="configToggleRow"><span>显示里程</span><input class="configCheck" type="checkbox" data-setting="showDistance"></label>
-      <label class="configToggleRow" title="开启后车辆会穿过树木、石头、路牌等环境碰撞体"><span>无碰撞</span><input class="configCheck" type="checkbox" data-setting="noCollision"></label>
-      <label class="configToggleRow wide" title="解除自动巡航 1000 km/h 的已验证安全上限；仍受“最大速度”总上限约束"><span>自动驾驶速度无上限</span><input class="configCheck" type="checkbox" data-setting="autopilotUnlimited"></label>
+    <div class="configTabs" role="tablist" aria-label="配置分类">
+      <button class="configTab active" type="button" data-config-tab="driving" role="tab" aria-selected="true">驾驶</button>
+      <button class="configTab" type="button" data-config-tab="graphics" role="tab" aria-selected="false">画面</button>
+      <button class="configTab" type="button" data-config-tab="interface" role="tab" aria-selected="false">界面</button>
+      <button class="configTab" type="button" data-config-tab="audio" role="tab" aria-selected="false">声音</button>
+      <button class="configTab" type="button" data-config-tab="advanced" role="tab" aria-selected="false">高级</button>
     </div>
+
+    <div class="configPage active" data-config-page="driving">
+      <div class="configRow"><span class="configLabel">最大速度</span><input id="cfgMaxSpeed" class="configRange" type="range" min="0" max="1001" step="1" data-setting="maxSpeedKmh"><span class="configValue" data-value-for="maxSpeedKmh"></span></div>
+      <div class="configRow"><span class="configLabel">自动巡航</span><input class="configRange" type="range" min="0" max="1000" step="1" data-setting="autopilotSpeedKmh"><span class="configValue" data-value-for="autopilotSpeedKmh"></span></div>
+      <div class="configRow"><span class="configLabel">加速力度</span><input class="configRange" type="range" min="50" max="160" step="1" data-setting="acceleration"><span class="configValue" data-value-for="acceleration"></span></div>
+      <div class="configRow"><span class="configLabel">转向灵敏度</span><input class="configRange" type="range" min="50" max="160" step="1" data-setting="steering"><span class="configValue" data-value-for="steering"></span></div>
+      <div class="configRow" title="降低后更容易产生侧滑；提高后车辆更快跟随车头方向"><span class="configLabel">抓地力</span><input class="configRange" type="range" min="50" max="150" step="1" data-setting="grip"><span class="configValue" data-value-for="grip"></span></div>
+      <div class="configDivider"></div>
+      <div class="configRow"><span class="configLabel">道路起伏</span><input class="configRange" type="range" min="0" max="500" step="1" data-setting="roadHills"><span class="configValue" data-value-for="roadHills"></span></div>
+      <div class="configRow"><span class="configLabel">道路弯折</span><input class="configRange" type="range" min="0" max="500" step="1" data-setting="roadCurves"><span class="configValue" data-value-for="roadCurves"></span></div>
+      <div class="configRow"><span class="configLabel">植被丰富度</span><input class="configRange" type="range" min="0" max="200" step="1" data-setting="vegetation"><span class="configValue" data-value-for="vegetation"></span></div>
+      <div class="configNote">道路起伏 / 弯折只影响之后生成的新路段。</div>
+    </div>
+
+    <div class="configPage" data-config-page="graphics">
+      <div class="configRow" title="调整所有驾驶视角的基础视野角"><span class="configLabel">基础 FOV</span><input class="configRange" type="range" min="50" max="75" step="1" data-setting="baseFov"><span class="configValue" data-value-for="baseFov"></span></div>
+      <div class="configRow" title="只控制随速度增加的 FOV 扩张，不改变基础视野角"><span class="configLabel">高速 FOV</span><input class="configRange" type="range" min="0" max="160" step="1" data-setting="fovEffect"><span class="configValue" data-value-for="fovEffect"></span></div>
+      <div class="configRow" title="控制高速时镜头距离、高度和前视位置的变化"><span class="configLabel">镜头速度感</span><input class="configRange" type="range" min="0" max="180" step="1" data-setting="cameraSpeed"><span class="configValue" data-value-for="cameraSpeed"></span></div>
+      <div class="configRow"><span class="configLabel">镜头震动</span><input class="configRange" type="range" min="0" max="200" step="1" data-setting="cameraShake"><span class="configValue" data-value-for="cameraShake"></span></div>
+      <div class="configRow"><span class="configLabel">速度线强度</span><input class="configRange" type="range" min="0" max="200" step="1" data-setting="speedLines"><span class="configValue" data-value-for="speedLines"></span></div>
+      <div class="configRow"><span class="configLabel">雾浓度</span><input class="configRange" type="range" min="0" max="200" step="1" data-setting="fogDensity"><span class="configValue" data-value-for="fogDensity"></span></div>
+      <div class="configDivider"></div>
+      <div class="configToggleGrid">
+        <label class="configToggleRow wide"><span>自动画质 <span id="qualityState" class="qualityState">Q0</span></span><input class="configCheck" type="checkbox" data-setting="autoQuality"></label>
+      </div>
+    </div>
+
+    <div class="configPage" data-config-page="interface">
+      <div class="configToggleGrid">
+        <label class="configToggleRow wide"><span>显示 FPS</span><input class="configCheck" type="checkbox" data-setting="showFps"></label>
+        <label class="configToggleRow wide"><span>显示时间</span><input class="configCheck" type="checkbox" data-setting="showClock"></label>
+        <label class="configToggleRow wide"><span>显示里程</span><input class="configCheck" type="checkbox" data-setting="showDistance"></label>
+      </div>
+      <div class="configNote">默认只显示速度与里程；时间、FPS 可按需开启。</div>
+    </div>
+
+    <div class="configPage" data-config-page="audio">
+      <div class="configRow"><span class="configLabel">总音量</span><input id="cfgVolume" class="configRange" type="range" min="0" max="100" step="1" data-setting="volume"><span class="configValue" data-value-for="volume"></span></div>
+      <div class="configDivider"></div>
+      <div class="configRow"><span class="configLabel">电机</span><input class="configRange" type="range" min="0" max="150" step="1" data-setting="motorVolume"><span class="configValue" data-value-for="motorVolume"></span></div>
+      <div class="configRow"><span class="configLabel">风声</span><input class="configRange" type="range" min="0" max="150" step="1" data-setting="windVolume"><span class="configValue" data-value-for="windVolume"></span></div>
+      <div class="configRow"><span class="configLabel">轮胎 / 路面</span><input class="configRange" type="range" min="0" max="150" step="1" data-setting="tireVolume"><span class="configValue" data-value-for="tireVolume"></span></div>
+      <div class="configNote">分轨音量会实时作用于程序化 Web Audio 混音。</div>
+    </div>
+
+    <div class="configPage" data-config-page="advanced">
+      <div class="configToggleGrid">
+        <label class="configToggleRow wide" title="开启后持续踩油门会按固定 km/h/s 加速，不再被高速阻力吃掉"><span>恒定加速</span><input class="configCheck" type="checkbox" data-setting="speedAccelFade" data-invert="true"></label>
+        <label class="configToggleRow wide"><span>高速转向抑制</span><input class="configCheck" type="checkbox" data-setting="highSpeedSteer"></label>
+        <label class="configToggleRow wide"><span>草地额外阻力</span><input class="configCheck" type="checkbox" data-setting="offroadDrag"></label>
+        <label class="configToggleRow wide"><span>速度感增强</span><input class="configCheck" type="checkbox" data-setting="paceBoost"></label>
+        <label class="configToggleRow wide" title="开启后车辆会穿过树木、石头、路牌等环境碰撞体"><span>无碰撞</span><input class="configCheck" type="checkbox" data-setting="noCollision"></label>
+        <label class="configToggleRow wide" title="解除自动巡航 1000 km/h 的已验证安全上限；仍受“最大速度”总上限约束"><span>自动驾驶速度无上限</span><input class="configCheck" type="checkbox" data-setting="autopilotUnlimited"></label>
+      </div>
+      <div class="configNote">最大速度最右端为 ∞；自动驾驶无上限仍受“最大速度”约束。</div>
+    </div>
+
     <button id="configResetBtn" class="configResetBtn" type="button" title="恢复全部配置到默认值">恢复默认配置</button>
-    <div class="configNote">道路起伏 / 弯折只影响之后生成的新路段。自动巡航默认上限 1000 km/h；开启“自动驾驶速度无上限”后仍受最大速度限制。最大速度最右端为 ∞。</div>
   </div>
   <div id="controlMenu" class="glass" aria-hidden="true">
     <button id="pauseBtn" class="menuAction iconAction" title="暂停 / 继续" aria-label="暂停游戏" aria-pressed="false"><svg class="actionSvg pauseIcon" viewBox="0 0 24 24" aria-hidden="true"><g class="pauseBars"><rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor"/></g><path class="playShape" d="M8 5.5L19 12 8 18.5Z" fill="currentColor"/></svg><span class="buttonLabel">暂停</span></button>
@@ -388,11 +430,11 @@ const lerp = (a,b,t)=>a+(b-a)*t;
 const smoothstep = (a,b,x)=>{ x=clamp((x-a)/(b-a),0,1); return x*x*(3-2*x); };
 const expLerp = (a,b,rate,dt)=>lerp(a,b,1-Math.exp(-rate*dt));
 const SETTINGS_KEY='driftway-settings-v1';
-const SETTINGS_VERSION=6;
+const SETTINGS_VERSION=7;
 const BASE_SPEED_REF=300/3.6;
 const AUTOPILOT_SAFE_CAP_KMH=1000;
 const MAX_SPEED_INFINITY_SLIDER=1001;
-const DEFAULT_SETTINGS={volume:.68,maxSpeedKmh:300,autopilotSpeedKmh:300,acceleration:1,steering:1,roadHills:1,roadCurves:1,vegetation:1,cameraSpeed:1,cameraShake:1,speedLines:1,fogDensity:1,speedAccelFade:true,highSpeedSteer:true,offroadDrag:true,paceBoost:true,autoQuality:true,showFps:false,showClock:false,showDistance:true,noCollision:false,autopilotUnlimited:false};
+const DEFAULT_SETTINGS={volume:.68,motorVolume:1,windVolume:1,tireVolume:1,maxSpeedKmh:300,autopilotSpeedKmh:300,acceleration:1,steering:1,grip:1,roadHills:1,roadCurves:1,vegetation:1,baseFov:61,fovEffect:1,cameraSpeed:1,cameraShake:1,speedLines:1,fogDensity:1,speedAccelFade:true,highSpeedSteer:true,offroadDrag:true,paceBoost:true,autoQuality:true,showFps:false,showClock:false,showDistance:true,noCollision:false,autopilotUnlimited:false};
 function loadSettings(){
   const out={...DEFAULT_SETTINGS};
   try{
@@ -1206,6 +1248,23 @@ class ChunkManager{
 // ------------------------------------------------------------
 // 8. Input
 // ------------------------------------------------------------
+/*
+  MAINTENANCE CONTRACT / 维护约定 — HUD 焦点与驾驶输入
+
+  本游戏允许玩家按住键盘驾驶的同时，用鼠标调整 HUD / 配置。任何 UI 改动都必须守住：
+
+  1) 鼠标专用按钮 / 分页切换后不能把 DOM 焦点长期留在按钮上。优先阻止 pointer focus，
+     或在动作结束后调用 Game.restoreCanvasFocus()。
+  2) range / checkbox / text input 必须保留浏览器原生 pointer 行为，否则会破坏滑动和勾选；
+     只在 change / pointerup 后把焦点还给 canvas。
+  3) 文本输入（目前只有 Seed）是例外：编辑期间允许持有焦点。
+  4) 页面内控件获得焦点不能清空已经按住的驾驶键；只有真正的窗口失焦 / 页面隐藏才清键。
+  5) 每次新增或修改 HUD / 配置后都要回归测试：
+       按住 W -> 点击配置分页 / 勾选 / 滑杆 -> 油门不能中断；
+       松开 W -> 才正常停止油门。
+
+  如果新控件导致点击后 WASD / Space 失效，统一视为 input-focus regression（输入焦点回归）。
+*/
 class Input{
   constructor(){
     this.keys=new Set();this.just=new Set();this.virtualKeys=new Set();
@@ -1416,7 +1475,7 @@ class Vehicle{
       // creates a real visible slip angle without replacing the comfortable arcade controller. Full
       // autopilot keeps strong grip so existing high-speed path following remains stable.
       let delta=this.yaw-this.moveYaw;while(delta>Math.PI)delta-=TAU;while(delta<-Math.PI)delta+=TAU;
-      const gripFollow=autoControl?14:(stepOnRoad?(hand?.72:lerp(8.5,5.0,smoothstep(8,55,speedAbs))):(hand?.42:2.0));
+      const gripSetting=clamp(this.world.settings.grip,.50,1.50),gripFollow=autoControl?14:(stepOnRoad?(hand?.72:lerp(8.5,5.0,smoothstep(8,55,speedAbs))):(hand?.42:2.0))*gripSetting;
       if(speedAbs<1.2)this.moveYaw=this.yaw;else this.moveYaw+=delta*(1-Math.exp(-gripFollow*motionDt));
       this.slipAngle=this.yaw-this.moveYaw;while(this.slipAngle>Math.PI)this.slipAngle-=TAU;while(this.slipAngle<-Math.PI)this.slipAngle+=TAU;
       this.x+=Math.sin(this.moveYaw)*travelSpeed*motionDt;this.z+=Math.cos(this.moveYaw)*travelSpeed*motionDt;
@@ -1785,13 +1844,16 @@ class Camera{
     const cameraYaw=this.mode===2?vehicle.yaw:this.rigYaw;
     const fX=Math.sin(cameraYaw),fZ=Math.cos(cameraYaw),rX=Math.cos(cameraYaw),rZ=-Math.sin(cameraYaw);
     const cameraSense=clamp(vehicle.world.settings.cameraSpeed*(vehicle.world.settings.paceBoost?1.14:.72),0,1.95),speedView=clamp(smoothstep(10,BASE_SPEED_REF,spd)*cameraSense,0,1.35),c1Speed=clamp(smoothstep(0,BASE_SPEED_REF,spd)*cameraSense,0,1.35),speedWide=Math.pow(c1Speed,.72),accelKick=clamp(vehicle.accelVisual,0,1)*cameraSense;
+    // Base FOV and speed-FOV are independent. CameraSpeed still controls the physical camera move
+    // (distance / height / look-ahead), while fovEffect only controls optical widening with speed.
+    const fovEffect=clamp(vehicle.world.settings.fovEffect,0,1.60),fovSpeed=clamp(smoothstep(0,BASE_SPEED_REF,spd),0,1),fovWide=Math.pow(fovSpeed,.72),baseFovOffset=clamp(vehicle.world.settings.baseFov,50,75)-61;
     let back=9.60,height=4.12,look=8.65,side=0,baseFov=61.2,warp=0;
     // Keep a normal, proportional perspective.  Speed comes from a stronger but still sane FOV,
     // a lower camera, near-field optic flow and a centre-safe peripheral stretch.  Do not widen
     // only the horizontal projection: that makes the car and the whole world look unnaturally thin.
-    if(this.mode===0){back=lerp(9.60,7.15,speedWide)+accelKick*.14;height=lerp(4.12,3.18,speedWide);look=lerp(8.65,12.4,speedWide);baseFov=lerp(60.8,101.0,speedWide)+accelKick*2.0;warp=0;}
-    if(this.mode===1){back=lerp(5.5,5.0,speedView)+accelKick*.12;height=lerp(2.25,1.98,speedView);look=lerp(10.8,12.8,speedView);baseFov=lerp(66.5,84.0,speedView)+accelKick*1.3;warp=0;}
-    if(this.mode===2){back=-1.05;height=1.35;look=24;baseFov=lerp(73,87,speedView);warp=0;}
+    if(this.mode===0){back=lerp(9.60,7.15,speedWide)+accelKick*.14;height=lerp(4.12,3.18,speedWide);look=lerp(8.65,12.4,speedWide);baseFov=60.8+baseFovOffset+(101.0-60.8)*fovWide*fovEffect+clamp(vehicle.accelVisual,0,1)*2.0*fovEffect;warp=0;}
+    if(this.mode===1){back=lerp(5.5,5.0,speedView)+accelKick*.12;height=lerp(2.25,1.98,speedView);look=lerp(10.8,12.8,speedView);baseFov=66.5+baseFovOffset+(84.0-66.5)*fovSpeed*fovEffect+clamp(vehicle.accelVisual,0,1)*1.3*fovEffect;warp=0;}
+    if(this.mode===2){back=-1.05;height=1.35;look=24;baseFov=73+baseFovOffset+(87-73)*fovSpeed*fovEffect;warp=0;}
     if(this.mode<2&&driftBlend>0){
       const signedSlip=clamp(vehicle.slipAngle/(16*DEG),-1,1);side+=signedSlip*driftBlend*(this.mode===0?.72:.34);look+=driftBlend*1.4;baseFov+=driftBlend*(this.mode===0?3.2:2.0);
     }
@@ -1804,7 +1866,7 @@ class Camera{
     this.cameraBank=expLerp(this.cameraBank,bankTarget,5.5,dt);
     const bankSin=Math.sin(this.cameraBank),bankCos=Math.cos(this.cameraBank);V3.set(this.up,rX*bankSin,bankCos,rZ*bankSin);
     let px=vehicle.x-fX*back+rX*(side+shakeX),py=vehicle.y+height+shakeY,pz=vehicle.z-fZ*back+rZ*(side+shakeX),tx=vehicle.x+fX*look+rX*shakeX*.28,ty=vehicle.y+1.05+Math.sin(vehicle.pitch)*look*.45+shakeY*.22,tz=vehicle.z+fZ*look+rZ*shakeX*.28;
-    const fovBoost=this.mode===0?0:this.mode===2?3:2.5,desiredFov=(baseFov+speedView*fovBoost)*DEG,desiredWarp=clamp(warp,0,.12);
+    const desiredFov=clamp(baseFov,45,122)*DEG,desiredWarp=clamp(warp,0,.12);
     if(!this.initialized){
       V3.set(this.pos,px,py,pz);V3.set(this.target,tx,ty,tz);this.currentFov=desiredFov;this.peripheralWarp=desiredWarp;this.initialized=true;
       this.lastVehicleX=vehicle.x;this.lastVehicleY=vehicle.y;this.lastVehicleZ=vehicle.z;
@@ -1882,28 +1944,29 @@ class AudioManager{
     const motorHz=78+s*10.8;
     this.motor.frequency.setTargetAtTime(motorHz,t,.045);
     this.inverter.frequency.setTargetAtTime(motorHz*2.06+70,t,.055);
-    this.motorGain.gain.setTargetAtTime((.0025+.010*speed01+.010*throttle)*(onRoad?1:.82),t,.07);
+    const motorMix=clamp(this.settings.motorVolume,0,1.5),windMix=clamp(this.settings.windVolume,0,1.5),tireMix=clamp(this.settings.tireVolume,0,1.5);
+    this.motorGain.gain.setTargetAtTime((.0025+.010*speed01+.010*throttle)*(onRoad?1:.82)*motorMix,t,.07);
     const regen=clamp(brake*.75+(throttle<.02?smoothstep(16,55,s)*.12:0),0,1);
-    this.inverterGain.gain.setTargetAtTime((.0015+.0065*speed01+.006*throttle+.0045*regen)*(1-fast*.25),t,.08);
+    this.inverterGain.gain.setTargetAtTime((.0015+.0065*speed01+.006*throttle+.0045*regen)*(1-fast*.25)*motorMix,t,.08);
 
     // At speed, wind and tyre noise should dominate an EV cabin instead of the motor.
     this.windFilter.frequency.setTargetAtTime(420+s*9.5,t,.12);
-    this.windGain.gain.setTargetAtTime(smoothstep(7,58,s)*(.045+.045*fast),t,.12);
+    this.windGain.gain.setTargetAtTime(smoothstep(7,58,s)*(.045+.045*fast)*windMix,t,.12);
     this.tireFilter.frequency.setTargetAtTime(170+s*3.1,t,.12);
-    this.tireGain.gain.setTargetAtTime((onRoad?1:.28)*smoothstep(2,45,s)*.025,t,.10);
+    this.tireGain.gain.setTargetAtTime((onRoad?1:.28)*smoothstep(2,45,s)*.025*tireMix,t,.10);
     this.offroadFilter.frequency.setTargetAtTime(360+s*4.0,t,.12);
-    this.offroadGain.gain.setTargetAtTime((onRoad?0:1)*smoothstep(2,42,s)*.045,t,.08);
+    this.offroadGain.gain.setTargetAtTime((onRoad?0:1)*smoothstep(2,42,s)*.045*tireMix,t,.08);
 
     const slipDeg=Math.abs(vehicle.slipAngle||0)/DEG,slipSqueal=smoothstep(3.0,12.0,slipDeg);
     const skid=smoothstep(7,28,s)*clamp(hand*.68+brake*.16+steer*.12+slipSqueal*.86,0,1);
     this.skidFilter.frequency.setTargetAtTime(900+s*6.4+slipSqueal*180,t,.08);
-    this.skidGain.gain.setTargetAtTime(skid*.038,t,.055);
+    this.skidGain.gain.setTargetAtTime(skid*.038*tireMix,t,.055);
 
     // Very low road/suspension texture. It follows actual body motion, so crests and rough grass
     // produce a soft thump/rumble instead of relying on a looping fake engine note.
     const suspensionMotion=clamp(Math.abs(vehicle.heaveVel)*.10+Math.abs(vehicle.pitchVel)*.24+Math.abs(vehicle.rollVel)*.12,0,1);
     this.rumbleFilter.frequency.setTargetAtTime(82+s*1.15+(onRoad?0:34),t,.10);
-    this.rumbleGain.gain.setTargetAtTime(smoothstep(4,42,s)*(.0025+suspensionMotion*.013+(onRoad?0:.010)),t,.07);
+    this.rumbleGain.gain.setTargetAtTime(smoothstep(4,42,s)*(.0025+suspensionMotion*.013+(onRoad?0:.010))*tireMix,t,.07);
   }
 }
 
@@ -1973,6 +2036,8 @@ class Game{
     for(let i=0;i<18;i++){const e=document.createElement('i');e.className='windStreak';const r=(i*73%97)/97;e.style.setProperty('--x',`${5+((i*37)%91)}%`);e.style.setProperty('--y',`${-18+((i*53)%118)}%`);e.style.setProperty('--len',`${28+((i*29)%72)}px`);e.style.setProperty('--o',`${(.18+r*.42).toFixed(2)}`);e.style.setProperty('--ang',`${96+((i%5)-2)*2}deg`);e.style.setProperty('--dur',`${(.48+r*.44).toFixed(2)}s`);e.style.setProperty('--delay',`${(-r*.8).toFixed(2)}s`);$windFx.appendChild(e);}
   }
   bindUI(){
+    // INPUT-FOCUS RULE: see the MAINTENANCE CONTRACT above Input. Any new mouse-only HUD button
+    // added here must preserve driving focus; editable/native form controls are the exception.
     // Mouse clicks on HUD controls must not interrupt a held driving key.
     for(const btn of [$configBtn,$configResetBtn,$menuBtn,$envBtn,$vehicleBtn,$autoBtn,$autopilotBtn,$touchAutoForward,$mobileCameraBtn,$mobileResetBtn,$mobileLayoutBtn,$pauseBtn,$aboutBtn,$aboutCloseBtn,$seedApplyBtn,$garageStart,$garageVehicle])if(btn)btn.addEventListener('mousedown',e=>e.preventDefault());
     if($garageStart)$garageStart.onclick=()=>this.paused?this.togglePause(false):this.startDriving();
@@ -2049,15 +2114,24 @@ class Game{
   }
   initConfigPanel(){
     if(!$configPanel)return;
-    const percentKeys=new Set(['acceleration','steering','roadHills','roadCurves','vegetation','cameraSpeed','cameraShake','speedLines','fogDensity']);
+    const percentKeys=new Set(['acceleration','steering','grip','roadHills','roadCurves','vegetation','fovEffect','cameraSpeed','cameraShake','speedLines','fogDensity','motorVolume','windVolume','tireVolume']);
     const restoreCanvasFocus=()=>this.restoreCanvasFocus();
+    const tabs=[...$configPanel.querySelectorAll('.configTab')],pages=[...$configPanel.querySelectorAll('.configPage')];
+    const selectTab=name=>{for(const tab of tabs){const active=tab.dataset.configTab===name;tab.classList.toggle('active',active);tab.setAttribute('aria-selected',String(active));}for(const page of pages)page.classList.toggle('active',page.dataset.configPage===name);};
+    for(const tab of tabs){
+      // Config categories are pointer navigation, not text-entry controls. Mouse/pen activation must
+      // not steal keyboard driving focus; keyboard activation still keeps normal button semantics.
+      tab.addEventListener('pointerdown',e=>{if(!IS_COARSE_POINTER&&e.pointerType!=='touch')e.preventDefault();},{passive:false});
+      tab.addEventListener('click',e=>{e.preventDefault();selectTab(tab.dataset.configTab);if(e.detail>0)restoreCanvasFocus();});
+    }
     for(const input of $configPanel.querySelectorAll('.configRange')){
       const key=input.dataset.setting;
       if(key==='volume')input.value=String(Math.round(this.settings.volume*100));
+      else if(key==='baseFov')input.value=String(Math.round(this.settings.baseFov));
       else if(key==='maxSpeedKmh')input.value=String(this.settings.maxSpeedKmh<0?MAX_SPEED_INFINITY_SLIDER:Math.round(this.settings.maxSpeedKmh));
       else if(key==='autopilotSpeedKmh'){input.value=String(Math.round(clamp(this.settings.autopilotSpeedKmh,0,AUTOPILOT_SAFE_CAP_KMH)));input.disabled=!!this.settings.autopilotUnlimited;}
       else if(percentKeys.has(key))input.value=String(Math.round(this.settings[key]*100));
-      const refresh=()=>{const raw=Number(input.value);if(key==='volume')this.settings.volume=raw/100;else if(key==='maxSpeedKmh')this.settings.maxSpeedKmh=raw>=MAX_SPEED_INFINITY_SLIDER?-1:raw;else if(key==='autopilotSpeedKmh')this.settings.autopilotSpeedKmh=clamp(raw,0,AUTOPILOT_SAFE_CAP_KMH);else this.settings[key]=raw/100;this.applySetting(key);this.refreshConfigValue(key);saveSettings(this.settings);this.updateSettingReset(key);};
+      const refresh=()=>{const raw=Number(input.value);if(key==='volume')this.settings.volume=raw/100;else if(key==='baseFov')this.settings.baseFov=raw;else if(key==='maxSpeedKmh')this.settings.maxSpeedKmh=raw>=MAX_SPEED_INFINITY_SLIDER?-1:raw;else if(key==='autopilotSpeedKmh')this.settings.autopilotSpeedKmh=clamp(raw,0,AUTOPILOT_SAFE_CAP_KMH);else this.settings[key]=raw/100;this.applySetting(key);this.refreshConfigValue(key);saveSettings(this.settings);this.updateSettingReset(key);};
       input.addEventListener('input',refresh);
       // Let the browser keep its native range behavior. Refocus the game only after the gesture
       // finishes so sliders remain draggable while held driving keys stay in Input.keys.
@@ -2096,7 +2170,7 @@ class Game{
   }
   syncSettingControl(key){
     const range=$configPanel?.querySelector(`.configRange[data-setting="${key}"]`);
-    if(range){if(key==='volume')range.value=String(Math.round(this.settings.volume*100));else if(key==='maxSpeedKmh')range.value=String(this.settings.maxSpeedKmh<0?MAX_SPEED_INFINITY_SLIDER:Math.round(this.settings.maxSpeedKmh));else if(key==='autopilotSpeedKmh'){range.value=String(Math.round(clamp(this.settings.autopilotSpeedKmh,0,AUTOPILOT_SAFE_CAP_KMH)));range.disabled=!!this.settings.autopilotUnlimited;}else range.value=String(Math.round(this.settings[key]*100));this.refreshConfigValue(key);}
+    if(range){if(key==='volume')range.value=String(Math.round(this.settings.volume*100));else if(key==='baseFov')range.value=String(Math.round(this.settings.baseFov));else if(key==='maxSpeedKmh')range.value=String(this.settings.maxSpeedKmh<0?MAX_SPEED_INFINITY_SLIDER:Math.round(this.settings.maxSpeedKmh));else if(key==='autopilotSpeedKmh'){range.value=String(Math.round(clamp(this.settings.autopilotSpeedKmh,0,AUTOPILOT_SAFE_CAP_KMH)));range.disabled=!!this.settings.autopilotUnlimited;}else range.value=String(Math.round(this.settings[key]*100));this.refreshConfigValue(key);}
     const check=$configPanel?.querySelector(`.configCheck[data-setting="${key}"]`);if(check){const invert=check.dataset.invert==='true';check.checked=invert?!this.settings[key]:!!this.settings[key];}
   }
   resetOneSetting(key){if(!(key in DEFAULT_SETTINGS))return;this.settings[key]=DEFAULT_SETTINGS[key];this.syncSettingControl(key);this.applySetting(key);saveSettings(this.settings);this.updateSettingReset(key);}
@@ -2105,15 +2179,15 @@ class Game{
   updateQualityState(){if($qualityState)$qualityState.textContent=this.settings.autoQuality?`Q${this.quality?.level||0}`:'最高';}
   resetConfigToDefaults(){
     Object.assign(this.settings,DEFAULT_SETTINGS);saveSettings(this.settings);
-    const percentKeys=new Set(['acceleration','steering','roadHills','roadCurves','vegetation','cameraSpeed','cameraShake','speedLines','fogDensity']);
+    const percentKeys=new Set(['acceleration','steering','grip','roadHills','roadCurves','vegetation','fovEffect','cameraSpeed','cameraShake','speedLines','fogDensity','motorVolume','windVolume','tireVolume']);
     for(const input of $configPanel?.querySelectorAll('.configRange')||[]){
-      const key=input.dataset.setting;if(key==='volume')input.value=String(Math.round(this.settings.volume*100));else if(key==='maxSpeedKmh')input.value=String(Math.round(this.settings.maxSpeedKmh));else if(key==='autopilotSpeedKmh'){input.value=String(Math.round(clamp(this.settings.autopilotSpeedKmh,0,AUTOPILOT_SAFE_CAP_KMH)));input.disabled=!!this.settings.autopilotUnlimited;}else if(percentKeys.has(key))input.value=String(Math.round(this.settings[key]*100));this.refreshConfigValue(key);
+      const key=input.dataset.setting;if(key==='volume')input.value=String(Math.round(this.settings.volume*100));else if(key==='baseFov')input.value=String(Math.round(this.settings.baseFov));else if(key==='maxSpeedKmh')input.value=String(Math.round(this.settings.maxSpeedKmh));else if(key==='autopilotSpeedKmh'){input.value=String(Math.round(clamp(this.settings.autopilotSpeedKmh,0,AUTOPILOT_SAFE_CAP_KMH)));input.disabled=!!this.settings.autopilotUnlimited;}else if(percentKeys.has(key))input.value=String(Math.round(this.settings[key]*100));this.refreshConfigValue(key);
     }
     for(const input of $configPanel?.querySelectorAll('.configCheck')||[]){const key=input.dataset.setting,invert=input.dataset.invert==='true';input.checked=invert?!this.settings[key]:!!this.settings[key];}
     this.audio.setVolume(this.settings.volume);if($fpsReadout)$fpsReadout.classList.toggle('show',!!this.settings.showFps);this.applySetting('showClock');this.applySetting('showDistance');this.applySetting('autopilotUnlimited');
     clearTimeout(this.vegetationConfigTimer);this.world.refreshEnvironment();this.quality.badWindows=0;this.quality.goodSeconds=0;this.quality.cooldown=0;this.quality.level=0;this.renderer.maxDpr=this.quality.dpr[0];this.world.setQuality(0);this.updateAllSettingResets();this.updateQualityState();this.restoreCanvasFocus();
   }
-  refreshConfigValue(key){const el=$configPanel?.querySelector(`[data-value-for="${key}"]`);if(!el)return;if(key==='volume')el.textContent=`${Math.round(this.settings.volume*100)}%`;else if(key==='maxSpeedKmh')el.textContent=this.settings.maxSpeedKmh<0?'∞':`${Math.round(this.settings.maxSpeedKmh)}`;else if(key==='autopilotSpeedKmh')el.textContent=this.settings.autopilotUnlimited?'∞':`${Math.round(clamp(this.settings.autopilotSpeedKmh,0,AUTOPILOT_SAFE_CAP_KMH))}`;else el.textContent=`${Math.round(this.settings[key]*100)}%`;}
+  refreshConfigValue(key){const el=$configPanel?.querySelector(`[data-value-for="${key}"]`);if(!el)return;if(key==='volume')el.textContent=`${Math.round(this.settings.volume*100)}%`;else if(key==='baseFov')el.textContent=`${Math.round(this.settings.baseFov)}°`;else if(key==='maxSpeedKmh')el.textContent=this.settings.maxSpeedKmh<0?'∞':`${Math.round(this.settings.maxSpeedKmh)}`;else if(key==='autopilotSpeedKmh')el.textContent=this.settings.autopilotUnlimited?'∞':`${Math.round(clamp(this.settings.autopilotSpeedKmh,0,AUTOPILOT_SAFE_CAP_KMH))}`;else el.textContent=`${Math.round(this.settings[key]*100)}%`;}
   applySetting(key){
     if(key==='volume')this.audio.setVolume(this.settings.volume);
     if(key==='vegetation'){clearTimeout(this.vegetationConfigTimer);this.vegetationConfigTimer=setTimeout(()=>this.world.refreshEnvironment(),120);}
