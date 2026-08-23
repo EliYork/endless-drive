@@ -1,0 +1,236 @@
+# 无尽驾驶
+
+一个轻松、安静、适合放空的 **3D 程序化无尽驾驶网页游戏**。
+
+整个游戏本体只有一个 `index.html`：不需要 Node.js、npm、本地服务器或联网，下载后使用 Windows 上的 Chrome / Edge 双击即可游玩。
+
+<p align="center">
+  <strong><a href="https://eliyork.github.io/endless-drive/">▶ 在线试玩</a></strong>
+  &nbsp;·&nbsp;
+  单 HTML / 完全离线可运行
+</p>
+
+<p align="center">
+  <img src="screenshots/02-driving.webp" alt="无尽驾驶 - 游戏画面" width="100%">
+</p>
+
+> 没有比赛，没有任务，没有压力——开着车，一直往前。
+
+## 特点
+
+- 单文件 `index.html`，完全离线运行
+- 原生 WebGL2 渲染，无 Three.js / Babylon.js / CDN
+- 程序化无尽公路、地形、植被与环境物体
+- 固定 Seed（种子）世界，可输入相同 Seed 复现同一世界
+- Floating Origin（浮动原点）与 Chunk Recycling（区块循环利用）
+- 晴天、黄昏、夜晚、雾天环境模式
+- 夜间双前灯、道路白线 / 反光柱逆反射、刹车灯地面反射
+- Low Poly 程序化车辆、四轮接地、悬挂、轮胎旋转与前轮转向
+- 轻量侧滑、手刹漂移、胎痕、轮胎烟与草地飞尘
+- 实时方向投影车影与轮胎接触阴影
+- 主界面车辆展示，可拖动环绕、滚轮缩放
+- 驾驶 / 暂停与车辆展示镜头平滑过渡
+- 自动前进与独立自动驾驶
+- 自动驾驶包含道路边缘感知、轨迹预测、前视控制与制动预判
+- PC 与移动端横屏操作布局
+- 自动画质、FPS 显示与大量可调参数
+
+## 游戏画面
+
+### 车辆展示
+
+<p align="center">
+  <img src="screenshots/01-garage.webp" alt="无尽驾驶 - 车辆展示" width="100%">
+</p>
+
+启动游戏后可以环绕查看当前车辆；车灯、车漆高光和方向阴影均为实时生成。
+
+### 夜间驾驶
+
+<p align="center">
+  <img src="screenshots/03-night-driving.webp" alt="无尽驾驶 - 夜间驾驶" width="100%">
+</p>
+
+夜晚环境会明显变暗，主要依靠车辆前灯照亮道路；白线与路边反光设施会在灯光扫过时增强可见度。
+
+### 自定义配置
+
+<p align="center">
+  <img src="screenshots/04-settings.webp" alt="无尽驾驶 - 配置界面" width="100%">
+</p>
+
+最大速度、自动巡航、道路起伏、道路弯折、植被、镜头与多种驾驶 / 画面选项都可以直接调整。
+
+## 文件结构
+
+```text
+index.html
+README.md
+screenshots/
+├─ 01-garage.webp
+├─ 02-driving.webp
+├─ 03-night-driving.webp
+└─ 04-settings.webp
+```
+
+其中 **游戏运行只需要 `index.html`**。
+
+`screenshots/` 仅用于 GitHub README 展示，不是游戏资源，也不会被 `index.html` 加载；删除整个 `screenshots/` 目录后游戏仍然可以完全离线运行。
+
+## 开始游玩
+
+### 在线试玩
+
+**[▶ 打开 GitHub Pages 在线版](https://eliyork.github.io/endless-drive/)**
+
+### 本地离线
+
+1. 下载 `index.html`。
+2. 使用 Chrome 或 Edge 直接打开。
+3. 点击「开始驾驶」，或直接按 `Space`。
+
+不需要：
+
+- Node.js
+- `npm install`
+- localhost
+- Python HTTP Server
+- 外部模型 / 图片 / 字体 / 音频
+- 网络连接
+
+> 需要浏览器支持 WebGL2。声音会在第一次用户交互后由 Web Audio API 启动。
+
+## 操作
+
+| 按键 | 功能 |
+| --- | --- |
+| `W` / `↑` | 油门 |
+| `S` / `↓` | 刹车 / 倒车 |
+| `A` / `←` | 左转 |
+| `D` / `→` | 右转 |
+| `Space` | 主界面开始 / 暂停界面继续；驾驶中为手刹 |
+| `C` | 切换摄像机 |
+| `R` | 回到公路 |
+| `T` | 自动前进 |
+| `G` | 自动驾驶 |
+| `P` / `Esc` | 暂停 / 继续 |
+| `H` | 显示 / 关闭键位说明 |
+| `M` | 静音 |
+| `F2` | 性能 / 调试信息 |
+
+移动端提供横屏触控按钮，并可切换不同左右手布局。
+
+## 配置
+
+游戏内「配置」面板目前包含：
+
+- 声音大小
+- 最大速度（支持 `∞`）
+- 自动巡航速度
+- 加速力度
+- 转向灵敏度
+- 道路起伏（最高 500%）
+- 道路弯折（最高 500%）
+- 植被丰富度
+- 镜头速度感
+- 镜头震动
+- 速度线强度
+- 雾浓度
+- 恒定加速
+- 高速转向抑制
+- 草地额外阻力
+- 速度感增强
+- 自动画质
+- 显示 FPS（默认关闭）
+- 显示时间（默认关闭）
+- 显示里程（默认开启）
+- 无碰撞
+- 自动驾驶速度无上限
+
+修改过的配置项可单独恢复，也可以一键恢复全部默认值。
+
+> 道路起伏 / 弯折会影响之后生成的新路段，不会突然重塑车辆脚下已经存在的道路。
+
+## Seed（种子）
+
+菜单中可以直接输入 Seed 并应用。
+
+应用新 Seed 时不会刷新网页，也不会修改 `file://` 地址；游戏会在当前页面中原地释放旧世界资源并重新生成道路、地形和环境。
+
+相同 Seed 在相同版本和配置下会尽可能生成相同世界。
+
+## 自动驾驶
+
+自动驾驶与「自动前进」是两个独立功能。
+
+自动驾驶会综合使用：
+
+- 道路左右边缘 / 可驾驶走廊
+- 当前横向偏移与车头方向
+- 车辆实际预测轨迹
+- Dynamic Lookahead（动态前视距离）
+- 高速曲率前馈
+- Braking Envelope（制动包络 / 提前刹车距离）
+- 偏离道路后的长距离回归目标
+
+默认设置以轻松巡航为主；配置中可提高巡航速度。极端的 300%～500% 弯折 / 起伏主要作为压力测试场景，不保证能以超高速通过所有弯道。
+
+## 技术实现
+
+核心全部内联在 `index.html` 中：
+
+- HTML / CSS / JavaScript
+- WebGL2 Shader
+- Vector / Matrix 数学
+- Mesh 与 Renderer
+- 程序化车辆
+- Road Generator
+- Terrain Generator
+- Environment Generator
+- Chunk Manager
+- Camera / Input / UI
+- Web Audio 程序化音效
+
+世界采用 Road Chunk / Terrain Chunk 流式生成，活动区块数量保持有限；旧区块会循环利用，而不是随着驾驶距离不断累计 GPU Mesh。
+
+长距离驾驶使用 Floating Origin（浮动原点）控制 Float32 GPU 坐标精度，同时保留逻辑世界进度、里程和道路历史。
+
+## 性能
+
+项目的主要性能策略包括：
+
+- 固定数量活动 Chunk
+- VAO / VBO / IBO 循环复用
+- Near / Mid / Far LOD
+- 远景降低植被密度与地形精度
+- 自动 DPR / 远景质量调节
+- 粒子、胎痕、烟尘均有固定数量上限
+- 暂停后停止车辆物理与音频，保留轻量车辆展示渲染
+
+## 致谢与参考
+
+本项目为独立实现，没有复制下列项目的源码、资产或 UI。开发过程中参考过它们公开展示的思路与体验：
+
+- **Slow Roads** — 无尽驾驶与程序化公路体验启发  
+  https://slowroads.io/
+- **PythonRobotics** — Pure Pursuit、Stanley、MPC 等路径跟踪思路  
+  https://github.com/AtsushiSakai/PythonRobotics
+- **F1TENTH 社区项目** — 高速前视、赛车线与自动驾驶控制思路  
+  https://f1tenth.org/
+- **Drivey / Rezmason** — 程序化驾驶场景与网页 3D 视觉参考  
+  https://github.com/Rezmason/drivey
+- **Morphicons / guillermolg00** — 状态图标 Morph（形变）与微交互设计思路参考  
+  https://github.com/guillermolg00/morphicons
+
+感谢所有试玩并反馈驾驶手感、移动端布局、速度感、车辆接地、自动驾驶和视觉细节的朋友。
+
+## 当前限制
+
+- 车辆仍以 Arcade（街机式）控制为主，不是完整刚体 + 轮胎力学模拟器。
+- 极端高速与 500% 道路参数主要用于实验和娱乐，视觉 / 自动驾驶行为可能出现非现实表现。
+- WebGL Context Lost 目前仍以提示用户恢复 / 刷新为主。
+- 不使用外部美术资源，因此车辆、树木、石头等保持程序化 Low Poly 风格。
+
+---
+
+**目标很简单：没有比赛，没有任务，没有压力——开着车，一直往前。**
