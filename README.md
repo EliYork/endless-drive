@@ -56,7 +56,7 @@
 ### 自定义配置
 
 <p align="center">
-  <img src="screenshots/04-settings.webp" alt="无尽驾驶 - 配置界面" width="36%">
+  <img src="screenshots/04-settings.webp" alt="无尽驾驶 - 配置界面" width="72%">
 </p>
 
 最大速度、自动巡航、道路起伏、道路弯折、植被、镜头与多种驾驶 / 画面选项都可以直接调整。
