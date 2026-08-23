@@ -14,6 +14,7 @@
   #speedFx::before{content:"";position:absolute;inset:0;background:repeating-conic-gradient(from 2deg at 50% 56%,transparent 0deg 9deg,rgba(235,247,255,.16) 9.2deg 9.48deg,transparent 9.72deg 18deg);-webkit-mask-image:radial-gradient(ellipse at 50% 56%,transparent 0 42%,rgba(0,0,0,.15) 53%,#000 76%,rgba(0,0,0,.15) 94%,transparent 100%);mask-image:radial-gradient(ellipse at 50% 56%,transparent 0 42%,rgba(0,0,0,.15) 53%,#000 76%,rgba(0,0,0,.15) 94%,transparent 100%);filter:blur(.45px)}
   #speedFx::after{content:"";position:absolute;inset:4%;background:radial-gradient(ellipse at 50% 56%,transparent 0 50%,rgba(202,230,240,.025) 64%,rgba(225,242,248,.10) 86%,transparent 100%);filter:blur(5px)}
   #windFx{position:absolute;inset:-8%;pointer-events:none;overflow:hidden;opacity:0;will-change:opacity}
+  #rainCanvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:1;will-change:opacity}
   .windStreak{position:absolute;left:var(--x);top:var(--y);width:var(--len);height:1px;border-radius:2px;background:linear-gradient(90deg,transparent,rgba(236,247,250,.56),transparent);opacity:var(--o);transform:rotate(var(--ang));animation:windRush var(--dur) linear infinite;animation-delay:var(--delay);will-change:transform}
   @keyframes windRush{from{translate:10vw -14vh}to{translate:-22vw 118vh}}
   #stats{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);text-align:center;text-shadow:0 2px 12px rgba(0,0,0,.48)}
@@ -204,6 +205,7 @@
   </div>
   <div id="speedFx" aria-hidden="true"></div>
   <div id="windFx" aria-hidden="true"></div>
+  <canvas id="rainCanvas" aria-hidden="true"></canvas>
   <div id="stats"><div id="speed">0 km/h</div><div id="distance">0.0 km</div></div>
   <div id="topRight">
     <button id="autopilotBtn" title="自动驾驶（G）" aria-label="开启自动驾驶" aria-pressed="false">自动驾驶</button>
@@ -242,6 +244,19 @@
       <div class="configRow"><span class="configLabel">速度线强度</span><input class="configRange" type="range" min="0" max="200" step="1" data-setting="speedLines"><span class="configValue" data-value-for="speedLines"></span></div>
       <div class="configRow"><span class="configLabel">雾浓度</span><input class="configRange" type="range" min="0" max="200" step="1" data-setting="fogDensity"><span class="configValue" data-value-for="fogDensity"></span></div>
       <div class="configDivider"></div>
+      <div class="configToggleGrid">
+        <label class="configToggleRow wide" title="允许天气系统随机进入小雨 / 中雨，再自然停雨；不是强制一直下"><span>概率下雨</span><input class="configCheck" type="checkbox" data-setting="rainEnabled"></label>
+        <label class="configToggleRow wide" title="让晴天、黄昏与夜晚按周期自然过渡"><span>自然昼夜</span><input class="configCheck" type="checkbox" data-setting="dayNightCycle"></label>
+        <label class="configToggleRow wide" title="在远离道路的位置生成塔楼、灯塔、热气球等视觉地标"><span>远景地标</span><input class="configCheck" type="checkbox" data-setting="landmarks"></label>
+        <label class="configToggleRow wide" title="偶尔让道路穿过小城镇、郊区和大都市边缘"><span>城镇 / 都市</span><input class="configCheck" type="checkbox" data-setting="settlements"></label>
+      </div>
+      <div class="configRow" title="一次降雨可能达到的最大强度"><span class="configLabel">最大雨势</span><input class="configRange" type="range" min="10" max="100" step="5" data-setting="rainIntensity"><span class="configValue" data-value-for="rainIntensity"></span></div>
+      <div class="configRow" title="越高越容易在天气检查时进入降雨；仍会有完整的晴天间隔"><span class="configLabel">降雨频率</span><input class="configRange" type="range" min="10" max="100" step="5" data-setting="rainChance"><span class="configValue" data-value-for="rainChance"></span></div>
+      <div class="configRow" title="完整昼夜循环所需的现实时间"><span class="configLabel">昼夜周期</span><input class="configRange" type="range" min="2" max="30" step="1" data-setting="dayNightMinutes"><span class="configValue" data-value-for="dayNightMinutes"></span></div>
+      <div class="configRow" title="改变远景地标出现频率"><span class="configLabel">地标丰富度</span><input class="configRange" type="range" min="25" max="200" step="5" data-setting="landmarkDensity"><span class="configValue" data-value-for="landmarkDensity"></span></div>
+      <div class="configRow" title="改变小城镇 / 大都市路段出现频率，不改变道路生成"><span class="configLabel">城镇丰富度</span><input class="configRange" type="range" min="25" max="200" step="5" data-setting="settlementDensity"><span class="configValue" data-value-for="settlementDensity"></span></div>
+      <div class="configNote">概率下雨默认开启；勾选表示“允许随机下雨”，不会持续一直下。</div>
+      <div class="configDivider"></div>
       <div class="configRow" title="独立于自动画质的最终像素比例；降低可明显减轻 GPU 压力"><span class="configLabel">渲染比例</span><input class="configRange" type="range" min="50" max="150" step="5" data-setting="renderScale"><span class="configValue" data-value-for="renderScale"></span></div>
       <div class="configRow" title="0 表示跟随浏览器 / 屏幕刷新率"><span class="configLabel">帧率上限</span><input class="configRange" type="range" min="0" max="120" step="30" data-setting="frameLimit"><span class="configValue" data-value-for="frameLimit"></span></div>
       <div class="configDivider"></div>
@@ -267,7 +282,8 @@
       <div class="configRow"><span class="configLabel">电机</span><input class="configRange" type="range" min="0" max="150" step="1" data-setting="motorVolume"><span class="configValue" data-value-for="motorVolume"></span></div>
       <div class="configRow"><span class="configLabel">风声</span><input class="configRange" type="range" min="0" max="150" step="1" data-setting="windVolume"><span class="configValue" data-value-for="windVolume"></span></div>
       <div class="configRow"><span class="configLabel">轮胎 / 路面</span><input class="configRange" type="range" min="0" max="150" step="1" data-setting="tireVolume"><span class="configValue" data-value-for="tireVolume"></span></div>
-      <div class="configNote">分轨音量会实时作用于程序化 Web Audio 混音。</div>
+      <div class="configRow"><span class="configLabel">雨声</span><input class="configRange" type="range" min="0" max="150" step="1" data-setting="rainVolume"><span class="configValue" data-value-for="rainVolume"></span></div>
+      <div class="configNote">分轨音量会实时作用于程序化 Web Audio 混音；关闭“概率下雨”时雨声音轨自动静音。</div>
     </div>
 
     <div class="configPage" data-config-page="advanced">
@@ -373,6 +389,7 @@ const canvas = document.getElementById('game');
 const $speed = document.getElementById('speed');
 const $speedFx = document.getElementById('speedFx');
 const $windFx = document.getElementById('windFx');
+const $rainCanvas = document.getElementById('rainCanvas');
 const $distance = document.getElementById('distance');
 const $seedInput = document.getElementById('seedInput');
 const $seedApplyBtn = document.getElementById('seedApplyBtn');
@@ -442,11 +459,11 @@ const lerp = (a,b,t)=>a+(b-a)*t;
 const smoothstep = (a,b,x)=>{ x=clamp((x-a)/(b-a),0,1); return x*x*(3-2*x); };
 const expLerp = (a,b,rate,dt)=>lerp(a,b,1-Math.exp(-rate*dt));
 const SETTINGS_KEY='driftway-settings-v1';
-const SETTINGS_VERSION=8;
+const SETTINGS_VERSION=10;
 const BASE_SPEED_REF=300/3.6;
 const AUTOPILOT_SAFE_CAP_KMH=1000;
 const MAX_SPEED_INFINITY_SLIDER=1001;
-const DEFAULT_SETTINGS={volume:.68,motorVolume:1,windVolume:1,tireVolume:1,maxSpeedKmh:300,autopilotSpeedKmh:300,acceleration:1,steering:1,grip:1,onePedal:0,roadHills:1,roadCurves:1,vegetation:1,baseFov:61,fovEffect:1,cameraSpeed:1,cameraShake:1,speedLines:1,fogDensity:1,renderScale:1,frameLimit:0,speedAccelFade:true,highSpeedSteer:true,offroadDrag:true,paceBoost:true,autoQuality:true,showFps:false,showClock:false,showDistance:true,fullscreen:false,cleanUi:false,noCollision:false,autopilotUnlimited:false};
+const DEFAULT_SETTINGS={volume:.68,motorVolume:1,windVolume:1,tireVolume:1,rainVolume:.82,maxSpeedKmh:300,autopilotSpeedKmh:300,acceleration:1,steering:1,grip:1,onePedal:0,roadHills:1,roadCurves:1,vegetation:1,baseFov:61,fovEffect:1,cameraSpeed:1,cameraShake:1,speedLines:1,fogDensity:1,renderScale:1,frameLimit:0,rainEnabled:true,rainIntensity:.72,rainChance:.42,dayNightCycle:true,dayNightMinutes:10,landmarks:true,landmarkDensity:1,settlements:true,settlementDensity:1,speedAccelFade:true,highSpeedSteer:true,offroadDrag:true,paceBoost:true,autoQuality:true,showFps:false,showClock:false,showDistance:true,fullscreen:false,cleanUi:false,noCollision:false,autopilotUnlimited:false};
 function loadSettings(){
   const out={...DEFAULT_SETTINGS};
   try{
@@ -455,7 +472,7 @@ function loadSettings(){
       for(const k of Object.keys(out)){if(typeof out[k]==='boolean'){if(typeof raw[k]==='boolean')out[k]=raw[k];}else if(Number.isFinite(raw[k]))out[k]=raw[k];}
       // One-time migration: the previous default master volume was 50%. If the player never
       // moved it away from that exact default, adopt the new, fuller 68% mix automatically.
-      const version=Number(raw._version)||1;if(version<2&&Math.abs(out.volume-.50)<.0001)out.volume=.68;if(version<3){if(Math.abs(out.maxSpeedKmh-240)<.0001)out.maxSpeedKmh=300;if(Math.abs(out.autopilotSpeedKmh-210)<.0001)out.autopilotSpeedKmh=300;}if(version<4&&out.autopilotSpeedKmh<0){out.autopilotUnlimited=true;out.autopilotSpeedKmh=AUTOPILOT_SAFE_CAP_KMH;}if(version<6){out.showClock=false;out.showDistance=true;}out.autopilotSpeedKmh=clamp(out.autopilotSpeedKmh,0,AUTOPILOT_SAFE_CAP_KMH);
+      const version=Number(raw._version)||1;if(version<2&&Math.abs(out.volume-.50)<.0001)out.volume=.68;if(version<3){if(Math.abs(out.maxSpeedKmh-240)<.0001)out.maxSpeedKmh=300;if(Math.abs(out.autopilotSpeedKmh-210)<.0001)out.autopilotSpeedKmh=300;}if(version<4&&out.autopilotSpeedKmh<0){out.autopilotUnlimited=true;out.autopilotSpeedKmh=AUTOPILOT_SAFE_CAP_KMH;}if(version<6){out.showClock=false;out.showDistance=true;}if(version<10){out.rainEnabled=true;out.dayNightCycle=true;}out.autopilotSpeedKmh=clamp(out.autopilotSpeedKmh,0,AUTOPILOT_SAFE_CAP_KMH);
       // Fullscreen is intentionally not restored from localStorage: browsers only allow entry from
       // a fresh user gesture. The checkbox mirrors the actual fullscreen state for this session.
       out.fullscreen=false;
@@ -639,7 +656,7 @@ in vec3 vWorld,vNormal; in vec4 vColor;
 uniform vec3 uCameraPos,uLightDir,uLightColor,uFogColor,uSkyTop,uSkyBottom;
 uniform vec3 uHeadlightPos,uHeadlightDir,uHeadlightRight;
 uniform vec3 uBrakePos,uBrakeDir;
-uniform float uAmbient,uDiffuse,uFogNear,uFogFar,uEmissive,uAlpha,uSpecular,uHeadlightStrength,uBrakeStrength;
+uniform float uAmbient,uDiffuse,uFogNear,uFogFar,uEmissive,uAlpha,uSpecular,uHeadlightStrength,uBrakeStrength,uWetness;
 out vec4 outColor;
 void main(){
   vec3 N=normalize(vNormal),L=normalize(-uLightDir);
@@ -648,6 +665,12 @@ void main(){
   vec3 ambientTint=mix(vec3(.86,.89,.91),uSkyBottom,.10);
   vec3 lit=vColor.rgb*(ambientTint*(uAmbient*(.86+hemi*.18))+uLightColor*(ndl*uDiffuse));
   if(uSpecular>.001){vec3 V=normalize(uCameraPos-vWorld),H=normalize(L+V);float spec=pow(max(dot(N,H),0.0),28.0)*uSpecular;lit+=uLightColor*spec;}
+  // Wet asphalt is darker head-on and develops a soft glancing sheen.  Detect the road from its
+  // low-saturation, dark material plus upward normal so vehicle trim is not accidentally wetted.
+  float wetMx=max(vColor.r,max(vColor.g,vColor.b)),wetMn=min(vColor.r,min(vColor.g,vColor.b));
+  float asphalt=(1.0-smoothstep(.075,.16,wetMx-wetMn))*smoothstep(.09,.145,wetMx)*(1.0-smoothstep(.30,.42,wetMx))*smoothstep(.48,.90,N.y);
+  float wet=clamp(uWetness*asphalt,0.0,1.0);
+  if(wet>.001){vec3 Vw=normalize(uCameraPos-vWorld),Rw=reflect(uLightDir,N);float sheen=pow(max(dot(normalize(Rw),Vw),0.0),10.0);lit*=1.0-wet*.24;lit+=uLightColor*sheen*wet*.22;}
   // Twin world-space headlights.  Each physical lamp now casts its own lobe, then the two beams
   // overlap naturally farther down the road.  This reads much more like a real pair of headlights
   // than one giant centred cone, while still costing only a handful of ALU operations per fragment.
@@ -678,6 +701,7 @@ void main(){
     float sparkle=.94+.06*sin(dot(floor(vWorld*2.7),vec3(12.7,7.1,19.3)));
     float retro=1.0+(pale*1.82+warmReflect*1.08)*(1.0+retroAlign*1.85)*sparkle;
     lit+=vec3(1.00,.935,.79)*headLight*retro;
+    if(wet>.001){float streak=pow(clamp(1.0-abs(dot(normalize(uCameraPos-vWorld),N)),0.0,1.0),1.8);lit+=vec3(1.0,.91,.72)*headLight*wet*(.14+.34*streak);}
   }
 
   // Brake lamps softly tint nearby asphalt/grass behind the car.  This is intentionally a tiny
@@ -710,7 +734,7 @@ const VS_SKY=`#version 300 es
 precision highp float;out vec2 vUv;
 void main(){vec2 p=vec2(float((gl_VertexID<<1)&2),float(gl_VertexID&2));vUv=p*.5;gl_Position=vec4(p*2.0-1.0,0.9999,1.0);}`;
 const FS_SKY=`#version 300 es
-precision highp float;in vec2 vUv;uniform vec3 uSkyTop,uSkyBottom,uSunColor;uniform float uSunStrength,uSkyYaw,uSkyPitch,uSkyTime;out vec4 outColor;
+precision highp float;in vec2 vUv;uniform vec3 uSkyTop,uSkyBottom,uSunColor;uniform float uSunStrength,uSkyYaw,uSkyPitch,uSkyTime,uStarVisibility;out vec4 outColor;
 float skyHash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453123);}
 void main(){
   float y=clamp(vUv.y,0.0,1.0);float gy=pow(y,.72);vec3 c=mix(uSkyBottom,uSkyTop,gy);float haze=exp(-y*7.0);float darkness=1.0-smoothstep(.06,.22,max(uSkyTop.r,max(uSkyTop.g,uSkyTop.b)));vec3 horizonTint=mix(uSkyBottom,vec3(1.0),mix(.035,.115,1.0-darkness));c=mix(c,horizonTint,haze*mix(.08,.24,1.0-darkness));float upperSoft=smoothstep(.58,1.0,y);c=mix(c,uSkyTop,upperSoft*.08);vec2 q=vUv-vec2(.74,.70);float halo=exp(-dot(q,q)*30.0)*.19*uSunStrength;float sun=exp(-dot(q,q)*190.0)*uSunStrength;c+=uSunColor*(halo+sun);
@@ -719,7 +743,7 @@ void main(){
   // against camera rotation like a distant world-space dome, then give every star its own subtle phase/frequency.
   vec2 starUv=vec2(fract(vUv.x-uSkyYaw/6.28318530718),clamp(vUv.y+uSkyPitch*.12,0.0,1.0));
   vec2 cell=floor(starUv*vec2(330.0,185.0));float h=skyHash(cell);float phase=skyHash(cell+vec2(19.37,7.91))*6.28318530718;float freq=mix(.55,1.85,skyHash(cell+vec2(3.17,41.2)));float twinkle=.72+.28*sin(uSkyTime*freq+phase);twinkle*=.92+.08*sin(uSkyTime*(freq*.37)+phase*1.73);
-  float star=smoothstep(.9935,.9996,h)*smoothstep(.18,.48,y)*darkness*clamp(twinkle,.42,1.0);c+=vec3(.62,.72,.90)*star*.46;outColor=vec4(c,1.0);
+  float star=smoothstep(.9935,.9996,h)*smoothstep(.18,.48,y)*darkness*clamp(twinkle,.42,1.0)*uStarVisibility;c+=vec3(.62,.72,.90)*star*.46;outColor=vec4(c,1.0);
 }`;
 
 class Renderer{
@@ -739,7 +763,7 @@ class Renderer{
     gl.disable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);this.sky.use();gl.bindVertexArray(this.skyVao);
     gl.uniform3fv(this.sky.loc('uSkyTop'),env.skyTop);gl.uniform3fv(this.sky.loc('uSkyBottom'),env.skyBottom);gl.uniform3fv(this.sky.loc('uSunColor'),env.sunColor);gl.uniform1f(this.sky.loc('uSunStrength'),env.sunStrength);
     const skyDx=camera.target[0]-camera.pos[0],skyDy=camera.target[1]-camera.pos[1],skyDz=camera.target[2]-camera.pos[2],skyFlat=Math.max(.0001,Math.hypot(skyDx,skyDz));
-    gl.uniform1f(this.sky.loc('uSkyYaw'),Math.atan2(skyDx,skyDz));gl.uniform1f(this.sky.loc('uSkyPitch'),Math.atan2(skyDy,skyFlat));gl.uniform1f(this.sky.loc('uSkyTime'),performance.now()*.001);
+    gl.uniform1f(this.sky.loc('uSkyYaw'),Math.atan2(skyDx,skyDz));gl.uniform1f(this.sky.loc('uSkyPitch'),Math.atan2(skyDy,skyFlat));gl.uniform1f(this.sky.loc('uSkyTime'),performance.now()*.001);gl.uniform1f(this.sky.loc('uStarVisibility'),clamp((env.nightFactor||0)*(1-(env.rainFactor||0)*.92),0,1));
     gl.drawArrays(gl.TRIANGLES,0,3);this.drawCalls++;
     gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.clear(gl.DEPTH_BUFFER_BIT);
     this.scene.use();gl.uniformMatrix4fv(this.scene.loc('uProj'),false,camera.proj);gl.uniformMatrix4fv(this.scene.loc('uView'),false,camera.view);
@@ -756,7 +780,7 @@ class Renderer{
     }
     gl.uniform3fv(this.scene.loc('uHeadlightPos'),this._headPos);gl.uniform3fv(this.scene.loc('uHeadlightDir'),this._headDir);gl.uniform3fv(this.scene.loc('uHeadlightRight'),this._headRight);gl.uniform1f(this.scene.loc('uHeadlightStrength'),headStrength);
     gl.uniform3fv(this.scene.loc('uBrakePos'),this._brakePos);gl.uniform3fv(this.scene.loc('uBrakeDir'),this._brakeDir);gl.uniform1f(this.scene.loc('uBrakeStrength'),brakeStrength);
-    gl.uniform1f(this.scene.loc('uAmbient'),env.ambient);gl.uniform1f(this.scene.loc('uDiffuse'),env.diffuse);gl.uniform1f(this.scene.loc('uFogNear'),env.fogNear);gl.uniform1f(this.scene.loc('uFogFar'),env.fogFar);gl.uniform1f(this.scene.loc('uPeripheralWarp'),camera.peripheralWarp||0);
+    gl.uniform1f(this.scene.loc('uAmbient'),env.ambient);gl.uniform1f(this.scene.loc('uDiffuse'),env.diffuse);gl.uniform1f(this.scene.loc('uWetness'),env.rainFactor||0);gl.uniform1f(this.scene.loc('uFogNear'),env.fogNear);gl.uniform1f(this.scene.loc('uFogFar'),env.fogFar);gl.uniform1f(this.scene.loc('uPeripheralWarp'),camera.peripheralWarp||0);
   }
   draw(mesh,model=this.identity,emissive=0,alpha=1,blend=false,cull=true,specular=0){
     const gl=this.gl;if(!mesh||!mesh.count)return;this.scene.use();
@@ -1106,17 +1130,29 @@ class WorldChunk{
     // Each prop family owns its own deterministic RNG stream. LOD changes can no longer advance
     // one shared RNG by a different amount and silently replace trees/bushes with new identities.
     const rngFor=salt=>mulberry32(hashU32((this.seed ^ Math.imul(this.id+1,0x9e3779b1) ^ salt)>>>0));
-    const treeRng=rngFor(0x19f123bb),rockRng=rngFor(0x5a17c9e3),bushRng=rngFor(0x7d4e2a91),tuftRng=rngFor(0x2c6d8fb5);
+    const treeRng=rngFor(0x19f123bb),rockRng=rngFor(0x5a17c9e3),bushRng=rngFor(0x7d4e2a91),tuftRng=rngFor(0x2c6d8fb5),flowerRng=rngFor(0x61a5e9d3),landmarkRng=rngFor(0x4f3a91c7),settlementRng=rngFor(0x73c21ab5);
     const centerBio=biomeAtS((this.id*SEG_PER_CHUNK+SEG_PER_CHUNK*.5)*ROAD_STEP,this.seed);
     const richness=clamp(this.settings.vegetation,0,2),treeDensity=biomeValue(centerBio,'treeDensity'),rockDensity=biomeValue(centerBio,'rockDensity'),bushDensity=biomeValue(centerBio,'bushDensity'),broadleaf=biomeValue(centerBio,'broadleaf'),dryness=biomeValue(centerBio,'dry');
     const biomeTree=biomeColor(centerBio,'tree');
     const place=(row,off)=>{row=clamp(row,0,SEG_PER_CHUNK);const k=row*3,bas=this.basisAt(row),rx=bas[6],rz=bas[7],x=this.points[k]+rx*off,z=this.points[k+2]+rz*off,y=this.terrainGen.height(x+this.anchorX,z+this.anchorZ,this.points[k+1]+this.anchorY,Math.abs(off))-this.anchorY;return [x,y,z,Math.atan2(bas[0],bas[2])];};
 
+    // Deterministic settlement bands: most of the world stays rural, but long drives occasionally
+    // pass through a small town or the edge of a much larger city.  These bands only decorate the
+    // existing road; they never alter road topology, so autopilot and Seed determinism stay intact.
+    const settlementDensity=clamp(this.settings.settlementDensity??1,.25,2);
+    const settlementCenter=(period,salt)=>{const group=Math.floor(this.id/period),span=Math.max(1,period-18),h=hashU32((this.seed^hashU32((Math.imul(group|0,0x45d9f3b)^salt)>>>0))>>>0);return group*period+9+(h%span);};
+    const townPeriod=Math.max(42,Math.round(82/settlementDensity)),cityPeriod=Math.max(150,Math.round(260/settlementDensity));
+    const townCenter=settlementCenter(townPeriod,0x21874d31),cityCenter=settlementCenter(cityPeriod,0x6d2b79f5);
+    const townDist=Math.abs(this.id-townCenter),cityDist=Math.abs(this.id-cityCenter),townRadius=3,cityRadius=11;
+    const settlementKind=!this.settings.settlements?0:(cityDist<=cityRadius?2:(townDist<=townRadius?1:0));
+    const settlementFalloff=settlementKind===2?clamp(1-cityDist/(cityRadius+1),.15,1):settlementKind===1?clamp(1-townDist/(townRadius+1),.22,1):0;
+    const urbanTreeMul=settlementKind===2?lerp(.10,.26,1-settlementFalloff):settlementKind===1?lerp(.42,.68,1-settlementFalloff):1;
+
     // Trees are now stable across Near/Mid/Far. Distance LOD only changes terrain resolution;
     // vegetation no longer swaps to a different random set as the player approaches.
-    const treeBase=11+Math.floor(treeRng()*7),treeCount=Math.max(0,Math.floor(treeBase*treeDensity*this.envScale*richness));
+    const treeBase=11+Math.floor(treeRng()*7),treeCount=Math.max(0,Math.floor(treeBase*treeDensity*this.envScale*richness*urbanTreeMul));
     for(let n=0;n<treeCount;n++){
-      const row=Math.floor(treeRng()*(SEG_PER_CHUNK+1)),side=treeRng()<.5?-1:1,off=side*(10.5+treeRng()*108),p=place(row,off),h=3.4+treeRng()*4.6,r=.72+treeRng()*.72,variant=treeRng();
+      const row=Math.floor(treeRng()*(SEG_PER_CHUNK+1)),side=treeRng()<.5?-1:1,off=side*(10.5+treeRng()*108),p=place(row,off),h=(5.4+treeRng()*8.6)*lerp(.94,1.12,smoothstep(.6,1.55,treeDensity)),r=.92+treeRng()*1.02,variant=treeRng();
       const lateralFade=smoothstep(42,118,Math.abs(off)),shade=.91+treeRng()*.15,baseLeaf=mixColor4(variant<.33?C.leaf1:variant<.66?C.leaf2:C.leaf3,biomeTree,.58);
       const leafA=scaleColor4(mixColor4(baseLeaf,C.leafFar,lateralFade*.54),shade),leafB=scaleColor4(mixColor4(baseLeaf,C.leafFar,lateralFade*.64),.96+treeRng()*.09),trunk=scaleColor4(mixColor4(C.trunk,[.38,.31,.23,1],lateralFade*.35),.93+treeRng()*.11);
       appendCylinder(b,p[0],p[1]+h*.24,p[2],r*.20,h*.48,6,trunk);
@@ -1138,7 +1174,7 @@ class WorldChunk{
     // Grey highlands get occasional larger outcrops, creating an obvious destination change.
     if(rockDensity>1.45){const extra=Math.floor((rockDensity-1.25)*2.4);for(let n=0;n<extra;n++){const row=Math.floor(rockRng()*(SEG_PER_CHUNK+1)),side=rockRng()<.5?-1:1,off=side*(15+rockRng()*42),p=place(row,off),r=1.3+rockRng()*1.7;appendRock(b,p[0],p[1],p[2],r,1.4+rockRng()*2.2,mixColor4(C.rock,[.38,.40,.39,1],.35),rockRng);}}
 
-    const bushBase=3+Math.floor(bushRng()*4),bushCount=Math.max(0,Math.floor(bushBase*bushDensity*this.envScale*richness));
+    const bushBase=3+Math.floor(bushRng()*4),bushCount=Math.max(0,Math.floor(bushBase*bushDensity*this.envScale*richness*(settlementKind===2?.34:settlementKind===1?.70:1)));
     for(let n=0;n<bushCount;n++){const row=Math.floor(bushRng()*(SEG_PER_CHUNK+1)),side=bushRng()<.5?-1:1,off=side*(9+bushRng()*68),p=place(row,off),r=.52+bushRng()*.70,fade=smoothstep(28,70,Math.abs(off)),bushCol=scaleColor4(mixColor4(mixColor4(C.bush,biomeTree,.34),C.bushFar,fade*.52),.92+bushRng()*.13);appendBush(b,p[0],p[1]+r*.45,p[2],r,bushCol);}
 
     // Close vegetation supplies optic flow. It is deterministic and always present across LOD;
@@ -1147,6 +1183,65 @@ class WorldChunk{
     for(let n=0;n<tuftCount;n++){const row=Math.floor(tuftRng()*(SEG_PER_CHUNK+1)),side=tuftRng()<.5?-1:1,off=side*(6.3+tuftRng()*3.7),p=place(row,off),h=.18+tuftRng()*.34,r=.065+tuftRng()*.075,col=tuftRng()<(dryness*.72+.12)?C.grassDry:mixColor4(C.grassVerge,biomeColor(centerBio,'grass'),.36);appendCone(b,p[0],p[1],p[2],r,h,3,col);}
     const fieldTufts=Math.max(0,Math.floor((4+dryness*7)*this.envScale*richness));
     for(let n=0;n<fieldTufts;n++){const row=Math.floor(tuftRng()*(SEG_PER_CHUNK+1)),side=tuftRng()<.5?-1:1,off=side*(10+tuftRng()*21),p=place(row,off),h=.14+tuftRng()*.30,r=.055+tuftRng()*.060,col=tuftRng()<(dryness*.65+.12)?C.grassDry:mixColor4(C.grassVerge,biomeColor(centerBio,'grass'),.45);appendCone(b,p[0],p[1],p[2],r,h,3,col);if(tuftRng()<.34)appendCone(b,p[0]+(tuftRng()-.5)*.26,p[1],p[2]+(tuftRng()-.5)*.26,r*.8,h*.75,3,col);}
+
+    // Low-poly wildflowers and taller meadow plants.  Clusters are concentrated near the verge and
+    // open fields, giving the ground a second scale below bushes/trees without textures or extra draws.
+    const flowerBase=Math.max(0,Math.floor((7+(1-dryness)*13)*this.envScale*richness*(settlementKind===2?.18:settlementKind===1?.58:1)));
+    const flowerCols=[[.96,.73,.78,1],[.96,.89,.54,1],[.72,.78,1.0,1],[.91,.72,.98,1],[.93,.94,.88,1]];
+    for(let n=0;n<flowerBase;n++){
+      const row=Math.floor(flowerRng()*(SEG_PER_CHUNK+1)),side=flowerRng()<.5?-1:1,off=side*(6.7+flowerRng()*27),p=place(row,off),h=.18+flowerRng()*.28,stem=[.30,.48,.25,1],fc=flowerCols[Math.floor(flowerRng()*flowerCols.length)];
+      appendCylinder(b,p[0],p[1]+h*.48,p[2],.016+flowerRng()*.012,h*.96,4,stem);
+      appendBush(b,p[0],p[1]+h,p[2],.075+flowerRng()*.055,fc);
+      if(flowerRng()<.26){const dx=(flowerRng()-.5)*.36,dz=(flowerRng()-.5)*.36;appendCylinder(b,p[0]+dx,p[1]+h*.38,p[2]+dz,.014,h*.72,4,stem);appendBush(b,p[0]+dx,p[1]+h*.76,p[2]+dz,.060,flowerCols[Math.floor(flowerRng()*flowerCols.length)]);}
+    }
+
+    // Town / city scenery is merged into the same environment mesh, so even a skyline costs no
+    // additional draw calls.  Small towns are short and warm; cities get a denser, taller centre.
+    if(settlementKind){
+      const isCity=settlementKind===2,baseCount=isCity?Math.floor(7+settlementRng()*8):Math.floor(3+settlementRng()*4),count=Math.max(1,Math.floor(baseCount*(.55+.70*settlementFalloff)*this.envScale));
+      const townPalette=[[.62,.54,.46,1],[.70,.62,.53,1],[.55,.59,.57,1],[.72,.68,.61,1],[.58,.50,.48,1]],cityPalette=[[.37,.40,.43,1],[.46,.48,.49,1],[.51,.49,.46,1],[.34,.37,.40,1],[.57,.55,.51,1]];
+      for(let n=0;n<count;n++){
+        const row=Math.floor(settlementRng()*(SEG_PER_CHUNK+1)),side=settlementRng()<.5?-1:1,off=side*(isCity?16+settlementRng()*65:13+settlementRng()*28),p=place(row,off),yaw=p[3]+(settlementRng()-.5)*(isCity?.05:.12);
+        const w=isCity?3.8+settlementRng()*7.2:3.3+settlementRng()*3.7,d=isCity?4.6+settlementRng()*10.0:4.2+settlementRng()*4.8;
+        let h;if(isCity){const tower=Math.pow(settlementRng(),1.72);h=(8+tower*31)*( .72+.62*settlementFalloff);if(settlementFalloff>.72&&settlementRng()<.14)h*=1.35;}else h=(3.1+settlementRng()*4.8)*(.82+.32*settlementFalloff);
+        const palette=isCity?cityPalette:townPalette,col=scaleColor4(palette[Math.floor(settlementRng()*palette.length)],.90+settlementRng()*.14);
+        appendBox(b,p[0],p[1]+h*.5,p[2],w,h,d,col,yaw);
+        // Roof / rooftop silhouettes make the boxes read as actual places from far away.
+        if(isCity){if(h>13){appendBox(b,p[0],p[1]+h+.32,p[2],w*.42,.64,d*.38,[.24,.27,.28,1],yaw);if(settlementRng()<.35)appendBox(b,p[0],p[1]+h+1.15,p[2],.18,1.65,.18,C.metal,yaw);}}
+        else{appendBox(b,p[0],p[1]+h+.18,p[2],w*1.04,.36,d*1.05,settlementRng()<.5?[.34,.23,.20,1]:[.30,.31,.29,1],yaw);}
+        // A simple pale facade strip suggests windows, especially when headlights sweep the town.
+        const lx=-side*(w*.505),fx=p[0]+Math.cos(yaw)*lx,fz=p[2]-Math.sin(yaw)*lx,windowCol=isCity?[.76,.79,.72,1]:[.84,.73,.55,1];
+        appendBox(b,fx,p[1]+h*.57,fz,.045,Math.max(.45,h*.18),d*.68,windowCol,yaw);
+        if(isCity&&h>16)appendBox(b,fx,p[1]+h*.78,fz,.047,Math.max(.45,h*.12),d*.62,windowCol,yaw);
+        if(Math.abs(off)<34)this.colliders.push(p[0],p[2],Math.max(w,d)*.43);
+      }
+      // More regular lighting and roadside rhythm immediately sells an inhabited stretch at night.
+      const lampRows=isCity?[1,3,5,7,9,11]:[2,6,10];
+      for(const row of lampRows)for(const side of [-1,1]){const p=place(row,side*(isCity?7.2:6.9));appendCylinder(b,p[0],p[1]+2.65,p[2],.07,5.3,6,C.lamp);appendBox(b,p[0]+Math.sin(p[3])*.52,p[1]+5.20,p[2]+Math.cos(p[3])*.52,1.04,.08,.08,C.lamp,p[3]);appendBox(b,p[0]+Math.sin(p[3])*.95,p[1]+5.10,p[2]+Math.cos(p[3])*.95,.25,.15,.25,C.lampHead,p[3]);}
+    }
+
+    // Sparse, deterministic distant landmarks give the horizon memorable anchors without becoming
+    // obstacles or gameplay objectives. They live far outside the road corridor and never collide.
+    if(this.settings.landmarks){
+      const lmDensity=clamp(this.settings.landmarkDensity,.25,2),period=Math.max(7,Math.round(19/lmDensity)),slot=hashU32((this.seed^0x41c6ce57)>>>0)%period;
+      if(mod(this.id,period)===slot){
+        const row=2+Math.floor(landmarkRng()*9),side=landmarkRng()<.5?-1:1,off=side*(72+landmarkRng()*55),p=place(row,off),kind=Math.floor(landmarkRng()*3);
+        if(kind===0){
+          // Lighthouse / observation beacon.
+          appendCylinder(b,p[0],p[1]+5.8,p[2],.72,11.6,8,[.68,.68,.64,1]);
+          appendBox(b,p[0],p[1]+11.45,p[2],2.1,.55,2.1,[.25,.29,.30,1]);
+          appendCone(b,p[0],p[1]+11.72,p[2],1.35,1.55,8,[.42,.22,.18,1]);
+        }else if(kind===1){
+          // Small hill tower / chapel silhouette.
+          appendBox(b,p[0],p[1]+3.2,p[2],3.4,6.4,3.4,[.48,.47,.43,1],p[3]);
+          appendBox(b,p[0],p[1]+7.25,p[2],1.45,3.0,1.45,[.43,.42,.39,1],p[3]);
+          appendCone(b,p[0],p[1]+8.75,p[2],1.35,2.0,6,[.33,.20,.16,1]);
+        }else{
+          // Hot-air balloon: intentionally high and non-colliding, visible from several chunks away.
+          const by=p[1]+18+landmarkRng()*8;appendBush(b,p[0],by,p[2],3.4,[.72,.34,.24,1]);appendBush(b,p[0],by+1.9,p[2],2.5,[.84,.52,.27,1]);appendBox(b,p[0],by-4.0,p[2],.75,.60,.75,[.28,.20,.14,1]);
+        }
+      }
+    }
 
     // Road furniture remains fixed across LOD too, avoiding visible swaps while approaching it.
     for(const row of [1,4,7,10])for(const side of [-1,1]){const p=place(row,side*5.85);appendBox(b,p[0],p[1]+.36,p[2],.11,.72,.11,C.delineator,p[3]);appendBox(b,p[0],p[1]+.50,p[2],.145,.18,.13,C.delineatorBand,p[3]);appendBox(b,p[0],p[1]+.62,p[2],.17,.12,.14,C.reflector,p[3]);}
@@ -1338,7 +1433,7 @@ class Vehicle{
     // single point glued to the road centre.
     this.wheelYOffset=new Float32Array(4);this.wheelGround=new Float32Array(4);this.wheelCenterY=new Float32Array(4);this.wheelWorldX=new Float32Array(4);this.wheelWorldZ=new Float32Array(4);this.wheelCompression=new Float32Array(4);this.wheelContact=new Uint8Array(4);
     this.groundCenter=s.y+.02;this.terrainPitch=0;this.terrainRoll=0;this.supportLift=0;this.heaveVel=0;this.pitchVel=0;this.rollVel=0;this.wheelRadius=.41;this.bodyRideHeight=.50;this.bumpStopLift=0;this.moveYaw=this.yaw;this.slipAngle=0;
-    this.trackMarks=[];this.dust=[];this.smoke=[];this.trackPrev=[null,null];this.trackTimer=0;this.dustTimer=0;this.smokeTimer=0;this.trackMesh=new Mesh(gl,true);this.dustMesh=new Mesh(gl,true);this.smokeMesh=new Mesh(gl,true);this.effectModel=M4.create();
+    this.trackMarks=[];this.dust=[];this.smoke=[];this.spray=[];this.trackPrev=[null,null];this.trackTimer=0;this.dustTimer=0;this.smokeTimer=0;this.sprayTimer=0;this.trackMesh=new Mesh(gl,true);this.dustMesh=new Mesh(gl,true);this.smokeMesh=new Mesh(gl,true);this.sprayMesh=new Mesh(gl,true);this.effectModel=M4.create();
     this.updateWheelContact(1/120,0,0);
   }
   rebuildPaint(){
@@ -1348,7 +1443,7 @@ class Vehicle{
   setPaint(index){index=clamp(index|0,0,VEHICLE_PAINTS.length-1);if(index===this.paintIndex&&this.body)return;this.paintIndex=index;this.rebuildPaint();}
   setStyle(index){this.styleIndex=clamp(index|0,0,VEHICLE_STYLES.length-1);this.style=VEHICLE_STYLES[this.styleIndex];}
   reset(directionSign=1){
-    const n=this.world.nearestRoad(this.x,this.z);this.x=n.x;this.z=n.z;this.y=n.y+this.bodyRideHeight;this.yaw=Math.atan2(n.tx,n.tz)+(directionSign<0?Math.PI:0);this.moveYaw=this.yaw;this.slipAngle=0;this.speed=0;this.targetSteer=0;this.currentSteer=0;this.pitch=Math.atan2(n.ty,Math.hypot(n.tx,n.tz));this.roll=0;this.heaveVel=0;this.pitchVel=0;this.rollVel=0;this.wheelSpin=0;this.wheelYOffset.fill(0);this.wheelCompression.fill(0);this.wheelContact.fill(1);this.groundCenter=n.y+.02;this.supportLift=0;this.bumpStopLift=0;this.trackMarks.length=0;this.dust.length=0;this.smoke.length=0;this.trackPrev=[null,null];
+    const n=this.world.nearestRoad(this.x,this.z);this.x=n.x;this.z=n.z;this.y=n.y+this.bodyRideHeight;this.yaw=Math.atan2(n.tx,n.tz)+(directionSign<0?Math.PI:0);this.moveYaw=this.yaw;this.slipAngle=0;this.speed=0;this.targetSteer=0;this.currentSteer=0;this.pitch=Math.atan2(n.ty,Math.hypot(n.tx,n.tz));this.roll=0;this.heaveVel=0;this.pitchVel=0;this.rollVel=0;this.wheelSpin=0;this.wheelYOffset.fill(0);this.wheelCompression.fill(0);this.wheelContact.fill(1);this.groundCenter=n.y+.02;this.supportLift=0;this.bumpStopLift=0;this.trackMarks.length=0;this.dust.length=0;this.smoke.length=0;this.spray.length=0;this.trackPrev=[null,null];
     this.updateWheelContact(1/120,0,0);
   }
   sampleSurfaceAtLocal(lx,lz){
@@ -1422,7 +1517,7 @@ class Vehicle{
       this.wheelCompression[i]=clamp((travel+wheelMaxDroop)/(maxWheelBump+wheelMaxDroop),0,1);
     }
   }
-  shiftEffects(dx,dz){for(const m of this.trackMarks){m.x0-=dx;m.z0-=dz;m.x1-=dx;m.z1-=dz;}for(const p of this.dust){p.x-=dx;p.z-=dz;}for(const p of this.smoke){p.x-=dx;p.z-=dz;}for(const q of this.trackPrev)if(q){q.x-=dx;q.z-=dz;}for(let i=0;i<4;i++){this.wheelWorldX[i]-=dx;this.wheelWorldZ[i]-=dz;}}
+  shiftEffects(dx,dz){for(const m of this.trackMarks){m.x0-=dx;m.z0-=dz;m.x1-=dx;m.z1-=dz;}for(const p of this.dust){p.x-=dx;p.z-=dz;}for(const p of this.smoke){p.x-=dx;p.z-=dz;}for(const p of this.spray){p.x-=dx;p.z-=dz;}for(const q of this.trackPrev)if(q){q.x-=dx;q.z-=dz;}for(let i=0;i<4;i++){this.wheelWorldX[i]-=dx;this.wheelWorldZ[i]-=dz;}}
   updateGroundEffects(dt,onRoad,travelSpeed,brake,hand,yawRate){
     const speed=Math.abs(travelSpeed),cy=Math.cos(this.yaw),sy=Math.sin(this.yaw),rz=this.style.rearZ,wx=.93;
     const contacts=[[-wx,rz,2],[wx,rz,3]].map(q=>{const lx=q[0],lz=q[1];return {x:this.x+lx*cy+lz*sy,z:this.z-lx*sy+lz*cy,y:(this.wheelGround[q[2]]||this.groundCenter)+.026,contact:!!this.wheelContact[q[2]]};});
@@ -1430,17 +1525,20 @@ class Vehicle{
     for(const m of this.trackMarks)m.age+=dt;this.trackMarks=this.trackMarks.filter(m=>m.age<m.life);
     for(const p of this.dust){p.age+=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;p.vy+=.18*dt;p.vx*=Math.exp(-1.1*dt);p.vz*=Math.exp(-1.1*dt);}this.dust=this.dust.filter(p=>p.age<p.life);
     for(const p of this.smoke){p.age+=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;p.vy+=.08*dt;p.vx*=Math.exp(-.72*dt);p.vz*=Math.exp(-.72*dt);p.size+=dt*.16;}this.smoke=this.smoke.filter(p=>p.age<p.life);
+    for(const p of this.spray){p.age+=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;p.vy-=1.8*dt;p.vx*=Math.exp(-1.5*dt);p.vz*=Math.exp(-1.5*dt);p.size+=dt*.08;}this.spray=this.spray.filter(p=>p.age<p.life);
     this.trackTimer+=dt;
     if(onRoad&&speed>4&&contacts[0].contact&&contacts[1].contact&&this.trackTimer>=.040){this.trackTimer=0;const base=.012,stress=clamp(brake*.050+(hand?.105:0)+smoothstep(2.0,11.0,slipDeg)*.105+Math.abs(yawRate)*.006,0,.16),alpha=base+stress;for(let side=0;side<2;side++){const cur=contacts[side],prev=this.trackPrev[side];if(prev){const d=Math.hypot(cur.x-prev.x,cur.z-prev.z);if(d>.04&&d<6.5){this.trackMarks.push({x0:prev.x,y0:prev.y,z0:prev.z,x1:cur.x,y1:cur.y,z1:cur.z,a:alpha,age:0,life:lerp(6.5,11.0,clamp(stress/.16,0,1))});if(this.trackMarks.length>220)this.trackMarks.shift();}}this.trackPrev[side]={...cur};}}
     if(!onRoad)this.trackPrev=[null,null];
-    this.smokeTimer+=dt;const smokeStress=onRoad&&speed>9?Math.max(hand?smoothstep(7,22,speed):0,smoothstep(4.0,12.0,slipDeg),brake>.82?smoothstep(18,42,speed)*.45:0):0;
+    this.smokeTimer+=dt;const rainWet=clamp(this.world.rainAmount||0,0,1);const smokeStress=(onRoad&&speed>9?Math.max(hand?smoothstep(7,22,speed):0,smoothstep(4.0,12.0,slipDeg),brake>.82?smoothstep(18,42,speed)*.45:0):0)*(1-rainWet*.68);
     if(smokeStress>.08&&(contacts[0].contact||contacts[1].contact)&&this.smokeTimer>=lerp(.095,.034,smokeStress)){this.smokeTimer=0;const live=contacts.filter(c=>c.contact),count=smokeStress>.62?2:1;for(let k=0;k<count;k++){const c=live[k%live.length],back=-(1.1+Math.min(7,speed*.055)),side=(Math.random()-.5)*(1.0+.7*smokeStress);this.smoke.push({x:c.x+(Math.random()-.5)*.22,y:c.y+.08,z:c.z+(Math.random()-.5)*.22,vx:-Math.sin(this.moveYaw)*back+Math.cos(this.moveYaw)*side,vy:.10+Math.random()*.20,vz:-Math.cos(this.moveYaw)*back-Math.sin(this.moveYaw)*side,age:0,life:.62+Math.random()*.65,size:.11+Math.random()*.12+smokeStress*.07,a:.08+.10*smokeStress});if(this.smoke.length>58)this.smoke.shift();}}
+    this.sprayTimer+=dt;if(rainWet>.05&&onRoad&&speed>10&&(contacts[0].contact||contacts[1].contact)&&this.sprayTimer>=lerp(.085,.030,smoothstep(10,70,speed)*rainWet)){this.sprayTimer=0;const live=contacts.filter(c=>c.contact),count=speed>40?2:1;for(let k=0;k<count;k++){const c=live[k%live.length],back=-(2.0+Math.min(12,speed*.12)),side=(Math.random()-.5)*(1.3+rainWet);this.spray.push({x:c.x+(Math.random()-.5)*.18,y:c.y+.05,z:c.z+(Math.random()-.5)*.18,vx:-Math.sin(this.moveYaw)*back+Math.cos(this.moveYaw)*side,vy:.35+Math.random()*.55,vz:-Math.cos(this.moveYaw)*back-Math.sin(this.moveYaw)*side,age:0,life:.34+Math.random()*.32,size:.075+Math.random()*.10+rainWet*.04,a:.08+.09*rainWet});if(this.spray.length>64)this.spray.shift();}}
     this.dustTimer+=dt;if(!onRoad&&speed>6&&(contacts[0].contact||contacts[1].contact)&&this.dustTimer>=clamp(.10-speed*.0007,.045,.10)){this.dustTimer=0;const liveContacts=contacts.filter(c=>c.contact),count=speed>45?2:1;for(let k=0;k<count;k++){const c=liveContacts[k%liveContacts.length],side=(Math.random()-.5)*1.2,back=-Math.max(2,Math.min(8,speed*.10));this.dust.push({x:c.x+(Math.random()-.5)*.35,y:c.y+.05,z:c.z+(Math.random()-.5)*.35,vx:-Math.sin(this.yaw)*back+Math.cos(this.yaw)*side,vy:.18+Math.random()*.42,vz:-Math.cos(this.yaw)*back-Math.sin(this.yaw)*side,age:0,life:.72+Math.random()*.65,size:.10+Math.random()*.18});if(this.dust.length>42)this.dust.shift();}}
   }
   renderGroundEffects(renderer){
     if(this.trackMarks.length){const b=new Builder();for(const m of this.trackMarks){const fade=1-m.age/m.life,a=m.a*fade,dx=m.x1-m.x0,dz=m.z1-m.z0,l=Math.hypot(dx,dz)||1,nx=-dz/l*.085,nz=dx/l*.085,c=[.035,.038,.038,a];b.quad([m.x0+nx,m.y0,m.z0+nz],[m.x1+nx,m.y1,m.z1+nz],[m.x1-nx,m.y1,m.z1-nz],[m.x0-nx,m.y0,m.z0-nz],[0,1,0],c);}const a=b.arrays();this.trackMesh.update(a[0],a[1]);renderer.draw(this.trackMesh,this.effectModel,0,1,true,false);}
     if(this.dust.length){const b=new Builder();for(const p of this.dust){const fade=1-p.age/p.life,size=p.size*(.75+p.age*.9),c=[.50,.46,.34,.16*fade];appendBush(b,p.x,p.y+p.age*.20,p.z,size,c);}const a=b.arrays();this.dustMesh.update(a[0],a[1]);renderer.draw(this.dustMesh,this.effectModel,0,1,true,false);}
     if(this.smoke.length){const b=new Builder();for(const p of this.smoke){const fade=1-p.age/p.life,size=p.size*(.78+p.age*.95),c=[.70,.73,.75,p.a*fade];appendBush(b,p.x,p.y+p.age*.10,p.z,size,c);}const a=b.arrays();this.smokeMesh.update(a[0],a[1]);renderer.draw(this.smokeMesh,this.effectModel,0,1,true,false);}
+    if(this.spray.length){const b=new Builder();for(const p of this.spray){const fade=1-p.age/p.life,size=p.size*(.8+p.age*.7),c=[.70,.82,.88,p.a*fade];appendBush(b,p.x,p.y,p.z,size,c);}const a=b.arrays();this.sprayMesh.update(a[0],a[1]);renderer.draw(this.sprayMesh,this.effectModel,.04,1,true,false);}
   }
   update(dt,input,autoForward=false,autoControl=null){
     let nearest=this.world.nearestRoad(this.x,this.z);this.world.updateStreaming(nearest);nearest=this.world.nearestRoad(this.x,this.z);
@@ -1913,8 +2011,8 @@ class AudioManager{
   constructor(settings=DEFAULT_SETTINGS){
     this.settings=settings;this.ctx=null;this.muted=false;this.paused=false;this.master=null;
     this.motor=null;this.motorGain=null;this.inverter=null;this.inverterGain=null;
-    this.windGain=null;this.tireGain=null;this.offroadGain=null;this.skidGain=null;this.rumbleGain=null;
-    this.windFilter=null;this.tireFilter=null;this.offroadFilter=null;this.skidFilter=null;this.rumbleFilter=null;
+    this.windGain=null;this.tireGain=null;this.offroadGain=null;this.skidGain=null;this.rumbleGain=null;this.rainGain=null;
+    this.windFilter=null;this.tireFilter=null;this.offroadFilter=null;this.skidFilter=null;this.rumbleFilter=null;this.rainFilter=null;
   }
   ensureStarted(){
     if(this.paused)return;
@@ -1940,6 +2038,7 @@ class AudioManager{
       this.offroadFilter=this.ctx.createBiquadFilter();this.offroadFilter.type='lowpass';this.offroadFilter.frequency.value=520;this.offroadGain=this.ctx.createGain();this.offroadGain.gain.value=0;src.connect(this.offroadFilter).connect(this.offroadGain).connect(this.master);
       this.skidFilter=this.ctx.createBiquadFilter();this.skidFilter.type='bandpass';this.skidFilter.frequency.value=1150;this.skidFilter.Q.value=1.4;this.skidGain=this.ctx.createGain();this.skidGain.gain.value=0;src.connect(this.skidFilter).connect(this.skidGain).connect(this.master);
       this.rumbleFilter=this.ctx.createBiquadFilter();this.rumbleFilter.type='bandpass';this.rumbleFilter.frequency.value=105;this.rumbleFilter.Q.value=.62;this.rumbleGain=this.ctx.createGain();this.rumbleGain.gain.value=0;src.connect(this.rumbleFilter).connect(this.rumbleGain).connect(this.master);
+      this.rainFilter=this.ctx.createBiquadFilter();this.rainFilter.type='highpass';this.rainFilter.frequency.value=1450;this.rainGain=this.ctx.createGain();this.rainGain.gain.value=0;src.connect(this.rainFilter).connect(this.rainGain).connect(this.master);
       src.start();
       if(this.ctx.state==='suspended')this.ctx.resume().catch(()=>{});
     }catch(e){console.warn('Audio disabled:',e);}
@@ -1954,7 +2053,7 @@ class AudioManager{
     else{this.ctx.resume().then(()=>{if(this.master)this.master.gain.setTargetAtTime(this.muted?0:this.settings.volume,this.ctx.currentTime,.03);}).catch(()=>{});}
   }
   setVolume(v){this.settings.volume=clamp(v,0,1);if(this.master)this.master.gain.setTargetAtTime(this.muted?0:this.settings.volume,this.ctx.currentTime,.03);}
-  update(vehicle){
+  update(vehicle,rainAmount=0){
     if(!this.ctx||!this.motor)return;
     const s=Math.abs(vehicle.speed),t=this.ctx.currentTime,kmh=s*3.6;
     const throttle=vehicle.audioThrottle||0,brake=vehicle.audioBrake||0,hand=vehicle.audioHandbrake?1:0,onRoad=vehicle.audioOnRoad!==false,steer=vehicle.audioSteer||0;
@@ -1987,6 +2086,9 @@ class AudioManager{
     const suspensionMotion=clamp(Math.abs(vehicle.heaveVel)*.10+Math.abs(vehicle.pitchVel)*.24+Math.abs(vehicle.rollVel)*.12,0,1);
     this.rumbleFilter.frequency.setTargetAtTime(82+s*1.15+(onRoad?0:34),t,.10);
     this.rumbleGain.gain.setTargetAtTime(smoothstep(4,42,s)*(.0025+suspensionMotion*.013+(onRoad?0:.010))*tireMix,t,.07);
+    const rainMix=clamp(this.settings.rainVolume,0,1.5),rain=clamp(rainAmount,0,1);
+    if(this.rainFilter)this.rainFilter.frequency.setTargetAtTime(lerp(1050,1850,rain),t,.18);
+    if(this.rainGain)this.rainGain.gain.setTargetAtTime((.008+rain*.052)*rain*rainMix,t,.16);
   }
 }
 
@@ -2051,13 +2153,51 @@ class UI{
 // ------------------------------------------------------------
 class Game{
   constructor(gl,seed){
-    this.gl=gl;this.seed=seed>>>0;this.settings=loadSettings();this.renderer=new Renderer(gl);this.renderer.renderScale=clamp(this.settings.renderScale,.50,1.50);this.input=new Input();this.world=new ChunkManager(gl,seed,this.settings);this.vehicle=new Vehicle(gl,this.world);this.loadVehiclePreferences();this.autopilot=new Autopilot(this.world,gl);this.camera=new Camera();this.audio=new AudioManager(this.settings);this.quality=new AdaptiveQuality(this);this.ui=new UI(this);this.initWindFx();this.envIndex=0;this.envFromIndex=0;this.envTransitionStart=-1;this.envTransitionDuration=1450;this.envScratch={name:'',skyTop:new Float32Array(3),skyBottom:new Float32Array(3),fogColor:new Float32Array(3),lightDir:new Float32Array(3),lightColor:new Float32Array(3),sunColor:new Float32Array(3),sunStrength:0,ambient:0,diffuse:0,fogNear:0,fogFar:0,nightFactor:0,duskFactor:0};this.autoForward=false;this.paused=false;this.pausePreview=false;this.started=false;document.body.classList.add('garage');document.body.classList.toggle('clean-ui',!!this.settings.cleanUi);this.last=performance.now();this.lastPresented=0;this.running=true;this.rafId=0;this.frameBound=t=>this.frame(t);
+    this.gl=gl;this.seed=seed>>>0;this.settings=loadSettings();this.renderer=new Renderer(gl);this.renderer.renderScale=clamp(this.settings.renderScale,.50,1.50);this.input=new Input();this.world=new ChunkManager(gl,seed,this.settings);this.vehicle=new Vehicle(gl,this.world);this.loadVehiclePreferences();this.autopilot=new Autopilot(this.world,gl);this.camera=new Camera();this.audio=new AudioManager(this.settings);this.quality=new AdaptiveQuality(this);this.ui=new UI(this);this.initWindFx();this.envIndex=0;this.envFromIndex=0;this.envTransitionStart=-1;this.envTransitionDuration=1450;this.dayCycleStart=performance.now()-clamp(this.settings.dayNightMinutes,2,30)*60000*.30;this.envScratch={name:'',skyTop:new Float32Array(3),skyBottom:new Float32Array(3),fogColor:new Float32Array(3),lightDir:new Float32Array(3),lightColor:new Float32Array(3),sunColor:new Float32Array(3),sunStrength:0,ambient:0,diffuse:0,fogNear:0,fogFar:0,nightFactor:0,duskFactor:0,rainFactor:0};this.autoForward=false;this.paused=false;this.pausePreview=false;this.started=false;document.body.classList.add('garage');document.body.classList.toggle('clean-ui',!!this.settings.cleanUi);this.last=performance.now();this.lastPresented=0;this.running=true;this.rafId=0;this.frameBound=t=>this.frame(t);
     if($seedInput){$seedInput.value=String(this.seed);$seedInput.title=`当前世界种子 ${this.seed}`;}
-    this.bindUI();this.initConfigPanel();this.camera.updateGarage(.016,this.vehicle);this.requestFrame();
+    this.bindUI();this.initConfigPanel();this.initRainFx();this.initWeatherSystem();this.updateEnvironmentButton();this.camera.updateGarage(.016,this.vehicle);this.requestFrame();
   }
   initWindFx(){
     if(!$windFx||$windFx.children.length)return;
     for(let i=0;i<18;i++){const e=document.createElement('i');e.className='windStreak';const r=(i*73%97)/97;e.style.setProperty('--x',`${5+((i*37)%91)}%`);e.style.setProperty('--y',`${-18+((i*53)%118)}%`);e.style.setProperty('--len',`${28+((i*29)%72)}px`);e.style.setProperty('--o',`${(.18+r*.42).toFixed(2)}`);e.style.setProperty('--ang',`${96+((i%5)-2)*2}deg`);e.style.setProperty('--dur',`${(.48+r*.44).toFixed(2)}s`);e.style.setProperty('--delay',`${(-r*.8).toFixed(2)}s`);$windFx.appendChild(e);}
+  }
+  initRainFx(){
+    this.rainCtx=$rainCanvas?.getContext('2d')||null;this.rainDrops=[];this.rainSize=[0,0];
+  }
+  initWeatherSystem(){
+    this.weatherRng=mulberry32(hashU32((this.seed^0x51ed270b)>>>0));this.weatherRain=0;this.weatherRainTarget=0;this.weatherPhase='dry';
+    // Start with a real dry window so "probability rain" never means "rain immediately on boot".
+    this.weatherNextChange=performance.now()+25000+this.weatherRng()*45000;this.world.rainAmount=0;
+  }
+  updateWeather(dt,now=performance.now()){
+    if(!this.settings.rainEnabled){this.weatherRainTarget=0;this.weatherPhase='dry';this.weatherNextChange=now+45000;}
+    else if(now>=this.weatherNextChange){
+      const freq=clamp(this.settings.rainChance??.42,.10,1),maxRain=clamp(this.settings.rainIntensity,.10,1);
+      if(this.weatherPhase==='rain'){
+        this.weatherPhase='dry';this.weatherRainTarget=0;
+        // Higher frequency shortens dry gaps, but every rain event is followed by visible clear time.
+        this.weatherNextChange=now+(42+this.weatherRng()*105)*1000*lerp(1.18,.58,freq);
+      }else if(this.weatherRng()<freq){
+        this.weatherPhase='rain';const strength=lerp(.28,1,Math.pow(this.weatherRng(),.72));this.weatherRainTarget=Math.min(maxRain,Math.max(.14,maxRain*strength));
+        this.weatherNextChange=now+(38+this.weatherRng()*92)*1000;
+      }else{
+        this.weatherNextChange=now+(28+this.weatherRng()*70)*1000*lerp(1.10,.72,freq);
+      }
+    }
+    if(this.weatherPhase==='rain')this.weatherRainTarget=Math.min(this.weatherRainTarget,clamp(this.settings.rainIntensity,.10,1));
+    const rate=this.weatherRainTarget>this.weatherRain?.26:.16;this.weatherRain=expLerp(this.weatherRain,this.weatherRainTarget,rate,Math.min(dt,.08));
+    if(this.weatherRain<.002&&this.weatherRainTarget===0)this.weatherRain=0;this.world.rainAmount=this.weatherRain;
+  }
+  updateRainFx(dt){
+    const c=$rainCanvas,ctx=this.rainCtx;if(!c||!ctx)return;
+    const w=Math.max(2,c.clientWidth||innerWidth),h=Math.max(2,c.clientHeight||innerHeight),dpr=Math.min(devicePixelRatio||1,1.25);
+    const bw=Math.round(w*dpr),bh=Math.round(h*dpr);if(c.width!==bw||c.height!==bh){c.width=bw;c.height=bh;ctx.setTransform(dpr,0,0,dpr,0,0);this.rainDrops.length=0;}
+    ctx.clearRect(0,0,w,h);const amount=clamp(this.weatherRain||0,0,1);if(amount<=.001)return;
+    const target=Math.round((IS_COARSE_POINTER?72:118)*amount);while(this.rainDrops.length<target)this.rainDrops.push({x:Math.random()*w,y:Math.random()*h,len:8+Math.random()*19,speed:500+Math.random()*620,phase:Math.random()*6.28});while(this.rainDrops.length>target)this.rainDrops.pop();
+    const carSpeed=Math.abs(this.vehicle?.speed||0),slant=lerp(-3,-14,smoothstep(0,80,carSpeed));ctx.lineWidth=1;ctx.lineCap='round';
+    for(const d of this.rainDrops){d.y+=d.speed*dt;d.x+=slant*dt*7;if(d.y>h+30||d.x<-30){d.y=-25-Math.random()*h*.18;d.x=Math.random()*w+20;d.speed=500+Math.random()*620;}const fade=.16+.26*amount*(.65+.35*Math.sin(performance.now()*.002+d.phase));ctx.strokeStyle=`rgba(205,225,236,${fade.toFixed(3)})`;ctx.beginPath();ctx.moveTo(d.x,d.y);ctx.lineTo(d.x+slant,d.y+d.len);ctx.stroke();}
+    // A few tiny lower-screen splashes suggest water hitting the windscreen without hiding the road.
+    ctx.strokeStyle=`rgba(220,235,242,${(.10+.10*amount).toFixed(3)})`;for(let i=0;i<Math.round(3+amount*5);i++){const x=(Math.sin(performance.now()*.0017+i*13.17)*.5+.5)*w,y=h*(.62+.34*((i*37)%11)/11),r=2+((i*11)%5);ctx.beginPath();ctx.moveTo(x-r,y);ctx.lineTo(x,y-r*.35);ctx.lineTo(x+r,y);ctx.stroke();}
   }
   bindUI(){
     // INPUT-FOCUS RULE: see the MAINTENANCE CONTRACT above Input. Any new mouse-only HUD button
@@ -2119,7 +2259,7 @@ class Game{
     const newWorld=new ChunkManager(this.gl,nextSeed,this.settings);
     newWorld.setQuality(qualityLevel);
     this.world=newWorld;this.seed=nextSeed;
-    this.vehicle.world=newWorld;this.autopilot.world=newWorld;
+    this.vehicle.world=newWorld;this.autopilot.world=newWorld;this.initWeatherSystem();
 
     const sp=newWorld.spawnData();
     this.vehicle.x=sp.x;this.vehicle.z=sp.z;this.vehicle.y=sp.y+this.vehicle.bodyRideHeight;
@@ -2127,7 +2267,7 @@ class Game{
     this.vehicle.speed=0;this.vehicle.targetSteer=0;this.vehicle.currentSteer=0;this.vehicle.slipAngle=0;
     this.vehicle.pitch=Math.atan2(sp.ty,Math.hypot(sp.tx,sp.tz));this.vehicle.roll=0;
     this.vehicle.heaveVel=0;this.vehicle.pitchVel=0;this.vehicle.rollVel=0;this.vehicle.wheelSpin=0;
-    this.vehicle.odometer=0;this.vehicle.trackMarks.length=0;this.vehicle.dust.length=0;this.vehicle.smoke.length=0;this.vehicle.trackPrev=[null,null];
+    this.vehicle.odometer=0;this.vehicle.trackMarks.length=0;this.vehicle.dust.length=0;this.vehicle.smoke.length=0;this.vehicle.spray.length=0;this.vehicle.trackPrev=[null,null];
     this.vehicle.supportLift=0;this.vehicle.bumpStopLift=0;this.vehicle.groundCenter=sp.y+.02;
     this.vehicle.updateWheelContact(1/120,0,0);
 
@@ -2142,7 +2282,7 @@ class Game{
   }
   initConfigPanel(){
     if(!$configPanel)return;
-    const percentKeys=new Set(['acceleration','steering','grip','onePedal','roadHills','roadCurves','vegetation','fovEffect','cameraSpeed','cameraShake','speedLines','fogDensity','renderScale','motorVolume','windVolume','tireVolume']);
+    const percentKeys=new Set(['acceleration','steering','grip','onePedal','roadHills','roadCurves','vegetation','fovEffect','cameraSpeed','cameraShake','speedLines','fogDensity','renderScale','motorVolume','windVolume','tireVolume','rainVolume','rainIntensity','rainChance','landmarkDensity','settlementDensity']);
     const restoreCanvasFocus=()=>this.restoreCanvasFocus();
     const tabs=[...$configPanel.querySelectorAll('.configTab')],pages=[...$configPanel.querySelectorAll('.configPage')];
     const selectTab=name=>{for(const tab of tabs){const active=tab.dataset.configTab===name;tab.classList.toggle('active',active);tab.setAttribute('aria-selected',String(active));}for(const page of pages)page.classList.toggle('active',page.dataset.configPage===name);};
@@ -2156,11 +2296,11 @@ class Game{
       const key=input.dataset.setting;
       if(key==='volume')input.value=String(Math.round(this.settings.volume*100));
       else if(key==='baseFov')input.value=String(Math.round(this.settings.baseFov));
-      else if(key==='frameLimit')input.value=String(Math.round(this.settings.frameLimit||0));
+      else if(key==='frameLimit')input.value=String(Math.round(this.settings.frameLimit||0));else if(key==='dayNightMinutes')input.value=String(Math.round(this.settings.dayNightMinutes));
       else if(key==='maxSpeedKmh')input.value=String(this.settings.maxSpeedKmh<0?MAX_SPEED_INFINITY_SLIDER:Math.round(this.settings.maxSpeedKmh));
       else if(key==='autopilotSpeedKmh'){input.value=String(Math.round(clamp(this.settings.autopilotSpeedKmh,0,AUTOPILOT_SAFE_CAP_KMH)));input.disabled=!!this.settings.autopilotUnlimited;}
       else if(percentKeys.has(key))input.value=String(Math.round(this.settings[key]*100));
-      const refresh=()=>{const raw=Number(input.value);if(key==='volume')this.settings.volume=raw/100;else if(key==='baseFov')this.settings.baseFov=raw;else if(key==='frameLimit')this.settings.frameLimit=clamp(Math.round(raw/30)*30,0,120);else if(key==='maxSpeedKmh')this.settings.maxSpeedKmh=raw>=MAX_SPEED_INFINITY_SLIDER?-1:raw;else if(key==='autopilotSpeedKmh')this.settings.autopilotSpeedKmh=clamp(raw,0,AUTOPILOT_SAFE_CAP_KMH);else this.settings[key]=raw/100;this.applySetting(key);this.refreshConfigValue(key);saveSettings(this.settings);this.updateSettingReset(key);};
+      const refresh=()=>{const raw=Number(input.value);if(key==='volume')this.settings.volume=raw/100;else if(key==='baseFov')this.settings.baseFov=raw;else if(key==='frameLimit')this.settings.frameLimit=clamp(Math.round(raw/30)*30,0,120);else if(key==='dayNightMinutes')this.settings.dayNightMinutes=clamp(Math.round(raw),2,30);else if(key==='maxSpeedKmh')this.settings.maxSpeedKmh=raw>=MAX_SPEED_INFINITY_SLIDER?-1:raw;else if(key==='autopilotSpeedKmh')this.settings.autopilotSpeedKmh=clamp(raw,0,AUTOPILOT_SAFE_CAP_KMH);else this.settings[key]=raw/100;this.applySetting(key);this.refreshConfigValue(key);saveSettings(this.settings);this.updateSettingReset(key);};
       input.addEventListener('input',refresh);
       // Let the browser keep its native range behavior. Refocus the game only after the gesture
       // finishes so sliders remain draggable while held driving keys stay in Input.keys.
@@ -2189,7 +2329,7 @@ class Game{
       // checked/change action on some browsers. Focus returns to the canvas after the change.
       input.addEventListener('change',()=>{this.settings[key]=invert?!input.checked:input.checked;this.applySetting(key);saveSettings(this.settings);this.updateSettingReset(key);restoreCanvasFocus();});
     }
-    this.installSettingResetButtons();this.applySetting('autopilotUnlimited');this.applySetting('showClock');this.applySetting('showDistance');this.applySetting('renderScale');this.applySetting('cleanUi');this.updateAllSettingResets();this.updateQualityState();
+    this.installSettingResetButtons();this.applySetting('autopilotUnlimited');this.applySetting('showClock');this.applySetting('showDistance');this.applySetting('renderScale');this.applySetting('cleanUi');this.applySetting('dayNightCycle');this.applySetting('landmarks');this.applySetting('settlements');this.updateAllSettingResets();this.updateQualityState();
   }
   settingIsDefault(key){const a=this.settings[key],b=DEFAULT_SETTINGS[key];return typeof b==='number'?Math.abs(a-b)<1e-6:a===b;}
   installSettingResetButtons(){
@@ -2199,7 +2339,7 @@ class Game{
   }
   syncSettingControl(key){
     const range=$configPanel?.querySelector(`.configRange[data-setting="${key}"]`);
-    if(range){if(key==='volume')range.value=String(Math.round(this.settings.volume*100));else if(key==='baseFov')range.value=String(Math.round(this.settings.baseFov));else if(key==='frameLimit')range.value=String(Math.round(this.settings.frameLimit||0));else if(key==='maxSpeedKmh')range.value=String(this.settings.maxSpeedKmh<0?MAX_SPEED_INFINITY_SLIDER:Math.round(this.settings.maxSpeedKmh));else if(key==='autopilotSpeedKmh'){range.value=String(Math.round(clamp(this.settings.autopilotSpeedKmh,0,AUTOPILOT_SAFE_CAP_KMH)));range.disabled=!!this.settings.autopilotUnlimited;}else range.value=String(Math.round(this.settings[key]*100));this.refreshConfigValue(key);}
+    if(range){if(key==='volume')range.value=String(Math.round(this.settings.volume*100));else if(key==='baseFov')range.value=String(Math.round(this.settings.baseFov));else if(key==='frameLimit')range.value=String(Math.round(this.settings.frameLimit||0));else if(key==='dayNightMinutes')range.value=String(Math.round(this.settings.dayNightMinutes));else if(key==='maxSpeedKmh')range.value=String(this.settings.maxSpeedKmh<0?MAX_SPEED_INFINITY_SLIDER:Math.round(this.settings.maxSpeedKmh));else if(key==='autopilotSpeedKmh'){range.value=String(Math.round(clamp(this.settings.autopilotSpeedKmh,0,AUTOPILOT_SAFE_CAP_KMH)));range.disabled=!!this.settings.autopilotUnlimited;}else range.value=String(Math.round(this.settings[key]*100));this.refreshConfigValue(key);}
     const check=$configPanel?.querySelector(`.configCheck[data-setting="${key}"]`);if(check){const invert=check.dataset.invert==='true';check.checked=invert?!this.settings[key]:!!this.settings[key];}
   }
   resetOneSetting(key){if(!(key in DEFAULT_SETTINGS))return;this.settings[key]=DEFAULT_SETTINGS[key];this.syncSettingControl(key);this.applySetting(key);saveSettings(this.settings);this.updateSettingReset(key);}
@@ -2208,24 +2348,28 @@ class Game{
   updateQualityState(){if($qualityState)$qualityState.textContent=this.settings.autoQuality?`Q${this.quality?.level||0}`:'最高';}
   resetConfigToDefaults(){
     Object.assign(this.settings,DEFAULT_SETTINGS);saveSettings(this.settings);
-    const percentKeys=new Set(['acceleration','steering','grip','roadHills','roadCurves','vegetation','fovEffect','cameraSpeed','cameraShake','speedLines','fogDensity','motorVolume','windVolume','tireVolume']);
+    const percentKeys=new Set(['acceleration','steering','grip','onePedal','roadHills','roadCurves','vegetation','fovEffect','cameraSpeed','cameraShake','speedLines','fogDensity','renderScale','motorVolume','windVolume','tireVolume','rainVolume','rainIntensity','rainChance','landmarkDensity','settlementDensity']);
     for(const input of $configPanel?.querySelectorAll('.configRange')||[]){
-      const key=input.dataset.setting;if(key==='volume')input.value=String(Math.round(this.settings.volume*100));else if(key==='baseFov')input.value=String(Math.round(this.settings.baseFov));else if(key==='maxSpeedKmh')input.value=String(Math.round(this.settings.maxSpeedKmh));else if(key==='autopilotSpeedKmh'){input.value=String(Math.round(clamp(this.settings.autopilotSpeedKmh,0,AUTOPILOT_SAFE_CAP_KMH)));input.disabled=!!this.settings.autopilotUnlimited;}else if(percentKeys.has(key))input.value=String(Math.round(this.settings[key]*100));this.refreshConfigValue(key);
+      const key=input.dataset.setting;if(key==='volume')input.value=String(Math.round(this.settings.volume*100));else if(key==='baseFov')input.value=String(Math.round(this.settings.baseFov));else if(key==='frameLimit')input.value=String(Math.round(this.settings.frameLimit||0));else if(key==='dayNightMinutes')input.value=String(Math.round(this.settings.dayNightMinutes));else if(key==='maxSpeedKmh')input.value=String(Math.round(this.settings.maxSpeedKmh));else if(key==='autopilotSpeedKmh'){input.value=String(Math.round(clamp(this.settings.autopilotSpeedKmh,0,AUTOPILOT_SAFE_CAP_KMH)));input.disabled=!!this.settings.autopilotUnlimited;}else if(percentKeys.has(key))input.value=String(Math.round(this.settings[key]*100));this.refreshConfigValue(key);
     }
     for(const input of $configPanel?.querySelectorAll('.configCheck')||[]){const key=input.dataset.setting,invert=input.dataset.invert==='true';input.checked=invert?!this.settings[key]:!!this.settings[key];}
-    this.audio.setVolume(this.settings.volume);if($fpsReadout)$fpsReadout.classList.toggle('show',!!this.settings.showFps);this.applySetting('showClock');this.applySetting('showDistance');this.applySetting('renderScale');this.applySetting('frameLimit');this.applySetting('cleanUi');this.applySetting('fullscreen');this.applySetting('autopilotUnlimited');
+    this.audio.setVolume(this.settings.volume);if($fpsReadout)$fpsReadout.classList.toggle('show',!!this.settings.showFps);this.applySetting('showClock');this.applySetting('showDistance');this.applySetting('renderScale');this.applySetting('frameLimit');this.applySetting('cleanUi');this.applySetting('fullscreen');this.applySetting('autopilotUnlimited');this.applySetting('dayNightCycle');this.applySetting('landmarks');this.applySetting('settlements');
     clearTimeout(this.vegetationConfigTimer);this.world.refreshEnvironment();this.quality.badWindows=0;this.quality.goodSeconds=0;this.quality.cooldown=0;this.quality.level=0;this.renderer.maxDpr=this.quality.dpr[0];this.world.setQuality(0);this.updateAllSettingResets();this.updateQualityState();this.restoreCanvasFocus();
   }
-  refreshConfigValue(key){const el=$configPanel?.querySelector(`[data-value-for="${key}"]`);if(!el)return;if(key==='volume')el.textContent=`${Math.round(this.settings.volume*100)}%`;else if(key==='baseFov')el.textContent=`${Math.round(this.settings.baseFov)}°`;else if(key==='frameLimit')el.textContent=this.settings.frameLimit>0?`${Math.round(this.settings.frameLimit)} FPS`:'跟随屏幕';else if(key==='maxSpeedKmh')el.textContent=this.settings.maxSpeedKmh<0?'∞':`${Math.round(this.settings.maxSpeedKmh)}`;else if(key==='autopilotSpeedKmh')el.textContent=this.settings.autopilotUnlimited?'∞':`${Math.round(clamp(this.settings.autopilotSpeedKmh,0,AUTOPILOT_SAFE_CAP_KMH))}`;else el.textContent=`${Math.round(this.settings[key]*100)}%`;}
+  refreshConfigValue(key){const el=$configPanel?.querySelector(`[data-value-for="${key}"]`);if(!el)return;if(key==='volume')el.textContent=`${Math.round(this.settings.volume*100)}%`;else if(key==='baseFov')el.textContent=`${Math.round(this.settings.baseFov)}°`;else if(key==='frameLimit')el.textContent=this.settings.frameLimit>0?`${Math.round(this.settings.frameLimit)} FPS`:'跟随屏幕';else if(key==='dayNightMinutes')el.textContent=`${Math.round(this.settings.dayNightMinutes)} 分钟`;else if(key==='maxSpeedKmh')el.textContent=this.settings.maxSpeedKmh<0?'∞':`${Math.round(this.settings.maxSpeedKmh)}`;else if(key==='autopilotSpeedKmh')el.textContent=this.settings.autopilotUnlimited?'∞':`${Math.round(clamp(this.settings.autopilotSpeedKmh,0,AUTOPILOT_SAFE_CAP_KMH))}`;else el.textContent=`${Math.round(this.settings[key]*100)}%`;}
   applySetting(key){
     if(key==='volume')this.audio.setVolume(this.settings.volume);
-    if(key==='vegetation'){clearTimeout(this.vegetationConfigTimer);this.vegetationConfigTimer=setTimeout(()=>this.world.refreshEnvironment(),120);}
+    if(key==='vegetation'||key==='landmarks'||key==='landmarkDensity'||key==='settlements'||key==='settlementDensity'){clearTimeout(this.vegetationConfigTimer);this.vegetationConfigTimer=setTimeout(()=>this.world.refreshEnvironment(),120);}
     if(key==='autoQuality'){this.quality.badWindows=0;this.quality.goodSeconds=0;this.quality.cooldown=0;if(!this.settings.autoQuality){this.quality.level=0;this.renderer.maxDpr=this.quality.dpr[0];this.world.setQuality(0);}this.updateQualityState();}
     if(key==='showFps'&&$fpsReadout)$fpsReadout.classList.toggle('show',!!this.settings.showFps);
     if(key==='showClock'&&$clock)$clock.classList.toggle('hidden',!this.settings.showClock);
     if(key==='showDistance'&&$distance)$distance.classList.toggle('hidden',!this.settings.showDistance);
     if(key==='renderScale')this.renderer.renderScale=clamp(this.settings.renderScale,.50,1.50);
     if(key==='frameLimit')this.lastPresented=0;
+    if(key==='dayNightCycle'){if(this.settings.dayNightCycle)this.dayCycleStart=performance.now()-clamp(this.settings.dayNightMinutes,2,30)*60000*.30;this.updateEnvironmentButton();}
+    if(key==='dayNightMinutes'&&this.settings.dayNightCycle)this.dayCycleStart=performance.now()-clamp(this.settings.dayNightMinutes,2,30)*60000*.30;
+    if(key==='rainEnabled'){if(this.settings.rainEnabled){this.weatherPhase='dry';this.weatherRainTarget=0;this.weatherNextChange=performance.now()+12000+(this.weatherRng?.()??.5)*30000;}else{this.weatherPhase='dry';this.weatherRainTarget=0;}}
+    if(key==='rainIntensity'&&this.weatherPhase==='rain')this.weatherRainTarget=Math.min(this.weatherRainTarget,clamp(this.settings.rainIntensity,.10,1));
     if(key==='cleanUi'){document.body.classList.toggle('clean-ui',!!this.settings.cleanUi);if(this.settings.cleanUi){this.ui?.toggleConfigPanel(false);this.ui?.toggleMenu(false);this.ui?.toggleVehiclePanel(false);this.ui?.toggleAbout(false);}}
     if(key==='fullscreen')this.setFullscreen(!!this.settings.fullscreen);
     if(key==='autopilotUnlimited'){const r=$configPanel?.querySelector('.configRange[data-setting="autopilotSpeedKmh"]');if(r)r.disabled=!!this.settings.autopilotUnlimited;this.refreshConfigValue('autopilotSpeedKmh');this.updateSettingReset('autopilotSpeedKmh');}
@@ -2255,22 +2399,31 @@ class Game{
   }
   swapTouchLayout(){if(!$touchControls)return;this.touchLayout=((this.touchLayout||0)+1)%3;this.applyTouchLayout();try{localStorage.setItem('driftway-touch-layout',String(this.touchLayout));}catch(_){}}
   activeEnvironment(){
-    const to=ENVIRONMENTS[this.envIndex],from=ENVIRONMENTS[this.envFromIndex??this.envIndex],bio=biomeAtS(this.world.worldProgress,this.seed),e=this.envScratch,fog=biomeColor(bio,'fogTint'),horizon=biomeColor(bio,'horizon'),fogMul=biomeValue(bio,'fogMul');
-    const elapsed=this.envTransitionStart<0?this.envTransitionDuration:performance.now()-this.envTransitionStart,raw=clamp(elapsed/this.envTransitionDuration,0,1),t=raw*raw*(3-2*raw);
-    e.name=to.name;
+    const bio=biomeAtS(this.world.worldProgress,this.seed),e=this.envScratch,fog=biomeColor(bio,'fogTint'),horizon=biomeColor(bio,'horizon'),fogMul=biomeValue(bio,'fogMul');
+    let from,to,t=1,raw=1;
+    if(this.settings.dayNightCycle){
+      const duration=clamp(this.settings.dayNightMinutes,2,30)*60000,p=((performance.now()-this.dayCycleStart)/duration%1+1)%1;
+      // Long daylight plateau, warm dusk/dawn shoulders, and a substantial dark-night window.
+      const keys=[[0,2],[.12,1],[.25,0],[.62,0],[.76,1],[.88,2],[1,2]];let a=keys[0],b=keys[1];for(let i=0;i<keys.length-1;i++)if(p>=keys[i][0]&&p<=keys[i+1][0]){a=keys[i];b=keys[i+1];break;}
+      from=ENVIRONMENTS[a[1]];to=ENVIRONMENTS[b[1]];raw=clamp((p-a[0])/Math.max(.0001,b[0]-a[0]),0,1);t=raw*raw*(3-2*raw);e.name='自然昼夜';
+    }else{
+      to=ENVIRONMENTS[this.envIndex];from=ENVIRONMENTS[this.envFromIndex??this.envIndex];const elapsed=this.envTransitionStart<0?this.envTransitionDuration:performance.now()-this.envTransitionStart;raw=clamp(elapsed/this.envTransitionDuration,0,1);t=raw*raw*(3-2*raw);e.name=to.name;
+    }
     for(let i=0;i<3;i++){
       const top=lerp(from.skyTop[i],to.skyTop[i],t),bottom=lerp(from.skyBottom[i],to.skyBottom[i],t),fogBase=lerp(from.fogColor[i],to.fogColor[i],t);
       e.skyTop[i]=top;e.skyBottom[i]=lerp(bottom,horizon[i],.12);e.fogColor[i]=lerp(fogBase,fog[i],.24);e.lightDir[i]=lerp(from.lightDir[i],to.lightDir[i],t);e.lightColor[i]=lerp(from.lightColor[i],to.lightColor[i],t);e.sunColor[i]=lerp(from.sunColor[i],to.sunColor[i],t);
     }
-    const nf=x=>x.name==='夜晚'?1:x.name==='黄昏'?.16:0,df=x=>x.name==='黄昏'?1:0;
-    e.nightFactor=lerp(nf(from),nf(to),t);e.duskFactor=lerp(df(from),df(to),t);
-    const fogSetting=clamp(this.settings.fogDensity,0,2),fogScale=Math.pow(1.35,1-fogSetting);
-    e.sunStrength=lerp(from.sunStrength,to.sunStrength,t);e.ambient=lerp(from.ambient,to.ambient,t);e.diffuse=lerp(from.diffuse,to.diffuse,t);
-    e.fogNear=lerp(from.fogNear,to.fogNear,t)*lerp(1,fogMul,.50)*fogScale;e.fogFar=lerp(from.fogFar,to.fogFar,t)*lerp(1,fogMul,.64)*fogScale;
-    if(raw>=1)this.envFromIndex=this.envIndex;
-    return e;
+    const nf=x=>x.name==='夜晚'?1:x.name==='黄昏'?.16:0,df=x=>x.name==='黄昏'?1:0;e.nightFactor=lerp(nf(from),nf(to),t);e.duskFactor=lerp(df(from),df(to),t);
+    const fogSetting=clamp(this.settings.fogDensity,0,2),fogScale=Math.pow(1.35,1-fogSetting);e.sunStrength=lerp(from.sunStrength,to.sunStrength,t);e.ambient=lerp(from.ambient,to.ambient,t);e.diffuse=lerp(from.diffuse,to.diffuse,t);e.fogNear=lerp(from.fogNear,to.fogNear,t)*lerp(1,fogMul,.50)*fogScale;e.fogFar=lerp(from.fogFar,to.fogFar,t)*lerp(1,fogMul,.64)*fogScale;
+    const rain=clamp(this.weatherRain||0,0,1);e.rainFactor=rain;
+    if(rain>0){
+      const rainTop=[.075,.105,.135],rainBottom=[.22,.27,.30],rainFog=[.25,.30,.32];for(let i=0;i<3;i++){e.skyTop[i]=lerp(e.skyTop[i],rainTop[i],rain*.72);e.skyBottom[i]=lerp(e.skyBottom[i],rainBottom[i],rain*.66);e.fogColor[i]=lerp(e.fogColor[i],rainFog[i],rain*.68);e.lightColor[i]=lerp(e.lightColor[i],[.64,.70,.75][i],rain*.38);}
+      e.sunStrength*=lerp(1,.18,rain);e.ambient*=lerp(1,.78,rain);e.diffuse*=lerp(1,.58,rain);e.fogNear*=lerp(1,.72,rain);e.fogFar*=lerp(1,.58,rain);
+    }
+    if(!this.settings.dayNightCycle&&raw>=1)this.envFromIndex=this.envIndex;return e;
   }
-  cycleEnvironment(){this.envFromIndex=this.envIndex;this.envIndex=(this.envIndex+1)%ENVIRONMENTS.length;this.envTransitionStart=performance.now();const e=ENVIRONMENTS[this.envIndex];$envBtn.textContent=`环境 · ${e.name}`;}
+  updateEnvironmentButton(){if(!$envBtn)return;$envBtn.textContent=this.settings.dayNightCycle?'环境 · 自动昼夜':`环境 · ${ENVIRONMENTS[this.envIndex].name}`;}
+  cycleEnvironment(){if(this.settings.dayNightCycle){this.settings.dayNightCycle=false;this.syncSettingControl('dayNightCycle');saveSettings(this.settings);this.updateSettingReset('dayNightCycle');this.envFromIndex=this.envIndex;this.envTransitionStart=-1;}else{this.envFromIndex=this.envIndex;this.envIndex=(this.envIndex+1)%ENVIRONMENTS.length;this.envTransitionStart=performance.now();}this.updateEnvironmentButton();}
   requestFrame(){if(!this.rafId&&this.running&&(!this.paused||this.pausePreview))this.rafId=requestAnimationFrame(this.frameBound);}
   togglePause(force){
     const next=typeof force==='boolean'?force:!this.paused;if(next===this.paused)return;
@@ -2300,12 +2453,12 @@ class Game{
     const frameLimit=clamp(this.settings.frameLimit||0,0,120);
     if(frameLimit>0&&this.lastPresented>0&&now-this.lastPresented<(1000/frameLimit)-.35){this.requestFrame();return;}
     this.lastPresented=now;
-    const rawDt=(now-this.last)/1000,simDt=Math.min(rawDt,.0833);this.last=now;
+    const rawDt=(now-this.last)/1000,simDt=Math.min(rawDt,.0833);this.last=now;this.updateWeather(simDt,now);
     if(!this.started){
-      this.camera.updateGarage(Math.min(simDt,.05),this.vehicle);const env=this.activeEnvironment();this.renderer.begin(this.camera,env,this.vehicle);this.world.render(this.renderer,this.camera,env);this.vehicle.render(this.renderer,env);this.ui.update(simDt);this.input.endFrame();this.requestFrame();return;
+      this.camera.updateGarage(Math.min(simDt,.05),this.vehicle);const env=this.activeEnvironment();this.updateRainFx(simDt);this.renderer.begin(this.camera,env,this.vehicle);this.world.render(this.renderer,this.camera,env);this.vehicle.render(this.renderer,env);this.ui.update(simDt);this.input.endFrame();this.requestFrame();return;
     }
     if(this.paused){
-      this.camera.updateGarage(Math.min(simDt,.05),this.vehicle,false);const env=this.activeEnvironment();this.renderer.begin(this.camera,env,this.vehicle);this.world.render(this.renderer,this.camera,env);this.vehicle.render(this.renderer,env);this.ui.update(simDt);this.input.endFrame();
+      this.camera.updateGarage(Math.min(simDt,.05),this.vehicle,false);const env=this.activeEnvironment();this.updateRainFx(simDt);this.renderer.begin(this.camera,env,this.vehicle);this.world.render(this.renderer,this.camera,env);this.vehicle.render(this.renderer,env);this.ui.update(simDt);this.input.endFrame();
       // Keep the showroom alive while paused so the camera continues its slow orbit. Physics and
       // audio are still frozen; only the lightweight presentation render keeps running.
       this.requestFrame();
@@ -2327,8 +2480,8 @@ class Game{
       this.vehicle.update(sd,this.input,this.autoForward,ap);
       this.world.maybeShiftOrigin(this.vehicle,this.camera);
     }
-    this.camera.update(simDt,this.vehicle);this.audio.update(this.vehicle);this.updateSpeedEffects();this.autopilot.updatePrediction(this.vehicle);
-    const env=this.activeEnvironment();this.renderer.begin(this.camera,env,this.vehicle);this.world.render(this.renderer,this.camera,env);this.autopilot.renderPrediction(this.renderer,this.ui.debug);this.vehicle.render(this.renderer,env);this.quality.update(rawDt);this.ui.update(simDt);this.input.endFrame();this.requestFrame();
+    this.camera.update(simDt,this.vehicle);const env=this.activeEnvironment();this.audio.update(this.vehicle,env.rainFactor||0);this.updateRainFx(simDt);this.updateSpeedEffects();this.autopilot.updatePrediction(this.vehicle);
+    this.renderer.begin(this.camera,env,this.vehicle);this.world.render(this.renderer,this.camera,env);this.autopilot.renderPrediction(this.renderer,this.ui.debug);this.vehicle.render(this.renderer,env);this.quality.update(rawDt);this.ui.update(simDt);this.input.endFrame();this.requestFrame();
   }
 }
 
