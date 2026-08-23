@@ -40,7 +40,7 @@
 ### 车辆展示
 
 <p align="center">
-  <img src="screenshots/01-garage.webp" alt="无尽驾驶 - 车辆展示" width="100%">
+  <img src="screenshots/01-garage.webp" alt="无尽驾驶 - 车辆展示" width="82%">
 </p>
 
 启动游戏后可以环绕查看当前车辆；车灯、车漆高光和方向阴影均为实时生成。
@@ -48,7 +48,7 @@
 ### 夜间驾驶
 
 <p align="center">
-  <img src="screenshots/03-night-driving.webp" alt="无尽驾驶 - 夜间驾驶" width="100%">
+  <img src="screenshots/03-night-driving.webp" alt="无尽驾驶 - 夜间驾驶" width="82%">
 </p>
 
 夜晚环境会明显变暗，主要依靠车辆前灯照亮道路；白线与路边反光设施会在灯光扫过时增强可见度。
@@ -56,7 +56,7 @@
 ### 自定义配置
 
 <p align="center">
-  <img src="screenshots/04-settings.webp" alt="无尽驾驶 - 配置界面" width="100%">
+  <img src="screenshots/04-settings.webp" alt="无尽驾驶 - 配置界面" width="72%">
 </p>
 
 最大速度、自动巡航、道路起伏、道路弯折、植被、镜头与多种驾驶 / 画面选项都可以直接调整。
