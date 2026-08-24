@@ -37,7 +37,7 @@
   .configMorph .cd1,.configMorph .cd2{width:3px;height:3px;border-radius:50%;background:currentColor}.configMorph .cd1{left:4px;top:3.25px}.configMorph .cd2{right:3px;top:9.25px}
   #configBtn[aria-expanded="true"] .configMorph .cb1{transform:translateY(3px) rotate(45deg)}#configBtn[aria-expanded="true"] .configMorph .cb2{transform:translateY(-3px) rotate(-45deg)}#configBtn[aria-expanded="true"] .configMorph .cd1,#configBtn[aria-expanded="true"] .configMorph .cd2{opacity:0;transform:scale(.2)}
   #autopilotBtn[aria-pressed="true"]{background:rgba(62,95,83,.42);color:#fff}
-  #configPanel{position:absolute;right:18px;top:52px;width:286px;padding:12px 13px;border-radius:16px;display:none;pointer-events:auto;text-shadow:none;max-height:calc(100% - 68px);overflow:auto;overscroll-behavior:contain}
+  #configPanel{position:absolute;right:18px;top:52px;width:286px;padding:12px 13px;border-radius:16px;display:none;pointer-events:auto;text-shadow:none;max-height:calc(100% - 68px);overflow:auto;overscroll-behavior:contain;touch-action:pan-y;-webkit-overflow-scrolling:touch}
   #configPanel.show{display:block;animation:panelPop .18s cubic-bezier(.2,.8,.2,1)}
   @keyframes panelPop{from{opacity:0;transform:translateY(-5px) scale(.985)}to{opacity:1;transform:none}}
   #configPanel .panelTitle{font-size:14px;font-weight:700;margin-bottom:8px}
@@ -51,7 +51,7 @@
      a wall of sliders. These are separators, not cards: no extra box chrome around passive info. */
   .configGroup{margin:0;border-bottom:1px solid rgba(255,255,255,.075)}
   .configGroup:first-child{border-top:1px solid rgba(255,255,255,.075)}
-  .configGroupSummary{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:31px;padding:5px 1px;list-style:none;cursor:pointer;user-select:none;-webkit-user-select:none;color:rgba(247,251,255,.78);font-size:10.5px;font-weight:650;letter-spacing:.02em}
+  .configGroupSummary{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:31px;padding:5px 1px;list-style:none;cursor:pointer;touch-action:pan-y;user-select:none;-webkit-user-select:none;color:rgba(247,251,255,.78);font-size:10.5px;font-weight:650;letter-spacing:.02em}
   .configGroupSummary::-webkit-details-marker{display:none}.configGroupSummary::marker{content:""}
   .configGroupSummary::after{content:"›";font:700 15px/1 system-ui;color:rgba(247,251,255,.42);transform:rotate(0deg);transition:transform .16s ease,color .16s ease}
   .configGroup[open]>.configGroupSummary::after{transform:rotate(90deg);color:rgba(247,251,255,.72)}
@@ -60,15 +60,15 @@
   .configRow{display:grid;grid-template-columns:90px 1fr 48px 20px;align-items:center;gap:7px;min-height:31px}
   .configLabel{font-size:11px;color:rgba(247,251,255,.83);white-space:nowrap}
   .configValue{font:600 10px/1 ui-monospace,SFMono-Regular,Consolas,monospace;text-align:right;color:rgba(247,251,255,.72);white-space:nowrap}
-  .configRange{width:100%;height:20px;margin:0;cursor:pointer;touch-action:none;-webkit-appearance:none;appearance:none;background:transparent}
+  .configRange{width:100%;height:20px;margin:0;cursor:pointer;touch-action:pan-y;-webkit-appearance:none;appearance:none;background:transparent}
   .configRange::-webkit-slider-runnable-track{height:2px;border-radius:2px;background:rgba(247,251,255,.34)}
   .configRange::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;margin-top:-5.5px;border-radius:50%;border:1px solid rgba(255,255,255,.72);background:#eef7f8;box-shadow:0 1px 5px rgba(0,0,0,.22)}
   .configRange::-moz-range-track{height:2px;border:0;border-radius:2px;background:rgba(247,251,255,.34)}
   .configRange::-moz-range-thumb{width:13px;height:13px;border-radius:50%;border:1px solid rgba(255,255,255,.72);background:#eef7f8;box-shadow:0 1px 5px rgba(0,0,0,.22)}
   .configDivider{height:1px;background:rgba(255,255,255,.08);margin:7px 0}
   .configToggleGrid{display:grid;grid-template-columns:1fr 1fr;gap:3px 9px;margin:1px 0 7px}
-  .configToggleRow{display:grid;grid-template-columns:1fr 15px 18px;align-items:center;gap:6px;min-height:29px;font-size:10.5px;color:rgba(247,251,255,.82);cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none}
-  .configCheck{width:15px;height:15px;min-width:15px;margin:0;accent-color:#d7eee5;cursor:pointer;touch-action:none}
+  .configToggleRow{display:grid;grid-template-columns:1fr 15px 18px;align-items:center;gap:6px;min-height:29px;font-size:10.5px;color:rgba(247,251,255,.82);cursor:pointer;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+  .configCheck{width:15px;height:15px;min-width:15px;margin:0;accent-color:#d7eee5;cursor:pointer;touch-action:pan-y}
   .configItemReset{width:18px;height:18px;min-width:18px;min-height:18px;padding:0;border:0;border-radius:50%;display:grid;place-items:center;background:transparent;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;color:rgba(247,251,255,.50);font:700 13px/1 system-ui;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .14s ease,background .14s ease,color .14s ease}
   .configItemReset.show{opacity:1;visibility:visible;pointer-events:auto}.configItemReset:hover{background:rgba(255,255,255,.10);color:#fff}
   .configToggleRow .configItemReset{justify-self:end}.configToggleRow.wide{grid-column:1/-1}.configRange:disabled{opacity:.35;cursor:not-allowed}
@@ -214,6 +214,8 @@
   /* Portrait phones still render the game as a landscape surface. No orientation lock or sensor takeover. */
   @media (hover:none) and (pointer:coarse) and (orientation:portrait){
     canvas,#ui{position:fixed;inset:auto;left:50%;top:50%;width:100vh;height:100vw;transform:translate(-50%,-50%) rotate(90deg);transform-origin:center center}
+    /* The whole UI is rotated, so its local vertical scroll axis maps to the device X axis. */
+    #configPanel,.configRange,.configToggleRow,.configCheck,.configGroupSummary{touch-action:pan-x}
   }
 </style>
 </head>
@@ -2702,20 +2704,47 @@ class Game{
       // finishes so sliders remain draggable while held driving keys stay in Input.keys.
       input.addEventListener('change',restoreCanvasFocus);
       if(!IS_COARSE_POINTER)input.addEventListener('pointerup',restoreCanvasFocus);
-      // Native range dragging is unreliable when the whole mobile UI is CSS-rotated into a
-      // landscape surface. On coarse pointers, map the pointer to the visual slider axis ourselves.
+      // In normal mobile landscape, keep the browser's native range gesture: touch-action:pan-y
+      // lets a vertical finger movement scroll the panel even when it starts on a slider. Only the
+      // CSS-rotated portrait fallback needs custom coordinate mapping. There we wait for clear
+      // slider intent before capturing the pointer, so a scroll gesture is never stolen on touch-down.
       if(IS_COARSE_POINTER){
-        let dragId=null;
+        let dragId=null,startX=0,startY=0,dragging=false,customGesture=false;
         const setFromPointer=e=>{
           const r=input.getBoundingClientRect(),forcedLandscape=innerHeight>innerWidth;
           let ratio=forcedLandscape?(e.clientY-r.top)/Math.max(1,r.height):(e.clientX-r.left)/Math.max(1,r.width);ratio=clamp(ratio,0,1);
           const min=Number(input.min)||0,max=Number(input.max)||100,step=Math.max(Number(input.step)||1,1e-6);let value=min+ratio*(max-min);value=min+Math.round((value-min)/step)*step;value=clamp(value,min,max);
           if(Number(input.value)!==value){input.value=String(value);refresh();}
         };
-        const endDrag=e=>{if(dragId===null||e.pointerId!==dragId)return;try{if(input.hasPointerCapture?.(dragId))input.releasePointerCapture(dragId);}catch(_){}dragId=null;};
-        input.addEventListener('pointerdown',e=>{dragId=e.pointerId;e.preventDefault();try{input.setPointerCapture?.(dragId);}catch(_){}setFromPointer(e);},{passive:false});
-        input.addEventListener('pointermove',e=>{if(e.pointerId!==dragId)return;e.preventDefault();setFromPointer(e);},{passive:false});
-        input.addEventListener('pointerup',endDrag);input.addEventListener('pointercancel',endDrag);input.addEventListener('lostpointercapture',e=>{if(e.pointerId===dragId)dragId=null;});
+        const clearDrag=e=>{
+          if(dragId===null||e.pointerId!==dragId)return;
+          try{if(input.hasPointerCapture?.(dragId))input.releasePointerCapture(dragId);}catch(_){}
+          dragId=null;dragging=false;customGesture=false;
+        };
+        input.addEventListener('pointerdown',e=>{
+          // Landscape phones use the native range implementation; it now coexists with vertical scroll.
+          customGesture=innerHeight>innerWidth;if(!customGesture)return;
+          dragId=e.pointerId;startX=e.clientX;startY=e.clientY;dragging=false;
+        },{passive:true});
+        input.addEventListener('pointermove',e=>{
+          if(!customGesture||e.pointerId!==dragId)return;
+          const dx=e.clientX-startX,dy=e.clientY-startY;
+          // With the whole UI rotated 90deg, the visual slider runs along device Y while the panel's
+          // visual scroll gesture runs along device X. Give scrolling a generous first claim.
+          if(!dragging){
+            const sliderMove=Math.abs(dy),scrollMove=Math.abs(dx);
+            if(scrollMove>7&&scrollMove>sliderMove*1.08){dragId=null;customGesture=false;return;}
+            if(sliderMove<7||sliderMove<scrollMove*1.08)return;
+            dragging=true;try{input.setPointerCapture?.(dragId);}catch(_){}
+          }
+          e.preventDefault();setFromPointer(e);
+        },{passive:false});
+        input.addEventListener('pointerup',e=>{
+          if(!customGesture||e.pointerId!==dragId)return;
+          if(!dragging){const dx=e.clientX-startX,dy=e.clientY-startY;if(Math.hypot(dx,dy)<7){e.preventDefault();setFromPointer(e);}}
+          clearDrag(e);
+        },{passive:false});
+        input.addEventListener('pointercancel',clearDrag);input.addEventListener('lostpointercapture',e=>{if(e.pointerId===dragId){dragId=null;dragging=false;customGesture=false;}});
       }
       this.refreshConfigValue(key);
     }
