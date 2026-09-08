@@ -145,10 +145,15 @@
      presentation remains intact, and coarse-pointer devices keep their essential touch controls.
      Keyboard users can always press U to restore the HUD even when the top-right buttons are hidden. */
   body.clean-ui:not(.garage) #stats,body.clean-ui:not(.garage) #topRight,body.clean-ui:not(.garage) #help,body.clean-ui:not(.garage) #clock,body.clean-ui:not(.garage) #fpsReadout,body.clean-ui:not(.garage) #regionToast,body.clean-ui:not(.garage) #hint{opacity:0!important;pointer-events:none!important}
-  @media (hover:none) and (pointer:coarse){body.clean-ui:not(.garage) #topRight{opacity:1!important;pointer-events:auto!important}}
+  @media all{
+    body.mobile-mode.clean-ui:not(.garage) #topRight{opacity:1!important;pointer-events:auto!important}
+  }
   #regionToast{position:absolute;left:50%;top:12.5%;transform:translate(-50%,-5px);font-size:13px;font-weight:650;letter-spacing:.16em;color:rgba(250,253,255,.88);opacity:0;transition:opacity .65s ease,transform .65s ease;text-shadow:0 2px 16px rgba(0,0,0,.52);white-space:nowrap}
   #regionToast.show{opacity:.92;transform:translate(-50%,0)}
-  #touchControls{display:none;position:absolute;inset:0;pointer-events:none}
+  #touchControls{display:none;position:absolute;inset:0;pointer-events:none;z-index:2}
+  #controlMenu,#configPanel,#aboutPanel,#vehiclePanel{z-index:6}
+  #topRight{z-index:7}
+  body.mobile-mode #controlMenu{max-height:calc(100% - 60px);overflow-y:auto;overscroll-behavior:contain;background:rgba(18,24,31,.96)}
   .touchGroup{display:flex;gap:9px;align-items:end;pointer-events:auto}
   .touchBtn{min-width:76px;height:56px;border-radius:17px;padding:0 10px;font-size:12px;font-weight:700;letter-spacing:.02em;touch-action:none;-webkit-user-select:none;user-select:none;background:rgba(18,24,31,.36);border-color:rgba(255,255,255,.13);box-shadow:0 5px 18px rgba(0,0,0,.08)}
   .touchBtn.primary{width:88px;height:72px;font-size:13px}
@@ -179,57 +184,87 @@
   .paintChoice{width:30px;height:30px;min-width:30px;min-height:30px;padding:0;border-radius:50%;box-shadow:none;border:2px solid rgba(255,255,255,.28)}
   .paintChoice[aria-pressed="true"]{outline:2px solid rgba(255,255,255,.90);outline-offset:2px}
   @media(max-width:700px){#speed{font-size:21px}button{padding:7px 9px}}
-  @media (hover:none) and (pointer:coarse){
-    #touchControls{display:block}
-    #speedFx::before{filter:none;opacity:.72}
-    #speedFx::after{filter:blur(3px)}
-    #help{display:none}.glass,button{backdrop-filter:none;-webkit-backdrop-filter:none}
-    #stats{left:50%;right:auto;top:auto;bottom:max(8px,env(safe-area-inset-bottom));transform:translateX(-50%);text-align:center}
-    #topRight{right:max(9px,env(safe-area-inset-right));top:7px}
-     #configBtn,#menuBtn,#autopilotBtn{font-size:11px;padding:5px 6px}
-    #controlMenu{right:max(8px,env(safe-area-inset-right));top:39px;width:190px;padding:7px}
-    #aboutPanel{right:max(8px,env(safe-area-inset-right));top:39px;width:min(290px,calc(100% - 16px));max-height:calc(100% - 50px)}
-    #controlMenu .menuAction{min-height:30px;padding:6px 8px;font-size:10.5px}
-    #controlMenu .mobileOnly{display:block}
-    #controlMenu .desktopOnly{display:none}
-    #clock{left:max(10px,env(safe-area-inset-left));right:auto;top:10px;bottom:auto;font-size:11px}
-    #fpsReadout{left:max(10px,env(safe-area-inset-left));top:26px;font-size:9.5px}
-    #hint{top:15%;font-size:12px}
-    #vehiclePanel{right:max(8px,env(safe-area-inset-right));top:39px;width:232px;padding:10px}#configPanel{right:max(8px,env(safe-area-inset-right));top:39px;width:284px;padding:9px 10px;max-height:calc(100% - 48px)}.configRow{grid-template-columns:82px 1fr 42px 18px;gap:5px;min-height:27px}.configLabel{font-size:9.5px}.configValue{font-size:9px}.configToggleRow{font-size:9px;min-height:25px}.configCheck{width:14px;height:14px;min-width:14px}
+  @media all{
+    body.mobile-mode #touchControls{display:block}
+    body.mobile-mode #speedFx::before{filter:none;opacity:.72}
+    body.mobile-mode #speedFx::after{filter:blur(3px)}
+    body.mobile-mode #help{display:none}
+    body.mobile-mode .glass,body.mobile-mode button{backdrop-filter:none;-webkit-backdrop-filter:none}
+    body.mobile-mode #stats{left:50%;right:auto;top:auto;bottom:max(8px,env(safe-area-inset-bottom));transform:translateX(-50%);text-align:center}
+    body.mobile-mode #topRight{right:max(9px,env(safe-area-inset-right));top:7px}
+    body.mobile-mode #configBtn,body.mobile-mode #menuBtn,body.mobile-mode #autopilotBtn{font-size:11px;padding:5px 6px}
+    body.mobile-mode #controlMenu{right:max(8px,env(safe-area-inset-right));top:39px;width:190px;padding:7px}
+    body.mobile-mode #aboutPanel{right:max(8px,env(safe-area-inset-right));top:39px;width:min(290px,calc(100% - 16px));max-height:calc(100% - 50px)}
+    body.mobile-mode #controlMenu .menuAction{min-height:30px;padding:6px 8px;font-size:10.5px}
+    body.mobile-mode #controlMenu .mobileOnly{display:block}
+    body.mobile-mode #controlMenu .desktopOnly{display:none}
+    body.mobile-mode #clock{left:max(10px,env(safe-area-inset-left));right:auto;top:10px;bottom:auto;font-size:11px}
+    body.mobile-mode #fpsReadout{left:max(10px,env(safe-area-inset-left));top:26px;font-size:9.5px}
+    body.mobile-mode #hint{top:15%;font-size:12px}
+    body.mobile-mode #vehiclePanel{right:max(8px,env(safe-area-inset-right));top:39px;width:232px;padding:10px}
+    body.mobile-mode #configPanel{right:max(8px,env(safe-area-inset-right));top:39px;width:284px;padding:9px 10px;max-height:calc(100% - 48px)}
+    body.mobile-mode .configRow{grid-template-columns:82px 1fr 42px 18px;gap:5px;min-height:27px}
+    body.mobile-mode .configLabel{font-size:9.5px}
+    body.mobile-mode .configValue{font-size:9px}
+    body.mobile-mode .configToggleRow{font-size:9px;min-height:25px}
+    body.mobile-mode .configCheck{width:14px;height:14px;min-width:14px}
   }
-  @media (hover:none) and (pointer:coarse) and (max-height:410px){
-    .touchBtn{height:46px;min-width:66px}.touchBtn.primary{width:76px;height:62px}#touchPedals{grid-template-columns:68px 68px}#touchBrake{width:143px}#touchSimple .simpleSteer{width:82px;height:62px}#touchAutoForward{bottom:52px;height:36px;min-width:94px;font-size:10px}
-    #topRight{right:6px;top:5px} #configBtn,#menuBtn,#autopilotBtn{font-size:10px;padding:4px 5px}#controlMenu{right:6px;top:34px;width:176px}#controlMenu .menuAction{min-height:27px;padding:5px 7px;font-size:9.5px}#aboutPanel{right:6px;top:34px;width:min(276px,calc(100% - 12px))}
-    #stats{bottom:7px}#speed{font-size:19px}#distance{font-size:11px;margin-top:3px}
+  @media (max-height:410px){
+    body.mobile-mode .touchBtn{height:46px;min-width:66px}
+    body.mobile-mode .touchBtn.primary{width:76px;height:62px}
+    body.mobile-mode #touchPedals{grid-template-columns:68px 68px}
+    body.mobile-mode #touchBrake{width:143px}
+    body.mobile-mode #touchSimple .simpleSteer{width:82px;height:62px}
+    body.mobile-mode #touchAutoForward{bottom:52px;height:36px;min-width:94px;font-size:10px}
+    body.mobile-mode #topRight{right:6px;top:5px}
+    body.mobile-mode #configBtn,body.mobile-mode #menuBtn,body.mobile-mode #autopilotBtn{font-size:10px;padding:4px 5px}
+    body.mobile-mode #controlMenu{right:6px;top:34px;width:176px}
+    body.mobile-mode #controlMenu .menuAction{min-height:27px;padding:5px 7px;font-size:9.5px}
+    body.mobile-mode #aboutPanel{right:6px;top:34px;width:min(276px,calc(100% - 12px))}
+    body.mobile-mode #stats{bottom:7px}
+    body.mobile-mode #speed{font-size:19px}
+    body.mobile-mode #distance{font-size:11px;margin-top:3px}
   }
   /* Garage / title presentation: the same WebGL car is shown live before driving starts. */
   #garageOverlay{position:absolute;inset:0;z-index:8;display:flex;align-items:flex-end;justify-content:space-between;padding:clamp(24px,5vw,72px);pointer-events:none;transition:opacity .35s ease,visibility .35s ease}
   #garageCard{max-width:420px;padding:22px 24px;border-left:2px solid rgba(255,255,255,.72);background:linear-gradient(90deg,rgba(12,17,22,.38),rgba(12,17,22,0));text-shadow:0 3px 18px rgba(0,0,0,.48)}
   #garageTitle{font-size:clamp(34px,5vw,68px);line-height:.92;font-weight:760;letter-spacing:-.055em}
   #garageSub{margin-top:10px;font-size:12px;color:rgba(247,251,255,.70);letter-spacing:.18em}
-  #garageActions{margin-top:19px;display:flex;gap:8px;pointer-events:auto}
+  #garageActions{margin-top:19px;display:grid;grid-template-columns:auto auto;gap:8px;pointer-events:auto}
+  #garageMobileStart{grid-row:2;grid-column:1 / -1}
   #garageActions button{min-height:40px;padding:9px 15px;border-radius:11px;font-size:12px;font-weight:680}
   #garageStart{background:rgba(239,247,246,.92);color:#243039;text-shadow:none;border-color:rgba(255,255,255,.72)}
   #garageVehicle{background:rgba(15,23,29,.42)}
   #garageTip{position:absolute;right:clamp(22px,4vw,58px);bottom:clamp(24px,5vw,66px);font-size:10px;letter-spacing:.12em;color:rgba(247,251,255,.48)}
   body.garage canvas{cursor:grab;touch-action:none}body.garage canvas:active{cursor:grabbing}
   body:not(.garage) #garageOverlay{opacity:0;visibility:hidden}
+  body:not(.garage) #garageActions,body:not(.garage) #garageActions button{pointer-events:none}
   body.garage #stats,body.garage #topRight,body.garage #help,body.garage #touchControls,body.garage #hint,body.garage #regionToast{opacity:0!important;pointer-events:none!important}
   body.garage #clock,body.garage #fpsReadout{opacity:.55}
-  @media (hover:none) and (pointer:coarse){#garageOverlay{padding:18px 22px}#garageCard{padding:14px 16px;max-width:330px}#garageSub{font-size:9px}#garageActions button{min-height:34px;padding:7px 12px;font-size:10px}#garageTip{display:none}}
+  @media all{
+    body.mobile-mode #garageOverlay{padding:18px 22px}
+    body.mobile-mode #garageCard{padding:14px 16px;max-width:330px}
+    body.mobile-mode #garageSub{font-size:9px}
+    body.mobile-mode #garageActions button{min-height:34px;padding:7px 12px;font-size:10px}
+    body.mobile-mode #garageTip{display:none}
+  }
   /* Accessibility / touch maintenance: keep coarse-pointer targets finger-sized without changing the compact desktop visual language. */
-  @media (hover:none) and (pointer:coarse){
-    #configBtn,#menuBtn,#autopilotBtn{min-width:44px!important;min-height:44px!important;padding:8px 9px!important}
-    #controlMenu .menuAction{min-height:44px!important;font-size:12px!important}
-    #configPanel{width:min(340px,calc(100% - 16px))!important}
-    .configTabs{gap:4px}.configTab{height:44px!important;min-height:44px!important;font-size:12px!important}
-    .configRow{grid-template-columns:92px 1fr 50px 44px!important;gap:6px!important;min-height:44px!important}
-    .configLabel{font-size:12px!important}.configValue{font-size:10.5px!important}.configRange{height:44px!important}
-    .configRange::-webkit-slider-thumb{width:20px;height:20px;margin-top:-9px}.configRange::-moz-range-thumb{width:20px;height:20px}
-    .configToggleRow{grid-template-columns:1fr 22px 44px!important;min-height:44px!important;font-size:12px!important}
-    .configCheck{width:20px!important;height:20px!important;min-width:20px!important}
-    .configItemReset{width:44px!important;height:44px!important;min-width:44px!important;min-height:44px!important}
-    #garageActions button{min-height:44px!important;font-size:12px!important}
+  @media all{
+    body.mobile-mode #configBtn,body.mobile-mode #menuBtn,body.mobile-mode #autopilotBtn{min-width:44px!important;min-height:44px!important;padding:8px 9px!important}
+    body.mobile-mode #controlMenu .menuAction{min-height:44px!important;font-size:12px!important}
+    body.mobile-mode #configPanel{width:min(340px,calc(100% - 16px))!important}
+    body.mobile-mode .configTabs{gap:4px}
+    body.mobile-mode .configTab{height:44px!important;min-height:44px!important;font-size:12px!important}
+    body.mobile-mode .configRow{grid-template-columns:92px 1fr 50px 44px!important;gap:6px!important;min-height:44px!important}
+    body.mobile-mode .configLabel{font-size:12px!important}
+    body.mobile-mode .configValue{font-size:10.5px!important}
+    body.mobile-mode .configRange{height:44px!important}
+    body.mobile-mode .configRange::-webkit-slider-thumb{width:20px;height:20px;margin-top:-9px}
+    body.mobile-mode .configRange::-moz-range-thumb{width:20px;height:20px}
+    body.mobile-mode .configToggleRow{grid-template-columns:1fr 22px 44px!important;min-height:44px!important;font-size:12px!important}
+    body.mobile-mode .configCheck{width:20px!important;height:20px!important;min-width:20px!important}
+    body.mobile-mode .configItemReset{width:44px!important;height:44px!important;min-width:44px!important;min-height:44px!important}
+    body.mobile-mode #garageActions button{min-height:44px!important;font-size:12px!important}
   }
   @media (prefers-reduced-motion: reduce){
     .windStreak{animation:none!important}#speedFx,#windFx{display:none!important}
@@ -237,10 +272,9 @@
     .menuMorph i,.configMorph i,.actionSvg *,.configGroupSummary::after,.configItemReset,#hint,#regionToast,#garageOverlay,#help .helpSummary,#help .helpDetails{transition:none!important}
   }
   /* Portrait phones still render the game as a landscape surface. No orientation lock or sensor takeover. */
-  @media (hover:none) and (pointer:coarse) and (orientation:portrait){
-    canvas,#ui{position:fixed;inset:auto;left:50%;top:50%;width:100vh;height:100vw;transform:translate(-50%,-50%) rotate(90deg);transform-origin:center center}
-    /* The whole UI is rotated, so its local vertical scroll axis maps to the device X axis. */
-    #configPanel,.configRange,.configToggleRow,.configCheck,.configGroupSummary{touch-action:pan-x}
+  @media (orientation:portrait){
+    body.mobile-mode canvas,body.mobile-mode #ui{position:fixed;inset:auto;left:50%;top:50%;width:100vh;height:100vw;transform:translate(-50%,-50%) rotate(90deg);transform-origin:center center}
+    body.mobile-mode #configPanel,body.mobile-mode .configRange,body.mobile-mode .configToggleRow,body.mobile-mode .configCheck,body.mobile-mode .configGroupSummary{touch-action:pan-x}
   }
 </style>
 </head>
@@ -253,6 +287,7 @@
       <div id="garageSub">DRIVE · BREATHE · KEEP GOING</div>
       <div id="garageActions">
         <button id="garageStart" type="button">开始驾驶</button>
+        <button id="garageMobileStart" type="button">移动端开始 · 触控驾驶</button>
         <button id="garageVehicle" type="button">查看载具</button>
       </div>
     </div>
@@ -507,7 +542,13 @@ const $touchAutoForward = document.getElementById('touchAutoForward');
 const $garageOverlay = document.getElementById('garageOverlay');
 const $garageStart = document.getElementById('garageStart');
 const $garageVehicle = document.getElementById('garageVehicle');
-const IS_COARSE_POINTER = window.matchMedia ? window.matchMedia('(hover:none) and (pointer:coarse)').matches : false;
+let IS_COARSE_POINTER = (navigator.maxTouchPoints||0)>0 || !!window.matchMedia?.('(any-pointer:coarse)').matches;
+try{IS_COARSE_POINTER=IS_COARSE_POINTER||localStorage.getItem('driftway-mobile-mode')==='true';}catch(_){}
+document.body.classList.toggle('mobile-mode',IS_COARSE_POINTER);
+function enableMobileMode(){
+  IS_COARSE_POINTER=true;document.body.classList.add('mobile-mode');
+  try{localStorage.setItem('driftway-mobile-mode','true');}catch(_){}
+}
 const REDUCED_MOTION_QUERY = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : {matches:false};
 const reducedMotionActive = ()=>!!REDUCED_MOTION_QUERY.matches;
 
@@ -1029,7 +1070,7 @@ class Renderer{
     this.shadowStatus=parts.length?parts.join(' + '):'投影';
   }
   resize(){
-    const touchCoarse=matchMedia('(hover:none) and (pointer:coarse)').matches,forcedLandscape=touchCoarse&&innerHeight>innerWidth;
+    const forcedLandscape=IS_COARSE_POINTER&&innerHeight>innerWidth;
     const cssW=forcedLandscape?innerHeight:innerWidth,cssH=forcedLandscape?innerWidth:innerHeight;
     const dpr=Math.min(window.devicePixelRatio||1,this.maxDpr)*clamp(this.renderScale,.50,1.50), w=Math.max(2,Math.floor(cssW*dpr)), h=Math.max(2,Math.floor(cssH*dpr));
     if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;} this.gl.viewport(0,0,w,h);
@@ -1139,6 +1180,7 @@ function appendRock(b,x,y,z,r,h,c,rng){
 function createBoxMesh(gl,c){const b=new Builder();appendBox(b,0,0,0,1,1,1,c);const a=b.arrays(),m=new Mesh(gl);m.update(a[0],a[1]);return m;}
 // A continuous coachbuilt shell, with open wheel arches (not boxes over the tyres).
 // All dimensions are metres; generated vertices remain embedded in this document.
+const WHEEL_ARCH_RADIUS=.48,WHEEL_MAX_BUMP=.10,WHEEL_MOUNT_Y=-.09;
 function createCoachMesh(gl,st,paint,cabin=false){
   const b=new Builder(),face=(a,d,e,f,c)=>{const u=d.map((v,i)=>v-a[i]),v=e.map((n,i)=>n-a[i]);let n=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]],l=Math.hypot(...n)||1;b.quad(a,d,e,f,n.map(v=>v/l),c);};
   if(cabin){
@@ -1160,7 +1202,7 @@ function createCoachMesh(gl,st,paint,cabin=false){
   }else{
     const len=st.body[2],half=st.body[0]/2,N=100;
     const section=z=>{const t=Math.abs(z)/(len/2),w=half*(1-.10*Math.pow(t,5));let bottom=-.12;
-      for(const axle of [st.frontZ,st.rearZ]){const dz=z-axle;if(Math.abs(dz)<.46)bottom=Math.max(bottom,-.11+Math.sqrt(.46*.46-dz*dz));}
+      for(const axle of [st.frontZ,st.rearZ]){const dz=z-axle;if(Math.abs(dz)<WHEEL_ARCH_RADIUS)bottom=Math.max(bottom,WHEEL_MOUNT_Y+WHEEL_MAX_BUMP+Math.sqrt(WHEEL_ARCH_RADIUS**2-dz*dz));}
       const top=.38-.16*Math.pow(t,3);return [[-w,bottom,z],[-w,Math.max(bottom+.018,top-.07),z],[-w*.90,Math.max(bottom+.025,top),z],[w*.90,Math.max(bottom+.025,top),z],[w,Math.max(bottom+.018,top-.07),z],[w,bottom,z]];};
     let prev=section(-len/2);
     for(let j=1;j<=N;j++){const next=section(-len/2+len*j/N);for(let k=0;k<5;k++)face(prev[k],next[k],next[k+1],prev[k+1],paint);prev=next;}
@@ -1836,14 +1878,15 @@ class ChunkManager{
 */
 class Input{
   constructor(){
-    this.keys=new Set();this.just=new Set();this.virtualKeys=new Set();
+    this.keys=new Set();this.just=new Set();this.virtualKeys=new Set();this.touchPointers=new Map();
     addEventListener('keydown',e=>{
       if(this.isInteractiveTarget(e.target))return;
       const k=e.code;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(k))e.preventDefault();
       if(!this.keys.has(k))this.just.add(k);this.keys.add(k);game?.audio.ensureStarted();
     },{passive:false});
     addEventListener('keyup',e=>this.keys.delete(e.code));
-    addEventListener('blur',()=>{if(document.hidden||!document.hasFocus()){this.keys.clear();this.virtualKeys.clear();$touchControls?.querySelectorAll('.active').forEach(btn=>btn.classList.remove('active'));}});
+    addEventListener('blur',()=>{if(document.hidden||!document.hasFocus()){this.keys.clear();this.clearTouch();}});
+    document.addEventListener('visibilitychange',()=>{if(document.hidden){this.keys.clear();this.clearTouch();}});
     this.bindTouchControls();
   }
   isInteractiveTarget(target){return target instanceof Element && !!target.closest('button,input,select,textarea,a,[role="button"]');}
@@ -1851,11 +1894,24 @@ class Input{
     if(!$touchControls)return;
     for(const btn of $touchControls.querySelectorAll('[data-key]')){
       const code=btn.dataset.key;
-      const release=e=>{this.virtualKeys.delete(code);btn.classList.remove('active');try{if(e&&Number.isFinite(e.pointerId)&&btn.hasPointerCapture?.(e.pointerId))btn.releasePointerCapture(e.pointerId);}catch(_){}};
-      btn.addEventListener('pointerdown',e=>{e.preventDefault();btn.setPointerCapture?.(e.pointerId);if(!this.virtualKeys.has(code))this.just.add(code);this.virtualKeys.add(code);btn.classList.add('active');game?.audio.ensureStarted();},{passive:false});
+      const release=e=>{
+        if(this.touchPointers.get(e.pointerId)?.button!==btn)return;
+        this.touchPointers.delete(e.pointerId);
+        if(![...this.touchPointers.values()].some(p=>p.code===code))this.virtualKeys.delete(code);
+        if(![...this.touchPointers.values()].some(p=>p.button===btn))btn.classList.remove('active');
+        try{if(btn.hasPointerCapture?.(e.pointerId))btn.releasePointerCapture(e.pointerId);}catch(_){}
+      };
+      btn.addEventListener('pointerdown',e=>{
+        e.preventDefault();if(e.pointerType==='mouse'&&e.button!==0)return;
+        this.touchPointers.set(e.pointerId,{code,button:btn});
+        if(!this.virtualKeys.has(code))this.just.add(code);this.virtualKeys.add(code);btn.classList.add('active');
+        try{btn.setPointerCapture?.(e.pointerId);}catch(_){}
+        game?.audio.ensureStarted();
+      },{passive:false});
       btn.addEventListener('pointerup',release);btn.addEventListener('pointercancel',release);btn.addEventListener('lostpointercapture',release);
     }
   }
+  clearTouch(){this.touchPointers.clear();this.virtualKeys.clear();$touchControls?.querySelectorAll('.active').forEach(btn=>btn.classList.remove('active'));}
   down(...codes){for(const c of codes)if(this.keys.has(c)||this.virtualKeys.has(c))return true;return false;}
   take(code){if(this.just.has(code)){this.just.delete(code);return true;}return false;}
   clearCode(code){this.keys.delete(code);this.virtualKeys.delete(code);this.just.delete(code);}
@@ -1938,6 +1994,13 @@ class Vehicle{
     if(this.y<floor){this.y=floor;this.heaveVel=Math.max(0,this.heaveVel)*.1;}
     this.pitch=clamp(this.pitch,-.65,.65);this.roll=clamp(this.roll,-.55,.55);
     if(Math.abs(this.pitch)>=.65)this.pitchVel=0;if(Math.abs(this.roll)>=.55)this.rollVel=0;
+    // Keep the shell's rendered arch above the tyre envelope without injecting an
+    // artificial vertical impulse into the tyre-load solver on a sharp road seam.
+    this.bodyVisualLift=0;
+    for(let i=0;i<4;i++){
+      const [lx,lz]=locals[i],nominal=this.y+WHEEL_MOUNT_Y+Math.sin(this.pitch)*lz+Math.sin(this.roll)*lx;
+      this.bodyVisualLift=Math.max(this.bodyVisualLift,this.wheelCenterY[i]-nominal-WHEEL_MAX_BUMP);
+    }
     this.accelVisual=expLerp(this.accelVisual,clamp(accel/15,-1,1),5,dt);
   }
   updateGroundEffects(dt,onRoad,travelSpeed,brake,hand,yawRate){
@@ -1998,7 +2061,8 @@ class Vehicle{
     const speedAbs=Math.abs(this.speed),wheelbase=this.style.frontZ-this.style.rearZ;
     const maxSteer=vehicleSteerLimit(speedAbs,this.world.settings,wheelbase);
     this.targetSteer=targetSteerInput*maxSteer;
-    this.currentSteer=expLerp(this.currentSteer,this.targetSteer,8,dt);
+    const touchSteering=!autoControl&&(input.virtualKeys?.has('ArrowLeft')||input.virtualKeys?.has('ArrowRight'));
+    this.currentSteer=expLerp(this.currentSteer,this.targetSteer,touchSteering?13:8,dt);
     // Integrate tyre and suspension forces at <=120 Hz regardless of rendering FPS.
     const motionSteps=Math.max(1,Math.ceil(dt/(1/120))),motionDt=dt/motionSteps;let yawRate=0;
     for(let ms=0;ms<motionSteps;ms++){
@@ -2065,7 +2129,7 @@ class Vehicle{
     // Keep the rendered wheelbase matched to the four sampled contact patches. A large speed-based
     // model scale looked good for FOV compensation but made tyres drift away from their ground
     // samples on slopes. A tiny 2% compensation is enough without breaking contact geometry.
-    const visualScale=1,visualY=this.y;M4.fromTRS(this.base,this.x,visualY,this.z,this.yaw,-this.pitch,this.roll,visualScale,visualScale,visualScale);
+    const visualScale=1,visualY=this.y+(this.bodyVisualLift||0);M4.fromTRS(this.base,this.x,visualY,this.z,this.yaw,-this.pitch,this.roll,visualScale,visualScale,visualScale);
     const drawPart=(mesh,x,y,z,sx,sy,sz,yaw=0,pitch=0,roll=0,em=0,alpha=1,blend=false,specular=0)=>{M4.fromTRS(this.local,x,y,z,yaw,pitch,roll,sx,sy,sz);M4.multiply(this.model,this.base,this.local);renderer.draw(mesh,this.model,em,alpha,blend,true,specular);};
     // Four contact shadows and four independent wheel transforms. Tyres stay pinned to ground + radius;
     // the bump-stop clearance constraint above moves the chassis once a wheel runs out of compression
@@ -2080,7 +2144,7 @@ class Vehicle{
     drawPart(this.darkTrim,0,-.055,halfL-.10,b[0]*.82,.11,.13,0,0,0,0,1,false,.05);
     drawPart(this.darkTrim,0,-.060,-halfL+.08,b[0]*.86,.12,.14,0,0,0,0,1,false,.04);
     for(const side of [-1,1]){
-      drawPart(this.darkTrim,side*(halfW-.055),-.025,b[4]-.02,.085,.10,b[2]*.76,0,0,0,0,1,false,.04);
+      drawPart(this.darkTrim,side*(halfW-.055),-.025,(frontZ+rearZ)*.5,.085,.10,frontZ-rearZ-2*WHEEL_ARCH_RADIUS,0,0,0,0,1,false,.04);
       // Mirror base + short arm + housing.  The old housing floated beside the cabin because there
       // was no geometry bridging it back to the A-pillar/door shoulder.
       const cabinHalf=c[0]*.5;
@@ -2623,6 +2687,12 @@ class Game{
     // Mouse clicks on HUD controls must not interrupt a held driving key.
     for(const btn of [$configBtn,$configResetBtn,$menuBtn,$envBtn,$vehicleBtn,$autoBtn,$autopilotBtn,$touchAutoForward,$mobileCameraBtn,$mobileResetBtn,$mobileLayoutBtn,$pauseBtn,$aboutBtn,$aboutCloseBtn,$seedApplyBtn,$garageStart,$garageVehicle])if(btn)btn.addEventListener('mousedown',e=>e.preventDefault());
     if($garageStart)$garageStart.onclick=()=>this.paused?this.togglePause(false):this.startDriving();
+    document.getElementById('garageMobileStart').onclick=()=>{
+      enableMobileMode();this.renderer.maxDpr=Math.min(this.renderer.maxDpr,1.25);
+      this.quality.dpr=[1.25,1.12,1.0,.90,.90,.90,.90];
+      this.touchLayout=2;this.applyTouchLayout();
+      if(this.paused)this.togglePause(false);else this.startDriving();
+    };
     if($garageVehicle)$garageVehicle.onclick=()=>{this.ui.toggleAbout(false);this.ui.toggleConfigPanel(false);this.ui.toggleMenu(false);this.ui.toggleVehiclePanel();};
     if($configBtn)$configBtn.onclick=()=>{this.ui.toggleAbout(false);this.ui.toggleVehiclePanel(false);this.ui.toggleMenu(false);this.ui.toggleConfigPanel();};
     const helpSummary=$help?.querySelector('.helpSummary');if(helpSummary){helpSummary.addEventListener('click',()=>this.ui.toggleHelp());helpSummary.addEventListener('keydown',e=>{if(e.code==='Enter'||e.code==='Space'){e.preventDefault();this.ui.toggleHelp();}});}
@@ -2675,7 +2745,7 @@ class Game{
     const wasPaused=this.paused,wasStarted=this.started,qualityLevel=this.quality.level;
     if(this.autopilot.enabled)this.toggleAutopilot(false);
     if(this.autoForward)this.toggleAutoForward(false);
-    this.input.keys.clear();this.input.virtualKeys.clear();this.input.just.clear();
+    this.input.keys.clear();this.input.clearTouch();this.input.just.clear();
 
     const oldWorld=this.world;
     const newWorld=new ChunkManager(this.gl,nextSeed,this.settings);
@@ -2738,7 +2808,7 @@ class Game{
       // lets a vertical finger movement scroll the panel even when it starts on a slider. Only the
       // CSS-rotated portrait fallback needs custom coordinate mapping. There we wait for clear
       // slider intent before capturing the pointer, so a scroll gesture is never stolen on touch-down.
-      if(IS_COARSE_POINTER){
+      {
         let dragId=null,startX=0,startY=0,dragging=false,customGesture=false;
         const setFromPointer=e=>{
           const r=input.getBoundingClientRect(),forcedLandscape=innerHeight>innerWidth;
@@ -2753,7 +2823,7 @@ class Game{
         };
         input.addEventListener('pointerdown',e=>{
           // Landscape phones use the native range implementation; it now coexists with vertical scroll.
-          customGesture=innerHeight>innerWidth;if(!customGesture)return;
+          customGesture=IS_COARSE_POINTER&&innerHeight>innerWidth;if(!customGesture)return;
           dragId=e.pointerId;startX=e.clientX;startY=e.clientY;dragging=false;
         },{passive:true});
         input.addEventListener('pointermove',e=>{
@@ -2883,6 +2953,7 @@ class Game{
   requestFrame(){if(!this.rafId&&this.running&&!this.pageHidden&&(!this.paused||this.pausePreview))this.rafId=requestAnimationFrame(this.frameBound);}
   togglePause(force){
     const next=typeof force==='boolean'?force:!this.paused;if(next===this.paused)return;
+    this.input.clearTouch();
     this.paused=next;this.ui.toggleAbout(false);this.ui.toggleMenu(false);this.ui.setPaused(next);this.audio.setPaused(next);this.last=performance.now();this.nextFrameAt=0;this.previewShadowAt=0;
     document.body.classList.toggle('garage',next);
     if(next){

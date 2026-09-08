@@ -5,6 +5,7 @@ const script=html.match(/<script>([\s\S]*?)<\/script>/)[1];new Function(script);
 assert(!/<script\b[^>]*\bsrc\s*=/i.test(html),'no external script dependency');
 assert(!/<link\b[^>]*rel=["']stylesheet["']/i.test(html),'no external stylesheet dependency');
 const context=vm.createContext({console,Float32Array,Uint8Array,Math});
+vm.runInContext(script.match(/const WHEEL_ARCH_RADIUS[^;]+;/)[0],context);
 const start=script.indexOf('function vehicleSteerLimit'),end=script.indexOf('function createCylinderXMesh',start);
 vm.runInContext('const DEG=Math.PI/180;const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));const lerp=(a,b,t)=>a+(b-a)*t;'+script.slice(start,end),context);
 function run(speed,steer,hand=false,load=6474.6){context.s={speed,yaw:0,yawRate:0,lateralSpeed:0};vm.runInContext(`for(let i=0;i<1200;i++)stepTyres(s,1/120,${steer},0,${load},${load},.98,${hand},2.36)`,context);return context.s;}
@@ -38,3 +39,17 @@ console.log('PASS full Vehicle.update acceleration, braking, cornering, handbrak
 v.speed=0;v.lateralSpeed=0;v.yawRate=0;drive(2,{brake:1});assert(v.speed<0);
 drive(4,{throttle:1});assert(v.speed>0);
 console.log('PASS reverse and forward recovery; inline runtime dependency checks');
+// Bump-stop envelope must hold after terrain steps without pushing a tyre into the ground.
+for(const step of [0,.08,.25,.5,0,-.4]){
+ ground=step;
+ for(let i=0;i<180;i++){
+  v.updateWheelContact(1/120,0,0);
+  for(let j=0;j<4;j++){
+   const lx=j%2===0?-.78:.78,lz=j<2?1.18:-1.18;
+   const nominal=v.y+v.bodyVisualLift-.09+Math.sin(v.pitch)*lz+Math.sin(v.roll)*lx;
+   assert(v.wheelCenterY[j]-nominal<=.10001,'wheel exceeds rendered arch bump envelope');
+   if(v.wheelContact[j])assert(v.wheelCenterY[j]>=ground+v.wheelRadius-.0001);
+  }
+ }
+}
+console.log('PASS bump envelope and terrain clearance');
