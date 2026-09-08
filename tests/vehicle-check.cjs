@@ -53,3 +53,16 @@ for(const step of [0,.08,.25,.5,0,-.4]){
  }
 }
 console.log('PASS bump envelope and terrain clearance');
+ground=0;
+for(const kmh of [60,100,120])for(const touch of [false,true]){
+ Object.assign(v,{y:.5,pitch:0,roll:0,heaveVel:0,pitchVel:0,rollVel:0,speed:kmh/3.6,lateralSpeed:0,yawRate:0,currentSteer:0});
+ v.wheelLoad.fill(1320*9.81/4);
+ const manual={down:(...keys)=>keys.includes('KeyA')||keys.includes('KeyW'),take:()=>false,virtualKeys:new Set(touch?['ArrowLeft','ArrowUp']:[])};
+ for(let i=0;i<60;i++)v.update(1/120,manual,false,null);
+ assert(Math.abs(v.targetSteer-34*Math.PI/180)<1e-6,'manual wheel angle must remain available');
+ assert(v.currentSteer>20*Math.PI/180,'held high-speed input must exceed old hard cap');
+ assert(Number.isFinite(v.speed+v.yaw+v.lateralSpeed),'finite manual cornering');
+ v.speed=kmh/3.6;v.update(1/120,input,false,{steer:1});
+ assert(v.targetSteer<6*Math.PI/180,'autopilot retains independent limit');
+}
+console.log('PASS 60/100/120 km/h keyboard and touch steering, independent autopilot limit');

@@ -402,7 +402,7 @@
     <div class="configPage" data-config-page="advanced">
       <div class="configToggleGrid">
         <label class="configToggleRow wide" title="开启后持续踩油门会按固定 km/h/s 加速，不再被高速阻力吃掉"><span>恒定加速</span><input class="configCheck" type="checkbox" data-setting="speedAccelFade" data-invert="true"></label>
-        <label class="configToggleRow wide"><span>高速转向抑制</span><input class="configCheck" type="checkbox" data-setting="highSpeedSteer"></label>
+        <label class="configToggleRow wide" title="手动驾驶高速时平滑转向输入，不缩小最大转角；自动驾驶保留独立转角保护"><span>高速转向辅助</span><input class="configCheck" type="checkbox" data-setting="highSpeedSteer"></label>
         <label class="configToggleRow wide"><span>草地额外阻力</span><input class="configCheck" type="checkbox" data-setting="offroadDrag"></label>
         <label class="configToggleRow wide"><span>速度感增强</span><input class="configCheck" type="checkbox" data-setting="paceBoost"></label>
         <label class="configToggleRow wide" title="开启后车辆会穿过树木、石头、路牌等环境碰撞体"><span>无碰撞</span><input class="configCheck" type="checkbox" data-setting="noCollision"></label>
@@ -1213,7 +1213,13 @@ function createCoachMesh(gl,st,paint,cabin=false){
 
 // Shared planar tyre solver. Body axes: +forward and +right; yaw turns toward +right.
 function vehicleSteerLimit(speed,settings,wheelbase=2.36){
+  // Autopilot actuator limit only. Manual input must not be capped to a few degrees at road speed.
   return (settings.highSpeedSteer?Math.min(34*DEG,Math.atan(1.05*9.81*wheelbase/Math.max(1,speed*speed))+.012):34*DEG)*settings.steering;
+}
+function manualSteerResponse(speed,settings,touch=false){
+  // Speed protection changes how quickly steering builds, not how far the wheels can turn.
+  const blend=settings.highSpeedSteer?clamp((Math.abs(speed)-8)/22,0,1):0;
+  return lerp(touch?13:8,touch?5:4,blend);
 }
 function stepTyres(state,dt,steer,accel,frontLoad,rearLoad,mu,hand,wheelbase){
   const mass=1320,a=wheelbase*.5,iz=mass*wheelbase*wheelbase*.24,u=state.speed,v=state.lateralSpeed||0,r=state.yawRate||0;
@@ -2059,10 +2065,11 @@ class Vehicle{
     const vmax=this.world.maxRoadSpeed();
     const targetSteerInput=autoControl?clamp(autoControl.steer||0,-1,1):((input.down('KeyA','ArrowLeft')?1:0)-(input.down('KeyD','ArrowRight')?1:0));
     const speedAbs=Math.abs(this.speed),wheelbase=this.style.frontZ-this.style.rearZ;
-    const maxSteer=vehicleSteerLimit(speedAbs,this.world.settings,wheelbase);
+    const maxSteer=autoControl?vehicleSteerLimit(speedAbs,this.world.settings,wheelbase):34*DEG*this.world.settings.steering;
     this.targetSteer=targetSteerInput*maxSteer;
     const touchSteering=!autoControl&&(input.virtualKeys?.has('ArrowLeft')||input.virtualKeys?.has('ArrowRight'));
-    this.currentSteer=expLerp(this.currentSteer,this.targetSteer,touchSteering?13:8,dt);
+    const steerResponse=autoControl?8:manualSteerResponse(speedAbs,this.world.settings,touchSteering);
+    this.currentSteer=expLerp(this.currentSteer,this.targetSteer,steerResponse,dt);
     // Integrate tyre and suspension forces at <=120 Hz regardless of rendering FPS.
     const motionSteps=Math.max(1,Math.ceil(dt/(1/120))),motionDt=dt/motionSteps;let yawRate=0;
     for(let ms=0;ms<motionSteps;ms++){
