@@ -1,4 +1,29 @@
 <!doctype html>
+<!--
+维护导航 / 单文件契约
+本文件包含运行所需的全部代码和程序化资源；不引入 CDN、外部模型或构建步骤。
+使用 Ctrl+F 搜索下列唯一标题/符号（不维护容易随编辑失效的行号）：
+  <style>                    页面、菜单、移动端布局
+  0. DOM / 错误处理          DOM 引用与错误展示
+  1. Math / Vector / Matrix  数学、配置默认值
+  2. Shader / Renderer       材质、光照、阴影、GPU 网格
+  3. Geometry helpers        基础几何；createCoachMesh 车辆外形；stepTyres 轮胎受力
+  4. Environment presets     天气与环境配色
+  5. Road Generator          道路与地形高度
+  6. Road/Terrain            区块几何与场景物件
+  7. Chunk Manager           流式世界、碰撞、浮动原点
+  8. Input                   键盘、触控、输入焦点维护约定
+  9. Vehicle                 尺寸、悬挂接地、驾驶积分、车辆绘制
+  10. Autopilot              路径跟踪、速度预判、预测轨迹
+  11. Camera                 展示镜头与驾驶镜头
+  12. Procedural Audio       程序化音效；AdaptiveQuality 自动质量
+  13. UI                     HUD 更新
+  14. Game                   配置、生命周期、主循环
+  15. Seed / Bootstrap       启动入口
+关联约定：车辆尺寸影响模型/接地点/轴距；stepTyres 同时供驾驶与预测使用。
+物理速度使用 m/s，显示时转 km/h；镜头速度感不得放大真实位移。
+改动驾驶需检查手动、倒车、自动驾驶、重置；改动 UI 需遵守 Input 焦点约定。
+-->
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8" />
@@ -1112,6 +1137,62 @@ function appendRock(b,x,y,z,r,h,c,rng){
 }
 
 function createBoxMesh(gl,c){const b=new Builder();appendBox(b,0,0,0,1,1,1,c);const a=b.arrays(),m=new Mesh(gl);m.update(a[0],a[1]);return m;}
+// A continuous coachbuilt shell, with open wheel arches (not boxes over the tyres).
+// All dimensions are metres; generated vertices remain embedded in this document.
+function createCoachMesh(gl,st,paint,cabin=false){
+  const b=new Builder(),face=(a,d,e,f,c)=>{const u=d.map((v,i)=>v-a[i]),v=e.map((n,i)=>n-a[i]);let n=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]],l=Math.hypot(...n)||1;b.quad(a,d,e,f,n.map(v=>v/l),c);};
+  if(cabin){
+    const w=st.body[0]*.43,r=w*.80,base=.34,roof=st.cabin[3]+st.cabin[1]*.5;
+    const back=st.cabin[4]-st.cabin[2]*.48,front=st.cabin[4]+st.cabin[2]*.48,rb=back+.38,rf=front-.52;
+    const glass=[.075,.15,.19,1];
+    face([-r,roof,rf],[r,roof,rf],[r,roof,rb],[-r,roof,rb],paint);
+    face([-w,base,front],[w,base,front],[r,roof,rf],[-r,roof,rf],glass);
+    face([w,base,back],[-w,base,back],[-r,roof,rb],[r,roof,rb],glass);
+    for(const side of [-1,1]){
+      const p=[[side*w,base,back],[side*w,base,front],[side*r,roof,rf],[side*r,roof,rb]];
+      if(side>0)p.reverse();face(...p,glass);
+      // Pillars follow the raked glass; thin strips retain a readable window silhouette.
+      for(const t of [0,.52,1]){
+        const z0=lerp(back,front,t),z1=lerp(rb,rf,t),q=[[side*(w+.004),base,z0-.028],[side*(w+.004),base,z0+.028],[side*(r+.004),roof,z1+.028],[side*(r+.004),roof,z1-.028]];
+        if(side>0)q.reverse();face(...q,paint);
+      }
+    }
+  }else{
+    const len=st.body[2],half=st.body[0]/2,N=100;
+    const section=z=>{const t=Math.abs(z)/(len/2),w=half*(1-.10*Math.pow(t,5));let bottom=-.12;
+      for(const axle of [st.frontZ,st.rearZ]){const dz=z-axle;if(Math.abs(dz)<.46)bottom=Math.max(bottom,-.11+Math.sqrt(.46*.46-dz*dz));}
+      const top=.38-.16*Math.pow(t,3);return [[-w,bottom,z],[-w,Math.max(bottom+.018,top-.07),z],[-w*.90,Math.max(bottom+.025,top),z],[w*.90,Math.max(bottom+.025,top),z],[w,Math.max(bottom+.018,top-.07),z],[w,bottom,z]];};
+    let prev=section(-len/2);
+    for(let j=1;j<=N;j++){const next=section(-len/2+len*j/N);for(let k=0;k<5;k++)face(prev[k],next[k],next[k+1],prev[k+1],paint);prev=next;}
+    for(const sign of [-1,1]){const p=section(sign*len/2);if(sign>0)face(p[0],p[5],p[3],p[2],paint);else face(p[5],p[0],p[2],p[3],paint);}
+  }
+  const a=b.arrays(),m=new Mesh(gl);m.update(a[0],a[1]);return m;
+}
+
+// Shared planar tyre solver. Body axes: +forward and +right; yaw turns toward +right.
+function vehicleSteerLimit(speed,settings,wheelbase=2.36){
+  return (settings.highSpeedSteer?Math.min(34*DEG,Math.atan(1.05*9.81*wheelbase/Math.max(1,speed*speed))+.012):34*DEG)*settings.steering;
+}
+function stepTyres(state,dt,steer,accel,frontLoad,rearLoad,mu,hand,wheelbase){
+  const mass=1320,a=wheelbase*.5,iz=mass*wheelbase*wheelbase*.24,u=state.speed,v=state.lateralSpeed||0,r=state.yawRate||0;
+  const denom=Math.max(2.5,Math.abs(u)),direction=u>=0?1:-1;
+  const demand=mass*accel,frontLimit=mu*frontLoad,rearLimit=mu*(hand?.30:1)*rearLoad;
+  // Combined-slip friction circle: braking and cornering share the available force.
+  // Do not allocate all grip to the brake first (that erased steering under braking).
+  const brakeShare=frontLoad/Math.max(1,frontLoad+rearLoad),frontShare=accel*u<0?brakeShare:.60;
+  let frontX=demand*frontShare,rearX=demand*(1-frontShare);
+  let fyf=frontLimit*Math.tanh((steer*direction-(v+a*r)/denom)*72000/Math.max(1,frontLimit));
+  let fyr=rearLimit*Math.tanh((-(v-a*r)/denom)*76000/Math.max(1,rearLimit));
+  const sf=Math.min(1,frontLimit/Math.max(1,Math.hypot(frontX,fyf))),sr=Math.min(1,rearLimit/Math.max(1,Math.hypot(rearX,fyr)));
+  frontX*=sf;fyf*=sf;rearX*=sr;fyr*=sr;
+  const fx=frontX+rearX;
+  state.longitudinalAccel=fx/mass;state.lateralAccel=(fyf+fyr)/mass;
+  state.speed+=(fx/mass+r*v)*dt;
+  state.lateralSpeed=v+((fyf+fyr)/mass-r*u)*dt;
+  state.yawRate=r+(a*(fyf-fyr)/iz)*dt;
+  if(Math.abs(u)<2&&frontLoad+rearLoad>100){const k=1-Math.exp(-dt*8);state.lateralSpeed*=1-k;state.yawRate=lerp(state.yawRate,Math.tan(steer)*u/wheelbase,k);}
+  state.yaw+=state.yawRate*dt;
+}
 function createCylinderXMesh(gl,c){
   const b=new Builder(),n=12,r=.5,half=.5;
   for(let k=0;k<n;k++){
@@ -1126,7 +1207,7 @@ function createTyreMesh(gl,c){
   // Hollow low-poly tyre: outer tread + two annular sidewalls + inner barrel.
   // All surfaces use outward-facing CCW winding so normal WebGL back-face culling is safe.
   // Unlike the old capped cylinder this leaves a real hole for the metallic rim.
-  const b=new Builder(),n=14,ro=.5,ri=.285,half=.5;
+  const b=new Builder(),n=24,ro=.5,ri=.285,half=.5;
   for(let k=0;k<n;k++){
     const a=k/n*TAU,d=(k+1)/n*TAU,ca=Math.cos(a),sa=Math.sin(a),cd=Math.cos(d),sd=Math.sin(d);
     let v0=b.vertex(-half,ca*ro,sa*ro,0,ca,sa,c),v1=b.vertex(half,ca*ro,sa*ro,0,ca,sa,c),v2=b.vertex(half,cd*ro,sd*ro,0,cd,sd,c),v3=b.vertex(-half,cd*ro,sd*ro,0,cd,sd,c);b.i.push(v0,v2,v1,v0,v3,v2);
@@ -1802,13 +1883,13 @@ const VEHICLE_STYLES=[
 class Vehicle{
   constructor(gl,world){
     this.gl=gl;this.world=world;const s=world.spawnData();this.x=s.x;this.y=s.y+.52;this.z=s.z;this.yaw=Math.atan2(s.tx,s.tz);this.speed=0;this.targetSteer=0;this.currentSteer=0;this.pitch=0;this.roll=0;this.wheelSpin=0;this.brakeLight=0;this.odometer=0;this.stuckTimer=0;this.accelVisual=0;
-    this.styleIndex=0;this.paintIndex=0;this.style=VEHICLE_STYLES[0];this.wheelTrack=1.19;this.body=null;this.body2=null;this.rebuildPaint();
+    this.styleIndex=0;this.paintIndex=0;this.style=VEHICLE_STYLES[0];this.wheelTrack=.78;this.body=null;this.body2=null;this.rebuildPaint();
+    this.lateralSpeed=0;this.yawRate=0;this.wheelLoad=new Float32Array(4).fill(1320*9.81/4);this.paintTrim=createBoxMesh(gl,VEHICLE_PAINTS[0].color);
     this.glass=createBoxMesh(gl,[.25,.39,.46,1]);this.wheel=createTyreMesh(gl,[.055,.060,.065,1]);this.rim=createCylinderXMesh(gl,[.34,.37,.40,1]);this.hub=createCylinderXMesh(gl,[.16,.18,.20,1]);this.rimSpoke=createBoxMesh(gl,[.76,.79,.82,1]);this.rimCap=createCylinderXMesh(gl,[.10,.11,.12,1]);this.brakeCaliper=createBoxMesh(gl,[.88,.17,.12,1]);this.head=createBoxMesh(gl,[1.0,.94,.72,1]);this.tail=createBoxMesh(gl,[.72,.06,.05,1]);this.shadow=createDiscMesh(gl,[.06,.08,.08,.38]);this.directionalShadow=createBoxMesh(gl,[.015,.018,.022,1]);this.beam=createBoxMesh(gl,[1.0,.92,.61,.15]);this.darkTrim=createBoxMesh(gl,[.045,.052,.060,1]);this.midTrim=createBoxMesh(gl,[.18,.20,.22,1]);this.plate=createBoxMesh(gl,[.88,.90,.86,1]);this.chrome=createBoxMesh(gl,[.52,.58,.60,1]);this.indicator=createBoxMesh(gl,[1.0,.48,.12,1]);
     this.base=M4.create();this.local=M4.create();this.model=M4.create();this.shadowModel=M4.create();
     // Raycast-style four-wheel suspension.  The body now has its own heave/pitch/roll inertia,
     // while each tyre keeps an independent contact point on the actual road/terrain surface.
-    // Horizontal steering stays deliberately arcade-friendly; vertical support is no longer a
-    // single point glued to the road centre.
+    // Contact loads feed the planar tyre solver; airborne tyres supply no horizontal force.
     this.wheelYOffset=new Float32Array(4);this.wheelGround=new Float32Array(4);this.wheelCenterY=new Float32Array(4);this.wheelWorldX=new Float32Array(4);this.wheelWorldZ=new Float32Array(4);this.wheelCompression=new Float32Array(4);this.wheelContact=new Uint8Array(4);
     this.groundCenter=s.y+.02;this.terrainPitch=0;this.terrainRoll=0;this.supportLift=0;this.heaveVel=0;this.pitchVel=0;this.rollVel=0;this.wheelRadius=.41;this.bodyRideHeight=.50;this.bumpStopLift=0;this.moveYaw=this.yaw;this.slipAngle=0;
     this.trackMarks=[];this.dust=[];this.smoke=[];this.spray=[];this.trackPrev=[null,null];this.trackTimer=0;this.dustTimer=0;this.smokeTimer=0;this.sprayTimer=0;this.trackMesh=new Mesh(gl,true);this.dustMesh=new Mesh(gl,true);this.smokeMesh=new Mesh(gl,true);this.sprayMesh=new Mesh(gl,true);this.effectModel=M4.create();
@@ -1816,11 +1897,12 @@ class Vehicle{
   }
   rebuildPaint(){
     const c=VEHICLE_PAINTS[this.paintIndex].color,c2=[lerp(c[0],1,.18),lerp(c[1],1,.18),lerp(c[2],1,.18),1];
-    if(this.body)this.body.destroy();if(this.body2)this.body2.destroy();this.body=createBoxMesh(this.gl,c);this.body2=createBoxMesh(this.gl,c2);
+    if(this.body)this.body.destroy();if(this.body2)this.body2.destroy();this.body=createCoachMesh(this.gl,this.style,c);this.body2=createCoachMesh(this.gl,this.style,c2,true);
   }
-  setPaint(index){index=clamp(index|0,0,VEHICLE_PAINTS.length-1);if(index===this.paintIndex&&this.body)return;this.paintIndex=index;this.rebuildPaint();}
-  setStyle(index){this.styleIndex=clamp(index|0,0,VEHICLE_STYLES.length-1);this.style=VEHICLE_STYLES[this.styleIndex];}
+  setPaint(index){index=clamp(index|0,0,VEHICLE_PAINTS.length-1);if(index===this.paintIndex&&this.body)return;this.paintIndex=index;this.rebuildPaint();this.paintTrim.destroy();this.paintTrim=createBoxMesh(this.gl,VEHICLE_PAINTS[index].color);}
+  setStyle(index){this.styleIndex=clamp(index|0,0,VEHICLE_STYLES.length-1);this.style=VEHICLE_STYLES[this.styleIndex];this.rebuildPaint();}
   reset(directionSign=1){
+    this.lateralSpeed=0;this.yawRate=0;this.wheelLoad.fill(1320*9.81/4);
     const n=this.world.nearestRoad(this.x,this.z);this.x=n.x;this.z=n.z;this.y=n.y+this.bodyRideHeight;this.yaw=Math.atan2(n.tx,n.tz)+(directionSign<0?Math.PI:0);this.moveYaw=this.yaw;this.slipAngle=0;this.speed=0;this.targetSteer=0;this.currentSteer=0;this.pitch=Math.atan2(n.ty,Math.hypot(n.tx,n.tz));this.roll=0;this.heaveVel=0;this.pitchVel=0;this.rollVel=0;this.wheelSpin=0;this.wheelYOffset.fill(0);this.wheelCompression.fill(0);this.wheelContact.fill(1);this.groundCenter=n.y+.02;this.supportLift=0;this.bumpStopLift=0;this.trackMarks.length=0;this.dust.length=0;this.smoke.length=0;this.spray.length=0;this.trackPrev=[null,null];
     this.updateWheelContact(1/120,0,0);
   }
@@ -1829,75 +1911,37 @@ class Vehicle{
     return this.world.surfaceHeight(x,z,n);
   }
   updateWheelContact(dt,accel,yawRate){
-    const wx=this.wheelTrack,fz=this.style.frontZ,rz=this.style.rearZ,locals=[[-wx,fz],[wx,fz],[-wx,rz],[wx,rz]],g=this.wheelGround;
-    const cy=Math.cos(this.yaw),sy=Math.sin(this.yaw);
+    const wx=this.wheelTrack,fz=this.style.frontZ,rz=this.style.rearZ,locals=[[-wx,fz],[wx,fz],[-wx,rz],[wx,rz]];
+    const cy=Math.cos(this.yaw),sy=Math.sin(this.yaw),mass=1320,k=32000,damping=3100,rest=.1012,droop=.22;
+    let sum=0,pitchTorque=0,rollTorque=0;
     for(let i=0;i<4;i++){
-      const lx=locals[i][0],lz=locals[i][1],x=this.x+lx*cy+lz*sy,z=this.z-lx*sy+lz*cy,n=this.world.nearestRoad(x,z);
-      g[i]=this.world.surfaceHeight(x,z,n);this.wheelWorldX[i]=x;this.wheelWorldZ[i]=z;this.wheelCenterY[i]=g[i]+this.wheelRadius;
+      const [lx,lz]=locals[i],x=this.x+lx*cy+lz*sy,z=this.z-lx*sy+lz*cy,n=this.world.nearestRoad(x,z),g=this.world.surfaceHeight(x,z,n);
+      this.wheelGround[i]=g;this.wheelWorldX[i]=x;this.wheelWorldZ[i]=z;
+      const nominal=this.y-.09+Math.sin(this.pitch)*lz+Math.sin(this.roll)*lx,travel=g+this.wheelRadius-nominal;
+      const contact=travel>=-droop,cornerVelocity=this.heaveVel+this.pitchVel*lz+this.rollVel*lx;
+      // Spring preload balances gravity at nominal ride height. Contact cannot pull downward.
+      const force=contact?clamp(k*(travel+rest)-damping*cornerVelocity,0,mass*9.81*1.8):0;
+      this.wheelLoad[i]=force;sum+=force;pitchTorque+=force*lz;rollTorque+=force*lx;
+      this.wheelContact[i]=contact?1:0;this.wheelCenterY[i]=contact?g+this.wheelRadius:nominal-droop;
+      this.wheelYOffset[i]=Math.max(-droop,travel);this.wheelCompression[i]=clamp((travel+droop)/(.16+droop),0,1);
     }
-    const front=(g[0]+g[1])*.5,rear=(g[2]+g[3])*.5,left=(g[0]+g[2])*.5,right=(g[1]+g[3])*.5,avg=(g[0]+g[1]+g[2]+g[3])*.25;
-    const terrainPitch=Math.atan2(front-rear,Math.max(.1,fz-rz)),terrainRoll=Math.atan2(right-left,wx*2);
-    this.terrainPitch=terrainPitch;this.terrainRoll=terrainRoll;
-
-    // Fit a support plane through the four tyre contacts, then sample beneath the chassis too.
-    // A convex grass hump can sit above the axle plane even when all four tyres are valid contacts.
-    const longSlope=(front-rear)/Math.max(.1,fz-rz),latSlope=(right-left)/(wx*2);
-    const supportSamples=[[0,0],[0,fz*.62],[0,rz*.62],[-wx*.72,0],[wx*.72,0],[-wx*.60,fz*.48],[wx*.60,fz*.48],[-wx*.60,rz*.48],[wx*.60,rz*.48]];
-    let hump=0;
-    for(const q of supportSamples){const gy=this.sampleSurfaceAtLocal(q[0],q[1]),plane=avg+q[1]*longSlope+q[0]*latSlope;hump=Math.max(hump,gy-plane);}
-    const targetLift=clamp(hump-.045,0,.24);this.supportLift=expLerp(this.supportLift,targetLift,18,dt);
-    this.groundCenter=avg;
-
-    // A critically-damped-ish body suspension.  At extreme sandbox speeds the virtual aero/downforce
-    // progressively tightens the suspension so 4-6 m physics strides cannot leave the shell floating
-    // metres above the tyres.  It still has visible pitch/roll travel at normal road speeds.
-    const speedAbs=Math.abs(this.speed),groundHug=smoothstep(35,190,speedAbs),targetY=avg+this.bodyRideHeight+this.supportLift;
-    const omegaY=lerp(13,30,groundHug),zetaY=lerp(1.00,1.28,groundHug),ay=(targetY-this.y)*omegaY*omegaY-2*zetaY*omegaY*this.heaveVel;
-    this.heaveVel=clamp(this.heaveVel+ay*dt,-12,12);this.y+=this.heaveVel*dt;
-    const maxCompression=lerp(.16,.075,groundHug),maxDroop=lerp(.25,.085,groundHug);
-    if(this.y<targetY-maxCompression){this.y=targetY-maxCompression;if(this.heaveVel<0)this.heaveVel*=.18;}
-    if(this.y>targetY+maxDroop){this.y=targetY+maxDroop;if(this.heaveVel>0)this.heaveVel*=.18;}
-
+    const g=this.wheelGround,front=(g[0]+g[1])*.5,rear=(g[2]+g[3])*.5,left=(g[0]+g[2])*.5,right=(g[1]+g[3])*.5;
+    this.groundCenter=(front+rear)*.5;this.terrainPitch=Math.atan2(front-rear,fz-rz);this.terrainRoll=Math.atan2(right-left,wx*2);
+    this.heaveVel+=(sum/mass-9.81)*dt;this.y+=this.heaveVel*dt;
+    // Inertial load transfer about a low centre of mass, plus anti-roll damping.
+    const support=clamp(sum/(mass*9.81),0,1),baseHeight=.38;
+    this.pitchVel+=(pitchTorque+mass*accel*baseHeight*support)/(mass*(fz-rz)**2*.24)*dt;
+    this.rollVel+=(rollTorque-mass*yawRate*this.speed*baseHeight*support-this.rollVel*900)/(mass*.72)*dt;
+    this.pitch+=this.pitchVel*dt;this.roll+=this.rollVel*dt;
+    // Chassis bump stop only: no upper ground tether, so crests permit actual flight.
+    const floor=this.sampleSurfaceAtLocal(0,0)+.21;
+    if(this.y<floor){this.y=floor;this.heaveVel=Math.max(0,this.heaveVel)*.1;}
+    this.pitch=clamp(this.pitch,-.65,.65);this.roll=clamp(this.roll,-.55,.55);
+    if(Math.abs(this.pitch)>=.65)this.pitchVel=0;if(Math.abs(this.roll)>=.55)this.rollVel=0;
     this.accelVisual=expLerp(this.accelVisual,clamp(accel/15,-1,1),5,dt);
-    const dynamicPitch=this.accelVisual*.034,dynamicRoll=clamp(-yawRate*speedAbs*.0044,-.068,.068),targetPitch=terrainPitch+dynamicPitch,targetRoll=terrainRoll+dynamicRoll;
-    const omegaPR=lerp(11.5,24,groundHug),zetaPR=lerp(.95,1.24,groundHug);
-    this.pitchVel=clamp(this.pitchVel+((targetPitch-this.pitch)*omegaPR*omegaPR-2*zetaPR*omegaPR*this.pitchVel)*dt,-2.2,2.2);this.pitch+=this.pitchVel*dt;
-    this.rollVel=clamp(this.rollVel+((targetRoll-this.roll)*omegaPR*omegaPR-2*zetaPR*omegaPR*this.rollVel)*dt,-2.4,2.4);this.roll+=this.rollVel*dt;
-    this.pitch=clamp(this.pitch,-.32,.32);this.roll=clamp(this.roll,-.28,.28);
-
-    // Hard bump-stop / wheel-clearance constraint. If a tyre reaches the top of the available wheel
-    // well it may no longer move upward through the solid low-poly body; it must push the chassis up.
-    // Derive the usable room from the current body style so sedan / hatch / wagon / SUV proportions
-    // keep their own clearance while the visible tyre crown stays below the side-body roof.
-    const wy=-.11,bodyTop=this.style.body[3]+this.style.body[1]*.5,
-      maxWheelBump=clamp(bodyTop-this.wheelRadius-wy-.018,.04,.16);
-    let hardLift=0;
-    for(let i=0;i<4;i++){
-      const lx=locals[i][0],lz=locals[i][1],nominalCenter=this.y+wy+Math.sin(this.pitch)*lz+Math.sin(this.roll)*lx;
-      hardLift=Math.max(hardLift,this.wheelCenterY[i]-nominalCenter-maxWheelBump);
-    }
-    if(hardLift>0){
-      // Contact constraints correct immediately: a one-frame tyre-through-body flash is still visible
-      // at 1000 km/h, so the soft spring cannot be allowed to lag behind this limit.
-      this.y+=hardLift;this.bumpStopLift=hardLift;if(this.heaveVel<0)this.heaveVel=0;
-    }else this.bumpStopLift=expLerp(this.bumpStopLift,0,18,dt);
-
-    // Real suspension has finite droop as well as finite bump travel. The old version pinned every tyre
-    // to ground + radius no matter how far the terrain fell away, so on extreme hills a wheel could be
-    // metres below the shell. Clamp the visual wheel to the suspension arc: if the ground is lower than
-    // max droop the tyre becomes airborne and stays attached to the chassis instead of stretching away.
-    const wheelMaxDroop=lerp(.24,.11,groundHug);
-    for(let i=0;i<4;i++){
-      const lx=locals[i][0],lz=locals[i][1],nominalCenter=this.y+wy+Math.sin(this.pitch)*lz+Math.sin(this.roll)*lx,groundCenter=g[i]+this.wheelRadius;
-      const minCenter=nominalCenter-wheelMaxDroop,maxCenter=nominalCenter+maxWheelBump,center=clamp(groundCenter,minCenter,maxCenter);
-      this.wheelCenterY[i]=center;this.wheelContact[i]=(groundCenter>=minCenter-.018&&groundCenter<=maxCenter+.025)?1:0;
-      const travel=center-nominalCenter;this.wheelYOffset[i]=travel;
-      this.wheelCompression[i]=clamp((travel+wheelMaxDroop)/(maxWheelBump+wheelMaxDroop),0,1);
-    }
   }
-  shiftEffects(dx,dz){for(const m of this.trackMarks){m.x0-=dx;m.z0-=dz;m.x1-=dx;m.z1-=dz;}for(const p of this.dust){p.x-=dx;p.z-=dz;}for(const p of this.smoke){p.x-=dx;p.z-=dz;}for(const p of this.spray){p.x-=dx;p.z-=dz;}for(const q of this.trackPrev)if(q){q.x-=dx;q.z-=dz;}for(let i=0;i<4;i++){this.wheelWorldX[i]-=dx;this.wheelWorldZ[i]-=dz;}}
   updateGroundEffects(dt,onRoad,travelSpeed,brake,hand,yawRate){
-    const speed=Math.abs(travelSpeed),cy=Math.cos(this.yaw),sy=Math.sin(this.yaw),rz=this.style.rearZ,wx=.93;
+    const speed=Math.abs(travelSpeed),cy=Math.cos(this.yaw),sy=Math.sin(this.yaw),rz=this.style.rearZ,wx=this.wheelTrack;
     const contacts=[[-wx,rz,2],[wx,rz,3]].map(q=>{const lx=q[0],lz=q[1];return {x:this.x+lx*cy+lz*sy,z:this.z-lx*sy+lz*cy,y:(this.wheelGround[q[2]]||this.groundCenter)+.026,contact:!!this.wheelContact[q[2]]};});
     const slip=Math.abs(this.slipAngle),slipDeg=slip/DEG;
     for(const m of this.trackMarks)m.age+=dt;this.trackMarks=this.trackMarks.filter(m=>m.age<m.life);
@@ -1949,36 +1993,38 @@ class Vehicle{
     if(Math.abs(this.speed)>.02&&!bypassForwardDrag)accel-=Math.sign(this.speed)*drag;
     // Handbrake is a drift tool, not a second foot brake: less straight-line stopping, much more rotation.
     if(hand)accel-=Math.sign(this.speed)*5.2;
-    this.speed+=accel*dt;const vmax=this.world.maxRoadSpeed();this.speed=Number.isFinite(vmax)?clamp(this.speed,-9.5,vmax):Math.max(-9.5,this.speed);if(Math.abs(this.speed)<.025&&!throttle&&!brake)this.speed=0;
+    const vmax=this.world.maxRoadSpeed();
     const targetSteerInput=autoControl?clamp(autoControl.steer||0,-1,1):((input.down('KeyA','ArrowLeft')?1:0)-(input.down('KeyD','ArrowRight')?1:0));
-    const speedAbs=Math.abs(this.speed),steerProtection=this.world.settings.highSpeedSteer?smoothstep(0,62,speedAbs):0,maxSteer=lerp(34,7.6,steerProtection)*DEG*this.world.settings.steering;this.targetSteer=targetSteerInput*maxSteer;
-    const steerResponse=autoControl?lerp(11.5,24.0,smoothstep(75,260,speedAbs)):(targetSteerInput===0?13.0:10.5);this.currentSteer=expLerp(this.currentSteer,this.targetSteer,steerResponse,dt);
-    // Sparse low-poly scenery needs a little extra optic flow. Keep the numeric speed honest-ish
-    // while allowing the world to sweep past up to ~15% faster only at high road speeds.
-    const paceScale=this.world.settings.paceBoost?lerp(1,1.32,smoothstep(14,58,speedAbs)):1,travelSpeed=this.speed*paceScale;
-    const wheelbase=2.65,reverseSign=this.speed>=0?1:-1,steeringFactor=this.world.settings.highSpeedSteer?lerp(1,.52,smoothstep(16,64,speedAbs)):1;
-    // Distance-based motion substeps stop an ultra-fast car from teleporting several metres between
-    // suspension samples.  At 1000 km/h this normally produces ~4-6 contact solves per 1/60 s tick;
-    // at ordinary speeds it remains one solve.
-    const motionSteps=clamp(Math.ceil(Math.abs(travelSpeed)*dt/1.35),1,8),motionDt=dt/motionSteps;let yawRate=0;
+    const speedAbs=Math.abs(this.speed),wheelbase=this.style.frontZ-this.style.rearZ;
+    const maxSteer=vehicleSteerLimit(speedAbs,this.world.settings,wheelbase);
+    this.targetSteer=targetSteerInput*maxSteer;
+    this.currentSteer=expLerp(this.currentSteer,this.targetSteer,8,dt);
+    // Integrate tyre and suspension forces at <=120 Hz regardless of rendering FPS.
+    const motionSteps=Math.max(1,Math.ceil(dt/(1/120))),motionDt=dt/motionSteps;let yawRate=0;
     for(let ms=0;ms<motionSteps;ms++){
-      const stepRoad=this.world.nearestRoad(this.x,this.z),stepOnRoad=stepRoad.roadDist<5.25,grip=stepOnRoad?1:.72;
-      yawRate=Math.tan(this.currentSteer)/wheelbase*Math.abs(travelSpeed)*grip*reverseSign*.38*steeringFactor;
-      if(hand&&speedAbs>5){const driftBoost=lerp(1.55,2.05,smoothstep(5,34,speedAbs));yawRate*=driftBoost;}
-      this.yaw+=yawRate*motionDt;
-      // Lightweight tyre-slip model: the body can rotate faster than the velocity vector, especially
-      // under handbrake or on grass. Grip then pulls the motion direction back toward the nose. This
-      // creates a real visible slip angle without replacing the comfortable arcade controller. Full
-      // autopilot keeps strong grip so existing high-speed path following remains stable.
-      let delta=this.yaw-this.moveYaw;while(delta>Math.PI)delta-=TAU;while(delta<-Math.PI)delta+=TAU;
-      const gripSetting=clamp(this.world.settings.grip,.50,1.50),gripFollow=autoControl?14:(stepOnRoad?(hand?.72:lerp(8.5,5.0,smoothstep(8,55,speedAbs))):(hand?.42:2.0))*gripSetting;
-      if(speedAbs<1.2)this.moveYaw=this.yaw;else this.moveYaw+=delta*(1-Math.exp(-gripFollow*motionDt));
-      this.slipAngle=this.yaw-this.moveYaw;while(this.slipAngle>Math.PI)this.slipAngle-=TAU;while(this.slipAngle<-Math.PI)this.slipAngle+=TAU;
-      this.x+=Math.sin(this.moveYaw)*travelSpeed*motionDt;this.z+=Math.cos(this.moveYaw)*travelSpeed*motionDt;
-      this.updateWheelContact(motionDt,accel,yawRate);
+      const n=this.world.nearestRoad(this.x,this.z),road=n.roadDist<5.25;
+      const mu=(road?.98:.58)*(1-.28*clamp(this.world.rainAmount||0,0,1))*clamp(this.world.settings.grip,.5,1.5);
+      const oldSpeed=this.speed,frontLoad=this.wheelLoad[0]+this.wheelLoad[1],rearLoad=this.wheelLoad[2]+this.wheelLoad[3];
+      stepTyres(this,motionDt,this.currentSteer,accel,frontLoad,rearLoad,mu,hand,wheelbase);
+      // Gravity acts along the surface; while airborne horizontal velocity remains ballistic.
+      this.speed-=9.81*Math.sin(this.terrainPitch)*clamp((frontLoad+rearLoad)/(1320*9.81),0,1)*motionDt;
+      if(!throttle&&!brake&&oldSpeed*this.speed<0)this.speed=0;
+      if(brake&&oldSpeed>0&&this.speed<0)this.speed=0;
+      this.speed=Number.isFinite(vmax)?clamp(this.speed,-9.5,vmax):Math.max(-9.5,this.speed);
+      if(Math.abs(this.speed)<.025&&!throttle&&!brake)this.speed=0;
+      yawRate=this.yawRate;
+      const cy=Math.cos(this.yaw),sy=Math.sin(this.yaw);
+      this.x+=(sy*this.speed+cy*this.lateralSpeed)*motionDt;
+      this.z+=(cy*this.speed-sy*this.lateralSpeed)*motionDt;
+      // Body-frame speed derivatives include rotating-axis terms, not just tyre acceleration.
+      // Feeding r*v back into pitch created a load-transfer feedback loop during a slide.
+      this.updateWheelContact(motionDt,this.longitudinalAccel,this.lateralAccel/Math.max(1,Math.abs(this.speed)));
     }
+    const travelSpeed=this.speed;
+    this.slipAngle=-Math.atan2(this.lateralSpeed,Math.max(.5,Math.abs(this.speed)));
+    this.moveYaw=this.yaw-this.slipAngle;
     this.odometer+=Math.abs(travelSpeed)*dt;
-    if(!this.world.settings.noCollision){const hit=this.world.collideVehicle(this.x,this.z,1.05);if(hit){this.x+=hit.nx*hit.penetration;this.z+=hit.nz*hit.penetration;this.speed*=.32;this.heaveVel*=.55;}}
+    if(!this.world.settings.noCollision){const hit=this.world.collideVehicle(this.x,this.z,1.05);if(hit){this.x+=hit.nx*hit.penetration;this.z+=hit.nz*hit.penetration;this.speed*=.32;this.lateralSpeed*=.32;this.yawRate*=.5;this.heaveVel*=.55;}}
     nearest=this.world.nearestRoad(this.x,this.z);if(nearest.roadDist>168){this.reset();nearest=this.world.nearestRoad(this.x,this.z);}
     const finalOnRoad=nearest.roadDist<5.25;this.updateGroundEffects(dt,finalOnRoad,travelSpeed,brake,hand,yawRate);
     this.wheelSpin=(this.wheelSpin+travelSpeed/this.wheelRadius*dt)%TAU;this.brakeLight=expLerp(this.brakeLight,(brake>.05||hand||onePedal>.34)?1:0,12,dt);
@@ -2028,9 +2074,8 @@ class Vehicle{
     for(let i=0;i<4;i++){if(!this.wheelContact[i])continue;const sx=this.wheelWorldX[i],sz=this.wheelWorldZ[i],gy=this.wheelGround[i]||this.groundCenter;M4.fromTRS(this.shadowModel,sx,gy+.018,sz,this.yaw,shadowPitch,shadowRoll,.42,1,.64);renderer.draw(this.shadow,this.shadowModel,0,.23,true,false);}
     const b=st.body,c=st.cabin,g=st.glass;
     const nightFactor=env.nightFactor??(env.name==='夜晚'?1:0),duskFactor=env.duskFactor??(env.name==='黄昏'?1:0),headlightVisual=clamp(renderer.headlightBrightness??1,0,2),paintSpec=lerp(.31,.34,nightFactor)+duskFactor*.08;
-    drawPart(this.body,0,b[3],b[4],b[0],b[1],b[2],0,0,0,0,1,false,paintSpec);
-    drawPart(this.body2,0,c[3],c[4],c[0],c[1],c[2],0,0,0,0,1,false,paintSpec*.82);
-    drawPart(this.glass,0,g[3],g[4],g[0],g[1],g[2],0,0,0,.018,1,false,.68);
+    drawPart(this.body,0,0,0,1,1,1,0,0,0,0,1,false,paintSpec);
+    drawPart(this.body2,0,0,0,1,1,1,0,0,0,0,1,false,paintSpec*.82);
     const halfW=b[0]*.5,halfL=b[2]*.5;
     drawPart(this.darkTrim,0,-.055,halfL-.10,b[0]*.82,.11,.13,0,0,0,0,1,false,.05);
     drawPart(this.darkTrim,0,-.060,-halfL+.08,b[0]*.86,.12,.14,0,0,0,0,1,false,.04);
@@ -2041,9 +2086,9 @@ class Vehicle{
       const cabinHalf=c[0]*.5;
       // A visible mirror plinth grows out of the cabin, then overlaps a short dark stalk and the
       // housing.  Every piece intersects its neighbour, so the mirror can never read as a floating box.
-      drawPart(this.body2,side*(cabinHalf-.018),c[3]+.005,c[4]+.285,.15,.11,.18,0,0,0,0,1,false,.16);
+      drawPart(this.paintTrim,side*(cabinHalf-.018),c[3]+.005,c[4]+.285,.15,.11,.18,0,0,0,0,1,false,.16);
       drawPart(this.darkTrim,side*(cabinHalf+.070),c[3]+.015,c[4]+.315,.18,.065,.09,0,0,0,0,1,false,.08);
-      drawPart(this.body,side*(cabinHalf+.190),c[3]+.045,c[4]+.35,.20,.115,.22,0,0,0,0,1,false,.18);
+      drawPart(this.paintTrim,side*(cabinHalf+.190),c[3]+.045,c[4]+.35,.20,.115,.22,0,0,0,0,1,false,.18);
       drawPart(this.glass,side*(cabinHalf+.205),c[3]+.050,c[4]+.315,.038,.080,.150,0,0,0,.01,1,false,.48);
       drawPart(this.indicator,side*(cabinHalf+.208),c[3]+.040,c[4]+.430,.038,.045,.110,0,0,0,.14,.90,true);
     }
@@ -2051,16 +2096,7 @@ class Vehicle{
     drawPart(this.darkTrim,0,b[3]+b[1]*.47,-halfL*.82,b[0]*.44,.026,.07,0,0,0,0,1,false,.08);
     drawPart(this.plate,0,.005,-halfL-.075,.48,.13,.025,0,0,0,.05,1,false,.12);
     drawPart(this.tail,0,.23,-halfL-.098,.50,.055,.022,0,0,0,.30+this.brakeLight*1.65,.96,true);
-    // Simple sculpted shoulders: a low sloping hood/deck and wheel-arch shoulders make the shell read
-    // less like two stacked cuboids while staying cheap enough for the single-file WebGL renderer.
-    drawPart(this.body,0,b[3]+b[1]*.42,halfL*.62,b[0]*.91,.17,b[2]*.28,0,-.065,0,0,1,false,.28);
-    drawPart(this.body2,0,b[3]+b[1]*.38,-halfL*.68,b[0]*.88,.14,b[2]*.20,0,.035,0,0,1,false,.24);
-    for(const side of [-1,1]){
-      // Keep the sculpted shoulder inside the body edge. The previous outer blocks sat directly
-      // over the tyre crown and made a perfectly rendered wheel look visibly cut in half.
-      drawPart(this.body,side*(halfW-.16),b[3]+.10,frontZ*.98,.10,.15,.58,0,0,0,0,1,false,.22);
-      drawPart(this.body,side*(halfW-.16),b[3]+.10,rearZ*.98,.10,.15,.58,0,0,0,0,1,false,.22);
-    }
+    // Hood, deck and wheel arches are part of the continuous shell above.
     // Each basic body style now gets one recognisable accessory instead of sharing the exact same roofline.
     if(this.styleIndex===0){ // sedan: subtle ducktail
       drawPart(this.darkTrim,0,b[3]+b[1]*.62,-halfL+.05,b[0]*.56,.055,.12,0,0,0,0,1,false,.16);
@@ -2076,16 +2112,16 @@ class Vehicle{
     const drawWheelWorld=(mesh,index,front,sx,sy,sz,spec=0)=>{const wyaw=this.yaw+(front?this.currentSteer:0),wpitch=this.wheelSpin;M4.fromTRS(this.model,this.wheelWorldX[index],this.wheelCenterY[index],this.wheelWorldZ[index],wyaw,wpitch,wheelCamber,sx,sy,sz);renderer.draw(mesh,this.model,0,1,false,true,spec);};
     for(let i=0;i<4;i++){
       const front=i<2,side=i%2===0?-1:1,wyaw=this.yaw+(front?this.currentSteer:0),wpitch=this.wheelSpin;
-      drawWheelWorld(this.wheel,i,front,.42,.82,.82,.04);
-      drawWheelWorld(this.rim,i,front,.435,.47,.47,.56);
-      drawWheelWorld(this.hub,i,front,.450,.19,.19,.78);
+      drawWheelWorld(this.wheel,i,front,.26,.82,.82,.04);
+      drawWheelWorld(this.rim,i,front,.275,.47,.47,.56);
+      drawWheelWorld(this.hub,i,front,.285,.19,.19,.78);
       // Put a five-spoke face just outside the cylinder cap.  It rotates with the tyre, while the
       // red caliper below remains attached to the upright.  This is deliberately geometry-only.
-      const ax=Math.cos(wyaw),az=-Math.sin(wyaw),faceOff=side*.226,fx=this.wheelWorldX[i]+ax*faceOff,fz=this.wheelWorldZ[i]+az*faceOff;
+      const ax=Math.cos(wyaw),az=-Math.sin(wyaw),faceOff=side*.145,fx=this.wheelWorldX[i]+ax*faceOff,fz=this.wheelWorldZ[i]+az*faceOff;
       for(let k=0;k<5;k++){M4.fromTRS(this.model,fx,this.wheelCenterY[i],fz,wyaw,wpitch+k*TAU/5,wheelCamber,.055,.075,.50);renderer.draw(this.rimSpoke,this.model,0,1,false,true,.72);}
       M4.fromTRS(this.model,fx+ax*side*.006,this.wheelCenterY[i],fz+az*side*.008,wyaw,wpitch,wheelCamber,.060,.19,.19);renderer.draw(this.rimCap,this.model,0,1,false,true,.82);
       // Brake caliper stays visually fixed relative to the upright instead of spinning with the tyre.
-      M4.fromTRS(this.model,this.wheelWorldX[i],this.wheelCenterY[i]-.06,this.wheelWorldZ[i],wyaw,0,wheelCamber,.57,.12,.17);renderer.draw(this.brakeCaliper,this.model,0,1,false,true,.20);
+      M4.fromTRS(this.model,this.wheelWorldX[i],this.wheelCenterY[i]-.06,this.wheelWorldZ[i],wyaw,0,wheelCamber,.30,.12,.17);renderer.draw(this.brakeCaliper,this.model,0,1,false,true,.20);
     }
     for(const side of [-1,1]){
       drawPart(this.head,side*.59,.12,st.frontLight,.42,.20,.09,0,0,0,.10+headlightVisual*(.35+nightFactor*1.70+duskFactor*.16));
@@ -2141,11 +2177,10 @@ class Autopilot{
     // Here every future curve contributes an *allowed speed now* based on the distance available to
     // brake into it. Far-away bends therefore do not slow the car early, while a fast straight can
     // still trigger braking several kilometres before an extreme corner.
-    const settings=this.world.settings,curveStrength=roadCurveStrength(settings),extreme=curveStrength>2.0;
-    if(!extreme)return {cap:Infinity,distance:Infinity,curveSpeed:Infinity,curvature:0,horizon:0};
-    const pace=settings.paceBoost?lerp(1,1.32,smoothstep(14,58,speed)):1;
-    const lateralAccel=lerp(22.0,18.0,smoothstep(2.0,10.5,curveStrength));
-    const brakeDecel=15.0; // Vehicle full brake is 16.5 m/s² before drag; keep a real safety reserve.
+    const settings=this.world.settings;
+    const pace=1;
+    const lateralAccel=3.0*clamp(settings.grip,.5,1.5)*(1-.28*clamp(this.world.rainAmount||0,0,1));
+    const brakeDecel=2.5; // Plan for the grip-preserving deceleration available inside a bend.
     const responseTime=.22,responseDistance=speed*pace*responseTime+10;
     const floorSpeed=24; // only used to size the horizon, not as a mandatory corner speed.
     const stoppingSpan=pace*Math.max(0,speed*speed-floorSpeed*floorSpeed)/(2*brakeDecel);
@@ -2155,10 +2190,8 @@ class Autopilot{
     for(let d=0;d<=horizon;d+=(d===0?step:step)){
       const q=this.roadFrame(s+this.routeDir*d),k=Math.abs(q.curvature);
       if(k<.00018)continue;
-      // The road is wide and the controller can use a broad line, so give a small arcade allowance
-      // over the point-mass lateral-acceleration formula. This keeps 500% roads challenging without
-      // turning every visible bend into a 100 km/h zone.
-      const curveSpeed=Math.sqrt(lateralAccel/Math.max(k,1e-6))*1.08;
+      // Conservative curve speed leaves a reserve for braking and terrain load variation.
+      const curveSpeed=Math.sqrt(lateralAccel/Math.max(k,1e-6));
       const usableDistance=Math.max(0,d-responseDistance);
       const allowedNow=Math.sqrt(curveSpeed*curveSpeed+2*brakeDecel*usableDistance/pace);
       if(allowedNow<cap){cap=allowedNow;bestDistance=d;bestCurveSpeed=curveSpeed;bestCurvature=k;}
@@ -2172,39 +2205,21 @@ class Autopilot{
     return lerp(this.laneOffset,0,smoothstep(82,142,speed));
   }
   guidanceForState(x,z,yaw,speed,s,roadDist=0,recoverHint=false){
-    const frame=this.roadFrame(s),lat=this.signedLateral(x,z,frame),outside=Math.max(0,Math.abs(lat)-this.safeHalfWidth),recover=recoverHint||roadDist>5.8||outside>.12;
-    const pc=this.previewCurvature(s,speed),curveSeverity=smoothstep(.00060,.0030,pc.max),laneOffset=this.cruiseLaneOffset(speed)*(1-.88*curveSeverity);
-    const straightLook=clamp(14+speed*.36,22,58),cruiseLook=lerp(straightLook+7,Math.max(10,straightLook-18),curveSeverity);
-    const recoverLook=clamp(82+speed*.95+roadDist*1.25,88,260),lookAhead=recover?recoverLook:cruiseLook;
-    const targetOffset=recover?lerp(laneOffset,0,smoothstep(8,65,roadDist)):laneOffset,targetS=s+this.routeDir*lookAhead,target=this.lanePoint(targetS,targetOffset);
-    const dx=target.x-x,dz=target.z-z,Ld=Math.max(2,Math.hypot(dx,dz)),desiredYaw=Math.atan2(dx,dz),yawError=this.angleDelta(desiredYaw,yaw),kappaPP=2*Math.sin(yawError)/Ld;
-    const settings=this.world.settings,steerProtection=settings.highSpeedSteer?smoothstep(0,62,speed):0,maxSteer=lerp(34,7.6,steerProtection)*DEG*settings.steering;
-    const steeringFactor=settings.highSpeedSteer?lerp(1,.52,smoothstep(16,64,speed)):1,modelGain=.38*steeringFactor*(recover?.84:1);
-    let desiredSteer=Math.atan(kappaPP*2.65/Math.max(.15,modelGain));
-
-    // Ultra-high-speed controller: follow the road in distance-domain rather than chasing a far
-    // target point. Road curvature is feed-forward; heading and lateral error are only damping terms.
-    // A short curvature lead compensates the steering actuator's ~0.1 s response without double-counting
-    // the future road heading (which caused the 600+ km/h left/right oscillation in the previous pass).
-    if(!recover&&(speed>40||curveSeverity>.18)){
-      const pace=settings.paceBoost?lerp(1,1.32,smoothstep(14,58,speed)):1;
-      const leadDist=lerp(clamp(speed*pace*.080,8,34),clamp(speed*pace*.035,5,16),curveSeverity),future=this.roadFrame(s+this.routeDir*leadDist);
-      const roadYaw=Math.atan2(frame.fx,frame.fz),headingError=this.angleDelta(roadYaw,yaw),latErr=lat-laneOffset;
-      const pathCurvature=future.curvature*this.routeDir;
-      const kHeading=lerp(.060,.034,smoothstep(45,280,speed)),kLateral=lerp(.00105,.00038,smoothstep(45,280,speed));
-      const curvatureCmd=pathCurvature+headingError*kHeading-latErr*kLateral;
-      const ffSteer=Math.atan(curvatureCmd*2.65/Math.max(.15,.38*steeringFactor));
-      const ffBlend=Math.max(smoothstep(55,135,speed),curveSeverity*.94);desiredSteer=lerp(desiredSteer,ffSteer,clamp(ffBlend,0,1));
-    }
-    let command=clamp(desiredSteer/Math.max(.01,maxSteer),-1,1);
-    const margin=this.safeHalfWidth-Math.abs(lat);
-    if(!recover&&margin<1.05){
-      const inward=clamp((1.05-margin)/1.05,0,1),safeTarget=this.lanePoint(targetS,lerp(targetOffset,0,inward)),sx=safeTarget.x-x,sz=safeTarget.z-z,sLd=Math.max(2,Math.hypot(sx,sz)),sa=this.angleDelta(Math.atan2(sx,sz),yaw),sk=2*Math.sin(sa)/sLd,sd=Math.atan(sk*2.65/Math.max(.15,modelGain))/Math.max(.01,maxSteer);command=lerp(command,clamp(sd,-1,1),inward*.92);
-    }
-    return {frame,lat,recover,lookAhead,targetS,target,yawError,command,margin,previewCurv:pc.max,laneOffset};
+    const frame=this.roadFrame(s),lat=this.signedLateral(x,z,frame),recover=recoverHint||roadDist>5.8;
+    const pc=this.previewCurvature(s,speed),laneOffset=this.cruiseLaneOffset(speed)*(1-.88*smoothstep(.0006,.003,pc.max));
+    const lookAhead=clamp(14+speed*.85+(recover?roadDist*.5:0),18,95);
+    const targetS=s+this.routeDir*lookAhead,target=this.lanePoint(targetS,recover?0:laneOffset);
+    const dx=target.x-x,dz=target.z-z,distance=Math.max(2,Math.hypot(dx,dz)),yawError=this.angleDelta(Math.atan2(dx,dz),yaw);
+    const curvature=2*Math.sin(yawError)/distance,wheelbase=this.wheelbase||2.36;
+    // Steady-state understeer from the same front/rear cornering stiffness as stepTyres.
+    const understeer=1320*.5*(1/72000-1/76000);
+    const desiredSteer=Math.atan(curvature*(wheelbase+understeer*speed*speed));
+    const maxSteer=vehicleSteerLimit(speed,this.world.settings,wheelbase),command=clamp(desiredSteer/Math.max(.01,maxSteer),-1,1);
+    return {frame,lat,recover,lookAhead,targetS,target,yawError,command,margin:this.safeHalfWidth-Math.abs(lat),previewCurv:pc.max,laneOffset};
   }
   simulateClosedLoop(vehicle,collect=false){
-    const settings=this.world.settings,wheelbase=2.65;let x=vehicle.x,z=vehicle.z,yaw=vehicle.yaw,speed=Math.max(0,vehicle.speed),steerAngle=vehicle.currentSteer;
+    const settings=this.world.settings,wheelbase=vehicle.style.frontZ-vehicle.style.rearZ;let x=vehicle.x,z=vehicle.z,yaw=vehicle.yaw,speed=Math.max(0,vehicle.speed),steerAngle=vehicle.currentSteer;
+    const predicted={speed,yaw,lateralSpeed:vehicle.lateralSpeed,yawRate:vehicle.yawRate};
     const nearest=this.world.nearestRoad(x,z);let s=Number.isFinite(this.trackS)?this.trackS:nearest.s,travelled=0,minMargin=99,futureMinMargin=99,maxCurv=0,score=0;const pts=[];
     const horizon=clamp(150+speed*3.15,180,1050),stepDist=speed>220?12:speed>140?10:speed>80?8:speed>45?6.5:5.5;
     if(collect){const n=this.world.nearestRoad(x,z),y=this.world.surfaceHeight(x,z,n)+.11;pts.push([x,y,z]);}
@@ -2212,17 +2227,26 @@ class Autopilot{
       const frame=this.roadFrame(s),lat=this.signedLateral(x,z,frame),margin=this.safeHalfWidth-Math.abs(lat),roadDist=Math.abs(lat),g=this.guidanceForState(x,z,yaw,speed,s,roadDist,roadDist>5.8);
       minMargin=Math.min(minMargin,margin);if(step>2)futureMinMargin=Math.min(futureMinMargin,margin);maxCurv=Math.max(maxCurv,g.previewCurv);
       const laneErr=lat-g.laneOffset,heading=Math.abs(this.angleDelta(Math.atan2(frame.fx,frame.fz),yaw)),over=Math.max(0,-margin),near=Math.max(0,.32-margin);score+=over*over*1200+near*near*95+laneErr*laneErr*.045+heading*heading*.8;
-      const steerProtection=settings.highSpeedSteer?smoothstep(0,62,speed):0,maxSteer=lerp(34,7.6,steerProtection)*DEG*settings.steering,targetSteer=g.command*maxSteer;
-      const pace=settings.paceBoost?lerp(1,1.32,smoothstep(14,58,speed)):1,travelSpeed=speed*pace,dt=clamp(stepDist/Math.max(1,travelSpeed),.018,.10);
-      steerAngle=expLerp(steerAngle,targetSteer,10.5,dt);const onRoad=Math.abs(lat)<this.roadHalfWidth+1.4,grip=onRoad?1:.72,steeringFactor=settings.highSpeedSteer?lerp(1,.52,smoothstep(16,64,speed)):1;
-      const yawRate=Math.tan(steerAngle)/wheelbase*Math.abs(travelSpeed)*grip*.38*steeringFactor;yaw+=yawRate*dt;x+=Math.sin(yaw)*travelSpeed*dt;z+=Math.cos(yaw)*travelSpeed*dt;travelled+=Math.abs(travelSpeed)*dt;
+      const maxSteer=vehicleSteerLimit(speed,settings,wheelbase),targetSteer=g.command*maxSteer;
+      const travelSpeed=speed,dt=clamp(stepDist/Math.max(1,travelSpeed),.018,.10),steps=Math.ceil(dt*120),sd=dt/steps;
+      const mu=(Math.abs(lat)<this.roadHalfWidth+1.4?.98:.58)*clamp(settings.grip,.5,1.5)*(1-.28*clamp(this.world.rainAmount||0,0,1));
+      for(let j=0;j<steps;j++){
+        steerAngle=expLerp(steerAngle,targetSteer,8,sd);
+        stepTyres(predicted,sd,steerAngle,0,1320*9.81/2,1320*9.81/2,mu,false,wheelbase);
+        // Prediction holds cruise speed and assumes level support, but shares tyre/yaw dynamics.
+        predicted.speed=speed;yaw=predicted.yaw;
+        x+=(Math.sin(yaw)*speed+Math.cos(yaw)*predicted.lateralSpeed)*sd;
+        z+=(Math.cos(yaw)*speed-Math.sin(yaw)*predicted.lateralSpeed)*sd;
+      }
+      travelled+=Math.abs(travelSpeed)*dt;
       const forwardDot=Math.max(.12,Math.cos(this.angleDelta(Math.atan2(frame.fx,frame.fz),yaw)));s+=this.routeDir*Math.abs(travelSpeed)*dt*forwardDot;
       if(collect){const n=this.world.nearestRoad(x,z),y=this.world.surfaceHeight(x,z,n)+.11;pts.push([x,y,z]);}if(travelSpeed<.15)break;
     }
     return {score,minMargin,futureMinMargin,maxCurv,pts,travelled};
   }
   control(dt,vehicle){
-    const speed=Math.abs(vehicle.speed),pace=this.world.settings.paceBoost?lerp(1,1.32,smoothstep(14,58,speed)):1;
+    this.wheelbase=vehicle.style.frontZ-vehicle.style.rearZ;
+    const speed=Math.abs(vehicle.speed),pace=1;
     if(!Number.isFinite(this.trackS))this.trackS=this.world.nearestRoad(vehicle.x,vehicle.z).s;
     const expectedS=this.trackS+this.routeDir*Math.max(0,vehicle.speed)*pace*dt,trackWindow=clamp(22+speed*dt*6,24,62),nearest=this.trackedRoadState(vehicle.x,vehicle.z,expectedS,trackWindow);this.trackS=nearest.s;
     const g=this.guidanceForState(vehicle.x,vehicle.z,vehicle.yaw,speed,nearest.s,nearest.roadDist,false);this.currentLateral=g.lat;this.recovering=g.recover;this.lookAhead=g.lookAhead;this.targetS=g.targetS;
@@ -2232,15 +2256,14 @@ class Autopilot{
     this.plannerTimer-=dt;if(this.plannerTimer<=0){const sim=this.simulateClosedLoop(vehicle,true);this.predictedMargin=sim.futureMinMargin;this.predictedCurvature=sim.maxCurv;this.plannerScore=sim.score;this.predictionPts=sim.pts;this.plannerTimer=g.recover?.045:(speed>180?.035:speed>120?.050:.075);}
 
     const configuredMax=this.world.maxRoadSpeed();let cruise=this.world.settings.autopilotUnlimited?Infinity:Math.min(AUTOPILOT_SAFE_CAP_KMH,Math.max(0,this.world.settings.autopilotSpeedKmh))/3.6;if(Number.isFinite(configuredMax))cruise=Math.min(cruise,configuredMax);
-    const extremeRoad=roadCurveStrength(this.world.settings)>2.0;
     this.speedPlanTimer-=dt;
     if(this.speedPlanTimer<=0){
       const bp=this.brakingPreview(nearest.s,speed,cruise);this.brakePlanCap=bp.cap;this.brakePlanDistance=bp.distance;this.brakePlanCurveSpeed=bp.curveSpeed;this.brakePlanCurvature=bp.curvature;this.brakePlanHorizon=bp.horizon;
       this.speedPlanTimer=speed>180?.055:speed>100?.080:.12;
     }
     let targetSpeed=Math.min(cruise,this.brakePlanCap),edgeRisk=this.predictedMargin;
-    if(!g.recover&&edgeRisk<.24){const risk=smoothstep(.24,-.18,edgeRisk),riskCap=lerp(Math.max(speed*1.01,40),Math.max(speed*.58,24),risk);targetSpeed=Math.min(targetSpeed,riskCap);this.state='EDGE AVOID';}
-    else if(g.recover){const angle=Math.abs(g.yawError),anglePenalty=lerp(1,.70,smoothstep(22*DEG,75*DEG,angle)),recoverCap=clamp(58-nearest.roadDist*.045,34,58)*anglePenalty;targetSpeed=Math.min(targetSpeed,recoverCap);this.state='RECOVERY';}
+    if(!g.recover&&edgeRisk<.24){const risk=smoothstep(.24,-.18,edgeRisk),riskCap=lerp(Math.max(speed*.98,12),Math.max(speed*.58,8),risk);targetSpeed=Math.min(targetSpeed,riskCap);this.state='EDGE AVOID';}
+    else if(g.recover){const angle=Math.abs(g.yawError),anglePenalty=lerp(1,.65,smoothstep(22*DEG,75*DEG,angle)),recoverCap=clamp(14-nearest.roadDist*.30,6,14)*anglePenalty;targetSpeed=Math.min(targetSpeed,recoverCap);this.state='RECOVERY';}
     else if(Number.isFinite(this.brakePlanCap)&&(cruise===Infinity||this.brakePlanCap<cruise*.985))this.state=this.brakePlanDistance<65?'CORNER':'BRAKE';
     else this.state='CRUISE';
     if(Math.abs(g.yawError)>82*DEG)targetSpeed=Math.min(targetSpeed,g.recover?22:18);if(vehicle.speed<-.5)targetSpeed=0;this.targetSpeed=targetSpeed;
@@ -2250,9 +2273,15 @@ class Autopilot{
       // still needs power at steady speed. Add a small feed-forward hold throttle using the same
       // road drag/engine envelope as Vehicle.update(), then use speed error only for correction.
       const fade=this.world.settings.speedAccelFade?lerp(.78,.33,smoothstep(0,this.world.speedReference(),current)):.78,fullAccel=Math.max(.25,8.7*fade*this.world.settings.acceleration),holdDrag=.34+current*.019,holdThrottle=this.world.settings.speedAccelFade?clamp(holdDrag/fullAccel,0,.92):0;
-      throttle=clamp(holdThrottle+speedError/4.2,0,1);brake=clamp((-speedError-1.6)/9.5,0,1);if(brake>.02)throttle=0;
+      throttle=clamp(holdThrottle+speedError/4.2,0,1);brake=clamp((-speedError-1.6)/9.5,0,1);
+      // Avoid panic trail-braking: unloading the rear axle during a fast turn causes a spin.
+      // Reserve rear lateral grip while cornering; straight-line braking keeps full authority.
+      const requestedLateral=Math.abs(Math.tan(steer*vehicleSteerLimit(speed,this.world.settings,this.wheelbase))*speed*speed/this.wheelbase);
+      const cornering=Math.max(requestedLateral/3,Math.abs(vehicle.lateralAccel||0)/3,Math.abs(vehicle.slipAngle||0)/(.04));
+      brake=Math.min(brake,lerp(1,.16,clamp(cornering,0,1)));
+      if(brake>.02)throttle=0;
     }
-    if(vehicle.speed<-.5){throttle=0;brake=1;}if(speed<1.1&&throttle>.55)this.stuckTimer+=dt;else this.stuckTimer=Math.max(0,this.stuckTimer-dt*1.5);const reset=this.stuckTimer>4.5;if(reset){this.stuckTimer=0;this.state='RECOVER RESET';}
+    if(vehicle.speed<-.5){throttle=1;brake=0;}if(speed<1.1&&throttle>.55)this.stuckTimer+=dt;else this.stuckTimer=Math.max(0,this.stuckTimer-dt*1.5);const reset=this.stuckTimer>4.5;if(reset){this.stuckTimer=0;this.state='RECOVER RESET';}
     return {throttle,brake,handbrake:false,steer,reset};
   }
   predictionPoints(vehicle){
@@ -2657,6 +2686,7 @@ class Game{
     const sp=newWorld.spawnData();
     this.vehicle.x=sp.x;this.vehicle.z=sp.z;this.vehicle.y=sp.y+this.vehicle.bodyRideHeight;
     this.vehicle.yaw=Math.atan2(sp.tx,sp.tz);this.vehicle.moveYaw=this.vehicle.yaw;
+    this.vehicle.lateralSpeed=0;this.vehicle.yawRate=0;this.vehicle.wheelLoad.fill(1320*9.81/4);
     this.vehicle.speed=0;this.vehicle.targetSteer=0;this.vehicle.currentSteer=0;this.vehicle.slipAngle=0;
     this.vehicle.pitch=Math.atan2(sp.ty,Math.hypot(sp.tx,sp.tz));this.vehicle.roll=0;
     this.vehicle.heaveVel=0;this.vehicle.pitchVel=0;this.vehicle.rollVel=0;this.vehicle.wheelSpin=0;
