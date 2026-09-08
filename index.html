@@ -2244,7 +2244,9 @@ class Autopilot{
     const settings=this.world.settings;
     const pace=1;
     const lateralAccel=3.0*clamp(settings.grip,.5,1.5)*(1-.28*clamp(this.world.rainAmount||0,0,1));
-    const brakeDecel=2.5; // Plan for the grip-preserving deceleration available inside a bend.
+    // The cornering controller may reserve grip by limiting brake input to .16.
+    // Plan below that deceleration, including downhill gravity, rather than promising 2.5 m/s².
+    const brakeDecel=1.4;
     const responseTime=.22,responseDistance=speed*pace*responseTime+10;
     const floorSpeed=24; // only used to size the horizon, not as a mandatory corner speed.
     const stoppingSpan=pace*Math.max(0,speed*speed-floorSpeed*floorSpeed)/(2*brakeDecel);
@@ -2252,10 +2254,20 @@ class Autopilot{
     const step=horizon>3000?32:horizon>1800?24:horizon>900?18:12;
     let cap=Infinity,bestDistance=Infinity,bestCurveSpeed=Infinity,bestCurvature=0;
     for(let d=0;d<=horizon;d+=(d===0?step:step)){
-      const q=this.roadFrame(s+this.routeDir*d),k=Math.abs(q.curvature);
-      if(k<.00018)continue;
+      const position=s+this.routeDir*d,q=this.roadFrame(position),k=Math.abs(q.curvature);
+      const before=this.roadFrame(position-this.routeDir*8),after=this.roadFrame(position+this.routeDir*8);
+      const slopeBefore=Math.atan2(before.ty*this.routeDir,Math.hypot(before.tx,before.tz));
+      const slopeAfter=Math.atan2(after.ty*this.routeDir,Math.hypot(after.tx,after.tz));
+      // Convex vertical curvature removes normal load: N/m = g - v²*kVertical.
+      // Keep at least 70% static support in the planned envelope; also limit sharp compressions.
+      const verticalCurvature=(slopeAfter-slopeBefore)/16;
+      const verticalCap=Math.sqrt((verticalCurvature<0?2.9:4.5)/Math.max(1e-7,Math.abs(verticalCurvature)));
+      // The lightweight suspension samples piecewise road heights; sustained slopes can
+      // unload axles at segment seams even when averaged vertical curvature is small.
+      const slope=Math.abs(Math.atan2(q.ty,Math.hypot(q.tx,q.tz)));
+      const slopeCap=lerp(83.33,30,smoothstep(.015,.055,slope));
       // Conservative curve speed leaves a reserve for braking and terrain load variation.
-      const curveSpeed=Math.sqrt(lateralAccel/Math.max(k,1e-6));
+      const curveSpeed=Math.min(Math.sqrt(lateralAccel/Math.max(k,1e-6)),verticalCap,slopeCap);
       const usableDistance=Math.max(0,d-responseDistance);
       const allowedNow=Math.sqrt(curveSpeed*curveSpeed+2*brakeDecel*usableDistance/pace);
       if(allowedNow<cap){cap=allowedNow;bestDistance=d;bestCurveSpeed=curveSpeed;bestCurvature=k;}
